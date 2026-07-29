@@ -64,19 +64,21 @@ MiningConfig.PICKAXE = {
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
 
 	-- La cabeza son dos barras a lo largo del eje Y (una punta arriba y otra abajo),
-	-- o sea en el mismo plano en el que baja el picazo. Asi se ve como un pico de verdad
-	-- y la punta de abajo es la que golpea el suelo.
-	HEAD_SIZE = Vector3.new(0.4, 1.15, 0.5), -- (grosor X, largo de la punta Y, grosor Z)
+	-- o sea en el mismo plano en el que baja el picazo.
+	HEAD_SIZE = Vector3.new(0.4, 0.85, 0.5), -- (grosor X, largo de la punta Y, grosor Z)
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_ANGLE = 24, -- grados: cuanto se echan las puntas hacia atras (curva del pico)
+	-- 0 = cabeza recta, perpendicular al mango (en T). Sube el valor si quieres las
+	-- puntas echadas hacia atras (curva de pico clasico).
+	HEAD_ANGLE = 0,
 
 	-- Donde agarra la mano el mango (offset dentro del propio mango, en studs).
 	-- Z positivo = mas atras en el mango.
 	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	-- Rotacion del agarre en grados (X, Y, Z). Cambialo si te queda raro en la mano.
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
-	-- Inclinacion en reposo: negativo = la punta queda levantada, listo para picar
-	REST_ANGLE = -20,
+	-- Inclinacion en reposo. 0 = pico totalmente recto (mango horizontal).
+	-- Negativo lo levanta, positivo lo baja.
+	REST_ANGLE = 0,
 }
 
 --------------------------------------------------------------------------------
@@ -85,11 +87,11 @@ MiningConfig.PICKAXE = {
 
 MiningConfig.SWING = {
 	-- El pico gira sobre el punto donde lo agarra la mano, bajando hasta tocar el suelo.
-	START_ANGLE = -50, -- grados: cuanto se levanta el pico antes del golpe
-	MAX_ANGLE = 88, -- limite hacia abajo, para que no atraviese el piso
+	START_ANGLE = -22, -- grados: pequeno amago hacia arriba antes del golpe (0 = sin amago)
+	MAX_ANGLE = 95, -- limite hacia abajo. Pasa un poco de la vertical para clavar la punta
 	-- Studs desde el punto de agarre hasta la punta del pico.
-	-- Con el mango por defecto: 1.3 (agarre) + 1.5 (medio mango) + la punta = ~3.2
-	HEAD_REACH = 3.2,
+	-- Con el mango por defecto: 1.3 (agarre) + 1.5 (medio mango) = 2.8
+	HEAD_REACH = 2.8,
 
 	RAISE_TIME = 0.14, -- levantar
 	STRIKE_TIME = 0.08, -- bajar (el picazo)

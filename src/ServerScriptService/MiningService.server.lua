@@ -203,10 +203,15 @@ local function computeStrikeAngle(character: Model): number
 	end
 
 	local height = hand.Position.Y - result.Position.Y
-	local ratio = math.clamp(height / swing.HEAD_REACH, 0, 1)
+	local ratio = height / swing.HEAD_REACH
+
+	-- El suelo queda mas abajo de lo que alcanza la punta: giro completo hasta clavarla
+	if ratio >= 1 then
+		return swing.MAX_ANGLE
+	end
 
 	-- La punta baja HEAD_REACH * sin(angulo), asi que este es el angulo justo para tocar
-	local angle = math.deg(math.asin(ratio))
+	local angle = math.deg(math.asin(math.max(ratio, 0)))
 
 	return math.min(angle, swing.MAX_ANGLE)
 end

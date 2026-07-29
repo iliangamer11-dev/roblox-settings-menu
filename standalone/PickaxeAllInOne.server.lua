@@ -51,19 +51,19 @@ local PICKAXE = {
 	HANDLE_SIZE = Vector3.new(0.32, 0.32, 3),
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
 	-- Dos barras sobre el eje Y (punta arriba y punta abajo), en el plano del picazo
-	HEAD_SIZE = Vector3.new(0.4, 1.15, 0.5),
+	HEAD_SIZE = Vector3.new(0.4, 0.85, 0.5),
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_ANGLE = 24, -- cuanto se echan las puntas hacia atras
+	HEAD_ANGLE = 0, -- 0 = cabeza recta en T. Sube el valor para echar las puntas atras
 	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
-	REST_ANGLE = -20, -- inclinacion en reposo (negativo = punta levantada)
+	REST_ANGLE = 0, -- 0 = pico totalmente recto (mango horizontal)
 }
 
 -- El picazo: gira sobre el punto de agarre y baja hasta tocar el suelo
 local SWING = {
-	START_ANGLE = -50,
-	MAX_ANGLE = 88,
-	HEAD_REACH = 3.2, -- studs del agarre a la punta del pico
+	START_ANGLE = -22, -- pequeno amago hacia arriba (0 = sin amago)
+	MAX_ANGLE = 95, -- pasa un poco de la vertical para clavar la punta en el suelo
+	HEAD_REACH = 2.8, -- studs del agarre a la punta del pico
 	RAISE_TIME = 0.14,
 	STRIKE_TIME = 0.08,
 	HOLD_TIME = 0.06,
@@ -476,9 +476,14 @@ local function computeStrikeAngle(character)
 	end
 
 	local height = hand.Position.Y - result.Position.Y
-	local ratio = math.clamp(height / SWING.HEAD_REACH, 0, 1)
+	local ratio = height / SWING.HEAD_REACH
 
-	return math.min(math.deg(math.asin(ratio)), SWING.MAX_ANGLE)
+	-- El suelo esta mas abajo de lo que alcanza la punta: giro completo
+	if ratio >= 1 then
+		return SWING.MAX_ANGLE
+	end
+
+	return math.min(math.deg(math.asin(math.max(ratio, 0))), SWING.MAX_ANGLE)
 end
 
 local function playSwing(tool, character)

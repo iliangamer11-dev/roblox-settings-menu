@@ -121,10 +121,11 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 | --- | --- |
 | `HANDLE_SIZE` | Tamano del mango. El largo va en Z |
 | `HEAD_SIZE` | Las dos puntas van sobre el eje Y: `(grosor X, largo Y, grosor Z)` |
-| `HEAD_COLOR`, `HEAD_ANGLE` | Color y cuanto se echan las puntas hacia atras |
+| `HEAD_COLOR` | Color de la cabeza |
+| `HEAD_ANGLE` | `0` = cabeza recta en T. Mas alto = puntas echadas hacia atras |
 | `GRIP_OFFSET` | Donde agarra la mano el mango (Z positivo = mas atras) |
 | `GRIP_ROTATION` | Rotacion del agarre en grados, si queda raro en la mano |
-| `REST_ANGLE` | Inclinacion en reposo (negativo = punta levantada) |
+| `REST_ANGLE` | Inclinacion en reposo. `0` = pico recto, mango horizontal |
 
 **El picazo** (`SWING`):
 
