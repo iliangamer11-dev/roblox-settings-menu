@@ -51,9 +51,6 @@ MiningConfig.HOLE = {
 -- Tiempo minimo entre picazos (segundos)
 MiningConfig.SWING_COOLDOWN = 0.55
 
--- Distancia maxima a la que se puede picar una zona (studs)
-MiningConfig.MAX_REACH = 18
-
 -- Cuanto se busca hacia abajo para saber sobre que zona esta parado el jugador
 MiningConfig.GROUND_CHECK_DISTANCE = 12
 
@@ -101,6 +98,10 @@ MiningConfig.SWING = {
 
 	-- Si el pico gira al lado contrario en tu avatar, pon -1
 	AXIS_SIGN = 1,
+
+	-- A cuantos studs delante del jugador cae la punta del pico.
+	-- Aqui es donde salen las chispas y el agujero (NO donde apunta el cursor).
+	HIT_OFFSET = 2.2,
 }
 
 --------------------------------------------------------------------------------
@@ -134,6 +135,8 @@ MiningConfig.POPUP = {
 	HEIGHT = 2.4,
 	-- Que parte del alto ocupa la imagen (el resto es el texto)
 	IMAGE_RATIO = 0.68,
+	-- Escala fina de la imagen dentro de su hueco. 1 = a tope, 0.9 = un poquito mas pequena
+	IMAGE_SCALE = 0.9,
 
 	ALWAYS_ON_TOP = false,
 	MAX_DISTANCE = 150,

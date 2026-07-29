@@ -79,8 +79,10 @@ function MoneyPopup.show(character: Model, amount: number)
 	local image = Instance.new("ImageLabel")
 	image.Name = "Icono"
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.fromScale(1, cfg.IMAGE_RATIO)
-	image.Position = UDim2.fromScale(0, 0)
+	-- Centrada en su hueco y escalada con IMAGE_SCALE
+	image.AnchorPoint = Vector2.new(0.5, 0.5)
+	image.Size = UDim2.fromScale(cfg.IMAGE_SCALE, cfg.IMAGE_RATIO * cfg.IMAGE_SCALE)
+	image.Position = UDim2.fromScale(0.5, cfg.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
 	image.ImageColor3 = cfg.IMAGE_COLOR
 	image.ImageTransparency = cfg.IMAGE_TRANSPARENCY
@@ -94,15 +96,12 @@ function MoneyPopup.show(character: Model, amount: number)
 	if usingPlaceholder then
 		image.BackgroundTransparency = cfg.IMAGE_TRANSPARENCY
 		image.BackgroundColor3 = cfg.IMAGE_COLOR
+		-- RelativeYY: el ancho sigue al alto para que el circulo salga redondo
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0.5, 0)
 		corner.Parent = image
-
-		-- Centrado, porque con SizeConstraint el ancho depende del alto
-		image.AnchorPoint = Vector2.new(0.5, 0)
-		image.Position = UDim2.fromScale(0.5, 0)
 	end
 
 	-- TextLabel debajo del ImageLabel

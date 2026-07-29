@@ -69,6 +69,7 @@ local SWING = {
 	HOLD_TIME = 0.06,
 	RETURN_TIME = 0.18,
 	AXIS_SIGN = 1, -- pon -1 si el pico gira al lado contrario
+	HIT_OFFSET = 2.2, -- studs delante del jugador donde cae la punta (chispas y agujero)
 }
 
 -- Cartel flotante al ganar dinero
@@ -98,6 +99,7 @@ local POPUP = {
 	WIDTH = 2.4,
 	HEIGHT = 2.4,
 	IMAGE_RATIO = 0.68,
+	IMAGE_SCALE = 0.9, -- escala fina de la imagen (1 = a tope)
 	ALWAYS_ON_TOP = false,
 	MAX_DISTANCE = 150,
 	MIN_RADIUS = 2,
@@ -281,8 +283,9 @@ local function showPopup(character, amount)
 	local image = Instance.new("ImageLabel")
 	image.Name = "Icono"
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.fromScale(1, POPUP.IMAGE_RATIO)
-	image.Position = UDim2.fromScale(0, 0)
+	image.AnchorPoint = Vector2.new(0.5, 0.5)
+	image.Size = UDim2.fromScale(POPUP.IMAGE_SCALE, POPUP.IMAGE_RATIO * POPUP.IMAGE_SCALE)
+	image.Position = UDim2.fromScale(0.5, POPUP.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
 	image.ImageColor3 = POPUP.IMAGE_COLOR
 	image.ImageTransparency = POPUP.IMAGE_TRANSPARENCY
@@ -296,8 +299,6 @@ local function showPopup(character, amount)
 		image.BackgroundTransparency = POPUP.IMAGE_TRANSPARENCY
 		image.BackgroundColor3 = POPUP.IMAGE_COLOR
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
-		image.AnchorPoint = Vector2.new(0.5, 0)
-		image.Position = UDim2.fromScale(0.5, 0)
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0.5, 0)
@@ -375,6 +376,28 @@ local function findZoneUnderCharacter(character)
 	end
 
 	return nil, nil, nil, nil, nil
+end
+
+-- Donde golpea el pico: justo delante del personaje, a la distancia que alcanza la punta
+local function findStrikePoint(character)
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil, nil, nil
+	end
+
+	local origin = root.Position + root.CFrame.LookVector * SWING.HIT_OFFSET + Vector3.new(0, 1, 0)
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character }
+	params.IgnoreWater = true
+
+	local result = workspace:Raycast(origin, Vector3.new(0, -(GROUND_CHECK_DISTANCE + 1), 0), params)
+	if not result then
+		return nil, nil, nil
+	end
+
+	return result.Instance, result.Position, result.Normal
 end
 
 -- Agujero que queda marcado donde se pico
@@ -531,7 +554,23 @@ local function onActivated(tool)
 
 	playSwing(tool, character)
 
-	local zoneName, reward, host, position, normal = findZoneUnderCharacter(character)
+	-- El efecto va donde cae el pico (delante del personaje), no bajo sus pies
+	local host, position, normal = findStrikePoint(character)
+
+	local zoneName, reward
+	if host then
+		zoneName, reward = findZone(host)
+	end
+
+	-- Si delante no hay zona valida, se usa la que esta pisando
+	if not zoneName then
+		local standHost, standPosition, standNormal
+		zoneName, reward, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
+		host = host or standHost
+		position = position or standPosition
+		normal = normal or standNormal
+	end
+
 	if not zoneName then
 		return
 	end

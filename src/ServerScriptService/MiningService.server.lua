@@ -113,20 +113,7 @@ local function findZoneUnderCharacter(character: Model)
 	return nil, nil, nil, nil, nil
 end
 
--- Normal de la superficie en el punto golpeado, para apoyar bien el agujero.
--- Se tira un rayo hacia abajo contra la propia zona; si falla, se asume suelo plano.
-local function surfaceNormalAt(host: BasePart, position: Vector3): Vector3
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Include
-	params.FilterDescendantsInstances = { host }
-	params.IgnoreWater = true
 
-	local result = workspace:Raycast(position + Vector3.new(0, 3, 0), Vector3.new(0, -6, 0), params)
-	if result then
-		return result.Normal
-	end
-	return Vector3.yAxis
-end
 
 --------------------------------------------------------------------------------
 -- Animacion del picazo
@@ -327,22 +314,31 @@ end
 
 local lastSwing = {} -- lastSwing[player] = os.clock()
 
-local function isWithinReach(character: Model, target: BasePart, hitPosition: Vector3): boolean
+-- Donde golpea el pico: justo delante del personaje, a la distancia que alcanza la punta.
+-- No se usa el cursor a proposito: el agujero tiene que salir donde cae el pico.
+local function findStrikePoint(character: Model)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root or not root:IsA("BasePart") then
-		return false
+		return nil, nil, nil
 	end
 
-	-- Cerca del punto golpeado y cerca de la propia zona (las zonas suelen ser enormes)
-	if (root.Position - hitPosition).Magnitude > Config.MAX_REACH then
-		return false
+	local swing = Config.SWING
+	local origin = root.Position + root.CFrame.LookVector * swing.HIT_OFFSET + Vector3.new(0, 1, 0)
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character }
+	params.IgnoreWater = true
+
+	local result = workspace:Raycast(origin, Vector3.new(0, -(Config.GROUND_CHECK_DISTANCE + 1), 0), params)
+	if not result then
+		return nil, nil, nil
 	end
 
-	local toPart = (root.Position - target.Position).Magnitude - target.Size.Magnitude * 0.5
-	return toPart <= Config.MAX_REACH
+	return result.Instance, result.Position, result.Normal
 end
 
-swingRemote.OnServerEvent:Connect(function(player: Player, target: any, hitPosition: any)
+swingRemote.OnServerEvent:Connect(function(player: Player)
 	local character = player.Character
 	if not character then
 		return
@@ -369,22 +365,27 @@ swingRemote.OnServerEvent:Connect(function(player: Player, target: any, hitPosit
 	-- Siempre se ve el picazo, aunque no haya zona valida
 	playSwing(tool, character)
 
-	-- 1) Zona apuntada con el mouse (validando alcance)
+	-- 1) Donde cae el pico: delante del personaje
 	local zoneName, reward, effectHost, effectPosition, effectNormal
 
-	if typeof(target) == "Instance" and target:IsA("BasePart") and typeof(hitPosition) == "Vector3" then
-		if isWithinReach(character, target, hitPosition) then
-			zoneName, reward = findZone(target)
-			if zoneName then
-				effectHost, effectPosition = target, hitPosition
-				effectNormal = surfaceNormalAt(target, hitPosition)
-			end
+	local strikeHost, strikePosition, strikeNormal = findStrikePoint(character)
+	if strikeHost then
+		zoneName, reward = findZone(strikeHost)
+		if zoneName then
+			effectHost, effectPosition, effectNormal = strikeHost, strikePosition, strikeNormal
 		end
 	end
 
-	-- 2) Si no apunto a una zona, se usa la zona donde esta parado
+	-- 2) Si delante no hay zona (borde, rampa, un objeto encima...), se usa la que pisa,
+	-- pero el efecto se deja igual en el punto donde cayo el pico
 	if not zoneName then
-		zoneName, reward, effectHost, effectPosition, effectNormal = findZoneUnderCharacter(character)
+		local standHost, standPosition, standNormal
+		zoneName, reward, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
+		if zoneName then
+			effectHost = strikeHost or standHost
+			effectPosition = strikePosition or standPosition
+			effectNormal = strikeNormal or standNormal
+		end
 	end
 
 	if not zoneName or not reward then

@@ -62,8 +62,12 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 - **Popup de dinero**: al sumar, aparece un cartel con un `ImageLabel` arriba (tu icono) y un
   `TextLabel` debajo (`+1`, `+5`, ...) en un punto **random alrededor del jugador**, que sube
   y se desvanece. Todo configurable en `POPUP`.
-- **Zona**: raycast hacia abajo desde el jugador. En la version modular, primero se usa la
-  part apuntada con el mouse y si no es zona, se cae al raycast.
+- **Zona y punto de impacto**: se tira un raycast hacia abajo a `SWING.HIT_OFFSET` studs
+  **delante del personaje**, ahi es donde cae el pico. Ese punto decide la zona, las chispas
+  y el agujero. El cursor no se usa. Si delante no hay zona valida (un borde, un objeto
+  encima...), se cobra la zona que esta pisando.
+- **Agujero**: cada picazo deja una marca oscura pegada a la superficie que desaparece a los
+  2 segundos (`HOLE.LIFETIME`).
 - **Anti-exploit**: cooldown por jugador (0.55 s) y todo el dinero se calcula en el servidor.
 - **Efecto**: chispas del color de la zona en el punto golpeado.
 
@@ -106,7 +110,7 @@ Causas mas comunes:
 Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 `standalone/PickaxeAllInOne.server.lua` si usas la version de un archivo).
 
-**Recompensas y ritmo**: `REWARDS`, `SWING_COOLDOWN`, `MAX_REACH`, `GROUND_CHECK_DISTANCE`.
+**Recompensas y ritmo**: `REWARDS`, `SWING_COOLDOWN`, `GROUND_CHECK_DISTANCE`.
 
 **El pico** (`PICKAXE`):
 
@@ -128,6 +132,7 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 | `HEAD_REACH` | Studs desde el agarre hasta la punta (define el angulo del golpe) |
 | `RAISE_TIME`, `STRIKE_TIME`, `HOLD_TIME`, `RETURN_TIME` | Duraciones de cada fase |
 | `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |
+| `HIT_OFFSET` | Studs delante del jugador donde cae la punta (chispas y agujero) |
 
 **El agujero** (`HOLE`): marca oscura que queda donde se pico y desaparece a los
 `LIFETIME` segundos (2 por defecto). Se ajusta con `SIZE` (diametro), `DEPTH`, `COLOR`,
@@ -144,6 +149,7 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 | `TEXT_FORMAT` | Texto de abajo, `%d` es la cantidad. Ej: `"+%d money"` |
 | `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |
 | `WIDTH`, `HEIGHT`, `IMAGE_RATIO` | Tamano del cartel en studs y cuanto ocupa la imagen |
+| `IMAGE_SCALE` | Escala fina de la imagen dentro de su hueco (`1` = a tope) |
 | `MIN_RADIUS`, `MAX_RADIUS`, `MIN_HEIGHT`, `MAX_HEIGHT` | Zona random alrededor del jugador |
 | `RISE_HEIGHT`, `DURATION` | Cuanto sube y cuanto dura antes de desaparecer |
 | `ALWAYS_ON_TOP`, `MAX_DISTANCE` | Si se ve atravesando paredes y desde cuan lejos |

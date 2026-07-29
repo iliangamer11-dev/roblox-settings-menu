@@ -1,9 +1,11 @@
 --[[
 	PickaxeClient (LocalScript en StarterPlayer > StarterPlayerScripts)
 
-	Detecta el click izquierdo con el Pickaxe equipado (Tool.Activated) y le avisa
-	al servidor a que parte le esta apuntando. El servidor valida, hace la
-	animacion del picazo y suma el money.
+	Detecta el click izquierdo con el Pickaxe equipado (Tool.Activated) y le avisa al
+	servidor. El servidor decide todo: donde cae el pico, la animacion y el dinero.
+
+	No se manda la posicion del cursor a proposito: el golpe cae siempre donde pica el
+	pico, delante del personaje.
 ]]
 
 local Players = game:GetService("Players")
@@ -13,7 +15,6 @@ local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local swingRemote = ReplicatedStorage:WaitForChild(Config.REMOTE_NAME)
 
 local player = Players.LocalPlayer
-local mouse = player:GetMouse()
 
 local lastSwing = 0
 
@@ -24,9 +25,7 @@ local function requestSwing()
 	end
 	lastSwing = now
 
-	local target = mouse.Target
-	local hitPosition = mouse.Hit and mouse.Hit.Position or nil
-	swingRemote:FireServer(target, hitPosition)
+	swingRemote:FireServer()
 end
 
 -- Tool.Activated = click izquierdo (o tap en movil) con la herramienta equipada
@@ -51,7 +50,6 @@ local function watch(container: Instance)
 end
 
 local function onCharacterAdded(character: Model)
-	mouse.TargetFilter = character -- no apuntar al propio personaje
 	watch(character)
 
 	local backpack = player:WaitForChild("Backpack", 10)
