@@ -37,22 +37,31 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | --- | --- | --- |
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
 | `src/ServerScriptService/PickaxeTool.lua` | ServerScriptService | ModuleScript `PickaxeTool` |
+| `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
 
-`MiningService` y `PickaxeTool` deben quedar hermanos dentro de `ServerScriptService`.
+`MiningService`, `PickaxeTool` y `MoneyPopup` deben quedar hermanos dentro de
+`ServerScriptService`.
 
 ### Como funciona
 
 - **money**: se crea `player.leaderstats.money` (IntValue), asi se ve en la lista de
   jugadores. Tambien se copia a un atributo: `player:GetAttribute("money")`.
-- **Tool**: el pico se construye por codigo (mango + cabeza de metal) y se copia a
-  `StarterPack`, con una red de seguridad que lo entrega al Backpack si no llego.
+- **Tool**: el pico se construye por codigo con el **mango sobre el eje Z** (la punta mira
+  hacia -Z) y se copia a `StarterPack`, con una red de seguridad que lo entrega al Backpack
+  si no llego.
 - **Click izquierdo**: `Tool.Activated` (tambien cubre el tap en movil).
-- **Animacion del picazo**: se interpola `Tool.Grip` (sube 75 grados, baja de golpe 60 y
-  vuelve). Corre en el servidor para que **todos** los jugadores vean el golpe, y no hace
-  falta subir ninguna animacion. Si subes una propia, pon su id en `ANIMATION_ID`.
+- **Animacion del picazo**: el pico **gira sobre el punto donde lo agarra la mano** y baja
+  hasta tocar la part. El angulo del golpe se calcula con un raycast desde la mano al suelo
+  (`asin(altura / HEAD_REACH)`), asi que en una zona alta el golpe es corto y en una baja es
+  mas largo, sin atravesar el piso. Se interpola `Tool.Grip` en el servidor para que **todos**
+  los jugadores vean el golpe, y no hace falta subir ninguna animacion. Si subes una propia,
+  pon su id en `ANIMATION_ID`.
+- **Popup de dinero**: al sumar, aparece un cartel con un `ImageLabel` arriba (tu icono) y un
+  `TextLabel` debajo (`+1`, `+5`, ...) en un punto **random alrededor del jugador**, que sube
+  y se desvanece. Todo configurable en `POPUP`.
 - **Zona**: raycast hacia abajo desde el jugador. En la version modular, primero se usa la
   part apuntada con el mouse y si no es zona, se cae al raycast.
 - **Anti-exploit**: cooldown por jugador (0.55 s) y todo el dinero se calcula en el servidor.
@@ -84,9 +93,42 @@ de lo que estas pisando. Ponlo en `false` cuando ya funcione.
 
 ### Ajustes
 
-En `standalone/PickaxeAllInOne.server.lua` (o en `src/ReplicatedStorage/MiningConfig.lua`):
-`REWARDS` (cuanto suma cada zona), `SWING_COOLDOWN` (velocidad de picado),
-`GROUND_CHECK_DISTANCE`, `ANIMATION_ID` y `HIT_SOUND_ID`.
+Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
+`standalone/PickaxeAllInOne.server.lua` si usas la version de un archivo).
+
+**Recompensas y ritmo**: `REWARDS`, `SWING_COOLDOWN`, `MAX_REACH`, `GROUND_CHECK_DISTANCE`.
+
+**El pico** (`PICKAXE`):
+
+| Campo | Para que sirve |
+| --- | --- |
+| `HANDLE_SIZE` | Tamano del mango. El largo va en Z |
+| `HEAD_SIZE`, `HEAD_COLOR`, `HEAD_ANGLE` | Cabeza de metal y cuanto se abren las puntas |
+| `GRIP_OFFSET` | Donde agarra la mano el mango (Z positivo = mas atras) |
+| `GRIP_ROTATION` | Rotacion del agarre en grados, si queda raro en la mano |
+
+**El picazo** (`SWING`):
+
+| Campo | Para que sirve |
+| --- | --- |
+| `START_ANGLE` | Cuanto se levanta el pico antes de golpear |
+| `MAX_ANGLE` | Limite hacia abajo, para no atravesar el piso |
+| `HEAD_REACH` | Studs desde el agarre hasta la punta (define el angulo del golpe) |
+| `RAISE_TIME`, `STRIKE_TIME`, `HOLD_TIME`, `RETURN_TIME` | Duraciones de cada fase |
+| `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |
+
+**El popup** (`POPUP`):
+
+| Campo | Para que sirve |
+| --- | --- |
+| `IMAGE_ID` | Tu icono: `"rbxassetid://..."`. Vacio = circulo del color de abajo |
+| `IMAGE_COLOR`, `IMAGE_TRANSPARENCY` | Color y transparencia del icono |
+| `TEXT_FORMAT` | Texto de abajo, `%d` es la cantidad. Ej: `"+%d money"` |
+| `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |
+| `WIDTH`, `HEIGHT`, `IMAGE_RATIO` | Tamano del cartel en studs y cuanto ocupa la imagen |
+| `MIN_RADIUS`, `MAX_RADIUS`, `MIN_HEIGHT`, `MAX_HEIGHT` | Zona random alrededor del jugador |
+| `RISE_HEIGHT`, `DURATION` | Cuanto sube y cuanto dura antes de desaparecer |
+| `ALWAYS_ON_TOP`, `MAX_DISTANCE` | Si se ve atravesando paredes y desde cuan lejos |
 
 El money no se guarda entre sesiones a proposito. Para eso hay que agregar `DataStoreService`
 leyendo/escribiendo `player.leaderstats.money` en `PlayerAdded` / `PlayerRemoving` + `BindToClose`.

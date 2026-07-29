@@ -1,19 +1,20 @@
 --[[
 	PICKAXE + MONEY  (VERSION TODO EN UNO)
 
-	INSTALACION:
-	1. En Studio, click derecho en ServerScriptService > Insert Object > Script
-	2. Pega TODO este codigo dentro
-	3. Play
+	Alternativa a la version modular de src/ para quien no usa Rojo.
+	NO uses las dos a la vez: harian el trabajo doble.
 
-	No necesita ModuleScripts, ni RemoteEvent, ni LocalScript.
-	Click izquierdo con el pico equipado = picazo + money segun la zona pisada.
+	INSTALACION:
+	1. ServerScriptService > Insert Object > Script
+	2. Pega TODO este codigo
+	3. Play
 
 	Naturaleza = 1 | Desierto = 5 | Mina = 10 | Luna = 25 | Dulces = 50
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local StarterPack = game:GetService("StarterPack")
 
@@ -41,9 +42,56 @@ local ZONE_COLORS = {
 	Dulces = Color3.fromRGB(245, 120, 190),
 }
 
-local SWING_COOLDOWN = 0.55 -- segundos entre picazos
-local GROUND_CHECK_DISTANCE = 12 -- cuanto se busca hacia abajo la zona
-local DEBUG = true -- pon false cuando ya funcione
+local SWING_COOLDOWN = 0.55
+local GROUND_CHECK_DISTANCE = 12
+local DEBUG = true
+
+-- El pico: mango a lo largo del eje Z, punta hacia -Z
+local PICKAXE = {
+	HANDLE_SIZE = Vector3.new(0.3, 0.3, 3),
+	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
+	HEAD_SIZE = Vector3.new(1.3, 0.4, 0.35),
+	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
+	HEAD_ANGLE = 14,
+	GRIP_OFFSET = Vector3.new(0, 0, 1.2),
+	GRIP_ROTATION = Vector3.new(0, 0, 0),
+}
+
+-- El picazo: gira sobre el punto de agarre y baja hasta tocar el suelo
+local SWING = {
+	START_ANGLE = -50,
+	MAX_ANGLE = 88,
+	HEAD_REACH = 2.7, -- del agarre a la punta: 1.2 + 1.5 con el mango por defecto
+	RAISE_TIME = 0.14,
+	STRIKE_TIME = 0.08,
+	HOLD_TIME = 0.06,
+	RETURN_TIME = 0.18,
+	AXIS_SIGN = 1, -- pon -1 si el pico gira al lado contrario
+}
+
+-- Cartel flotante al ganar dinero
+local POPUP = {
+	ENABLED = true,
+	IMAGE_ID = "", -- tu icono: "rbxassetid://1234567890". Vacio = circulo de color
+	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
+	IMAGE_TRANSPARENCY = 0,
+	TEXT_FORMAT = "+%d",
+	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
+	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
+	TEXT_STROKE_TRANSPARENCY = 0,
+	FONT = Enum.Font.GothamBold,
+	WIDTH = 2.4,
+	HEIGHT = 2.4,
+	IMAGE_RATIO = 0.68,
+	ALWAYS_ON_TOP = false,
+	MAX_DISTANCE = 150,
+	MIN_RADIUS = 2,
+	MAX_RADIUS = 5,
+	MIN_HEIGHT = 0.5,
+	MAX_HEIGHT = 4,
+	RISE_HEIGHT = 3,
+	DURATION = 1.2,
+}
 
 local function log(...)
 	if DEBUG then
@@ -52,11 +100,12 @@ local function log(...)
 end
 
 --------------------------------------------------------------------------------
--- LA HERRAMIENTA (se construye por codigo)
+-- LA HERRAMIENTA (mango sobre el eje Z)
 --------------------------------------------------------------------------------
 
 local function weld(partA, partB)
 	local joint = Instance.new("Weld")
+	joint.Name = "PickaxeWeld"
 	joint.Part0 = partA
 	joint.Part1 = partB
 	joint.C0 = partA.CFrame:Inverse() * partB.CFrame
@@ -67,53 +116,55 @@ end
 local function buildPickaxe()
 	local tool = Instance.new("Tool")
 	tool.Name = TOOL_NAME
-	tool.ToolTip = "Pica el suelo para ganar money"
+	tool.ToolTip = "Pica el suelo para ganar " .. MONEY_NAME
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.3, 3, 0.3)
-	handle.Color = Color3.fromRGB(110, 75, 45)
+	handle.Size = PICKAXE.HANDLE_SIZE
+	handle.Color = PICKAXE.HANDLE_COLOR
 	handle.Material = Enum.Material.Wood
 	handle.TopSurface = Enum.SurfaceType.Smooth
 	handle.BottomSurface = Enum.SurfaceType.Smooth
 	handle.CanCollide = false
 	handle.Massless = true
+	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	local headLeft = Instance.new("Part")
-	headLeft.Name = "HeadLeft"
-	headLeft.Size = Vector3.new(1.4, 0.35, 0.4)
-	headLeft.Color = Color3.fromRGB(160, 160, 165)
-	headLeft.Material = Enum.Material.Metal
-	headLeft.CanCollide = false
-	headLeft.Massless = true
-	headLeft.CFrame = CFrame.new(-0.6, 1.4, 0) * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(12))
-	headLeft.Parent = tool
+	local headZ = -(PICKAXE.HANDLE_SIZE.Z / 2 - PICKAXE.HEAD_SIZE.Y / 2)
+	local headX = PICKAXE.HEAD_SIZE.X / 2
+	local headAngle = math.rad(PICKAXE.HEAD_ANGLE)
 
-	local headRight = Instance.new("Part")
-	headRight.Name = "HeadRight"
-	headRight.Size = headLeft.Size
-	headRight.Color = headLeft.Color
-	headRight.Material = headLeft.Material
-	headRight.CanCollide = false
-	headRight.Massless = true
-	headRight.CFrame = CFrame.new(0.6, 1.4, 0) * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(-12))
-	headRight.Parent = tool
+	local function makeHead(name, side)
+		local head = Instance.new("Part")
+		head.Name = name
+		head.Size = PICKAXE.HEAD_SIZE
+		head.Color = PICKAXE.HEAD_COLOR
+		head.Material = Enum.Material.Metal
+		head.TopSurface = Enum.SurfaceType.Smooth
+		head.BottomSurface = Enum.SurfaceType.Smooth
+		head.CanCollide = false
+		head.Massless = true
+		head.CFrame = handle.CFrame
+			* CFrame.new(headX * side, 0, headZ)
+			* CFrame.fromEulerAnglesXYZ(0, headAngle * side, 0)
+		head.Parent = tool
+		weld(handle, head)
+	end
 
-	weld(handle, headLeft)
-	weld(handle, headRight)
+	makeHead("HeadLeft", -1)
+	makeHead("HeadRight", 1)
 
-	-- Si te queda raro en la mano, ajusta este Grip
-	tool.Grip = CFrame.new(0, -1, 0)
+	local rotation = PICKAXE.GRIP_ROTATION
+	tool.Grip = CFrame.new(PICKAXE.GRIP_OFFSET)
+		* CFrame.fromEulerAnglesXYZ(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
 
 	return tool
 end
 
 local pickaxeTemplate = buildPickaxe()
 
--- Copia en StarterPack: asi todos los jugadores la reciben al spawnear
 if not StarterPack:FindFirstChild(TOOL_NAME) then
 	local starterCopy = pickaxeTemplate:Clone()
 	starterCopy.Parent = StarterPack
@@ -124,7 +175,7 @@ end
 -- VARIABLE money
 --------------------------------------------------------------------------------
 
-local money = {} -- money[player] = IntValue
+local money = {}
 
 local function setupMoney(player)
 	local leaderstats = player:FindFirstChild("leaderstats")
@@ -153,10 +204,98 @@ local function setupMoney(player)
 end
 
 --------------------------------------------------------------------------------
+-- POPUP: ImageLabel arriba + TextLabel abajo, en un punto random
+--------------------------------------------------------------------------------
+
+local random = Random.new()
+
+local function showPopup(character, amount)
+	if not POPUP.ENABLED then
+		return
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+
+	local angle = random:NextNumber(0, math.pi * 2)
+	local radius = random:NextNumber(POPUP.MIN_RADIUS, POPUP.MAX_RADIUS)
+	local height = random:NextNumber(POPUP.MIN_HEIGHT, POPUP.MAX_HEIGHT)
+
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "MoneyPopup"
+	attachment.Position = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+	attachment.Parent = root
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "MoneyPopupGui"
+	billboard.Size = UDim2.fromScale(POPUP.WIDTH, POPUP.HEIGHT)
+	billboard.AlwaysOnTop = POPUP.ALWAYS_ON_TOP
+	billboard.MaxDistance = POPUP.MAX_DISTANCE
+	billboard.LightInfluence = 0
+	billboard.Parent = attachment
+
+	local image = Instance.new("ImageLabel")
+	image.Name = "Icono"
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.fromScale(1, POPUP.IMAGE_RATIO)
+	image.Position = UDim2.fromScale(0, 0)
+	image.ScaleType = Enum.ScaleType.Fit
+	image.ImageColor3 = POPUP.IMAGE_COLOR
+	image.ImageTransparency = POPUP.IMAGE_TRANSPARENCY
+	image.Image = POPUP.IMAGE_ID
+	image.Parent = billboard
+
+	local usingPlaceholder = POPUP.IMAGE_ID == ""
+	if usingPlaceholder then
+		image.BackgroundTransparency = POPUP.IMAGE_TRANSPARENCY
+		image.BackgroundColor3 = POPUP.IMAGE_COLOR
+		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
+		image.AnchorPoint = Vector2.new(0.5, 0)
+		image.Position = UDim2.fromScale(0.5, 0)
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.5, 0)
+		corner.Parent = image
+	end
+
+	local label = Instance.new("TextLabel")
+	label.Name = "Cantidad"
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1 - POPUP.IMAGE_RATIO)
+	label.Position = UDim2.fromScale(0, POPUP.IMAGE_RATIO)
+	label.Font = POPUP.FONT
+	label.TextScaled = true
+	label.Text = string.format(POPUP.TEXT_FORMAT, amount)
+	label.TextColor3 = POPUP.TEXT_COLOR
+	label.TextStrokeColor3 = POPUP.TEXT_STROKE_COLOR
+	label.TextStrokeTransparency = POPUP.TEXT_STROKE_TRANSPARENCY
+	label.Parent = billboard
+
+	local riseInfo = TweenInfo.new(POPUP.DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(attachment, riseInfo, {
+		Position = attachment.Position + Vector3.new(0, POPUP.RISE_HEIGHT, 0),
+	}):Play()
+
+	local fadeTime = POPUP.DURATION * 0.5
+	local fadeInfo =
+		TweenInfo.new(fadeTime, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, POPUP.DURATION - fadeTime)
+
+	local imageGoal = { ImageTransparency = 1 }
+	if usingPlaceholder then
+		imageGoal.BackgroundTransparency = 1
+	end
+	TweenService:Create(image, fadeInfo, imageGoal):Play()
+	TweenService:Create(label, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+
+	Debris:AddItem(attachment, POPUP.DURATION + 0.25)
+end
+
+--------------------------------------------------------------------------------
 -- ZONAS
 --------------------------------------------------------------------------------
 
--- Sube por la jerarquia: sirve si la zona es una Part sola o un Model/Folder
 local function findZone(instance)
 	local current = instance
 	while current and current ~= workspace do
@@ -169,7 +308,6 @@ local function findZone(instance)
 	return nil, nil
 end
 
--- Zona sobre la que esta parado el jugador
 local function findZoneUnderCharacter(character)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root then
@@ -214,7 +352,36 @@ local function lerpGrip(tool, from, to, duration)
 	tool.Grip = to
 end
 
-local function playSwing(tool)
+local function pitch(degrees)
+	return CFrame.fromEulerAnglesXYZ(math.rad(degrees * SWING.AXIS_SIGN), 0, 0)
+end
+
+-- Angulo justo para que la punta del pico llegue al suelo
+local function computeStrikeAngle(character)
+	local hand = character:FindFirstChild("RightHand") -- R15
+		or character:FindFirstChild("Right Arm") -- R6
+		or character:FindFirstChild("HumanoidRootPart")
+	if not hand then
+		return SWING.MAX_ANGLE
+	end
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character }
+	params.IgnoreWater = true
+
+	local result = workspace:Raycast(hand.Position, Vector3.new(0, -GROUND_CHECK_DISTANCE, 0), params)
+	if not result then
+		return SWING.MAX_ANGLE
+	end
+
+	local height = hand.Position.Y - result.Position.Y
+	local ratio = math.clamp(height / SWING.HEAD_REACH, 0, 1)
+
+	return math.min(math.deg(math.asin(ratio)), SWING.MAX_ANGLE)
+end
+
+local function playSwing(tool, character)
 	if swinging[tool] then
 		return
 	end
@@ -226,14 +393,14 @@ local function playSwing(tool)
 		tool:SetAttribute("BaseGrip", baseGrip)
 	end
 
-	local raised = baseGrip * CFrame.fromEulerAnglesXYZ(math.rad(75), 0, 0)
-	local struck = baseGrip * CFrame.fromEulerAnglesXYZ(math.rad(-60), 0, 0)
+	local raised = baseGrip * pitch(SWING.START_ANGLE)
+	local struck = baseGrip * pitch(computeStrikeAngle(character))
 
 	task.spawn(function()
-		lerpGrip(tool, baseGrip, raised, 0.12) -- levanta el pico
-		lerpGrip(tool, raised, struck, 0.07) -- picazo
-		task.wait(0.05)
-		lerpGrip(tool, struck, baseGrip, 0.16) -- vuelve
+		lerpGrip(tool, baseGrip, raised, SWING.RAISE_TIME)
+		lerpGrip(tool, raised, struck, SWING.STRIKE_TIME)
+		task.wait(SWING.HOLD_TIME)
+		lerpGrip(tool, struck, baseGrip, SWING.RETURN_TIME)
 		tool.Grip = baseGrip
 		swinging[tool] = nil
 	end)
@@ -282,8 +449,7 @@ local function onActivated(tool)
 	end
 	lastSwing[player] = now
 
-	-- El picazo se ve siempre
-	playSwing(tool)
+	playSwing(tool, character)
 
 	local zoneName, reward, host, position = findZoneUnderCharacter(character)
 	if not zoneName then
@@ -295,6 +461,8 @@ local function onActivated(tool)
 		moneyValue.Value += reward
 		log(player.Name, "pico en", zoneName, "+" .. reward, "=> money:", moneyValue.Value)
 	end
+
+	showPopup(character, reward)
 
 	if host and position then
 		playHitEffect(host, position, zoneName)
@@ -341,31 +509,11 @@ local function onCharacterAdded(player, character)
 
 	watch(backpack)
 
-	-- Red de seguridad: si StarterPack no lo entrego, se lo damos aqui
 	task.wait(0.5)
 	if not backpack:FindFirstChild(TOOL_NAME) and not character:FindFirstChild(TOOL_NAME) then
 		local tool = pickaxeTemplate:Clone()
 		tool.Parent = backpack
 		log("Pico entregado manualmente a", player.Name)
-	end
-
-	-- DIAGNOSTICO: 2 segundos despues dice si el pico esta o no en la mochila.
-	-- Si dice que SI esta pero no lo ves en la pantalla, el problema es la
-	-- interfaz de la mochila (ver PickaxeBackpackFix), no la entrega del pico.
-	if DEBUG then
-		task.wait(2)
-		local names = {}
-		for _, child in backpack:GetChildren() do
-			table.insert(names, child.Name .. " (" .. child.ClassName .. ")")
-		end
-		log("Contenido del Backpack de " .. player.Name .. ": " .. (#names > 0 and table.concat(names, ", ") or "VACIO"))
-
-		local hasTool = backpack:FindFirstChild(TOOL_NAME) or character:FindFirstChild(TOOL_NAME)
-		if hasTool then
-			log("El pico SI existe. Si no lo ves, revisa la interfaz de la mochila.")
-		else
-			warn("[Pickaxe] El pico fue entregado pero YA NO ESTA: algun otro script de tu juego esta borrando las tools del Backpack.")
-		end
 	end
 end
 

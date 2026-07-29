@@ -1,7 +1,8 @@
 --[[
 	PickaxeTool
-	Construye la herramienta "Pickaxe" por codigo, asi no hay que armar nada a mano.
-	Si prefieres tu propio modelo, mira el README (seccion "Usar tu propio pico").
+	Construye la herramienta "Pickaxe" por codigo, con el mango a lo largo del eje Z.
+	La punta del pico apunta hacia -Z, asi el picazo (giro sobre el eje X) la baja
+	hacia el suelo.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,46 +23,58 @@ local function weld(partA: BasePart, partB: BasePart)
 end
 
 function PickaxeTool.build(): Tool
+	local settings = Config.PICKAXE
+
 	local tool = Instance.new("Tool")
 	tool.Name = Config.TOOL_NAME
-	tool.ToolTip = "Pica el suelo para ganar money"
+	tool.ToolTip = "Pica el suelo para ganar " .. Config.MONEY_NAME
 	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 
-	-- Mango
+	-- Mango: largo sobre el eje Z
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.3, 3, 0.3)
-	handle.Color = Color3.fromRGB(110, 75, 45)
+	handle.Size = settings.HANDLE_SIZE
+	handle.Color = settings.HANDLE_COLOR
 	handle.Material = Enum.Material.Wood
 	handle.TopSurface = Enum.SurfaceType.Smooth
 	handle.BottomSurface = Enum.SurfaceType.Smooth
 	handle.CanCollide = false
 	handle.Massless = true
+	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	-- Cabeza del pico (dos bloques en cruz sobre el mango)
-	local headLeft = Instance.new("Part")
-	headLeft.Name = "HeadLeft"
-	headLeft.Size = Vector3.new(1.4, 0.35, 0.4)
-	headLeft.Color = Color3.fromRGB(160, 160, 165)
-	headLeft.Material = Enum.Material.Metal
-	headLeft.CanCollide = false
-	headLeft.Massless = true
-	headLeft.CFrame = handle.CFrame * CFrame.new(-0.6, 1.4, 0) * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(12))
-	headLeft.Parent = tool
+	-- La cabeza va en la punta delantera del mango (-Z)
+	local headZ = -(settings.HANDLE_SIZE.Z / 2 - settings.HEAD_SIZE.Y / 2)
+	local headX = settings.HEAD_SIZE.X / 2
+	local headAngle = math.rad(settings.HEAD_ANGLE)
 
-	local headRight = headLeft:Clone()
-	headRight.Name = "HeadRight"
-	headRight.CFrame = handle.CFrame * CFrame.new(0.6, 1.4, 0) * CFrame.fromEulerAnglesXYZ(0, 0, math.rad(-12))
-	headRight.Parent = tool
+	local function makeHead(name: string, side: number)
+		local head = Instance.new("Part")
+		head.Name = name
+		head.Size = settings.HEAD_SIZE
+		head.Color = settings.HEAD_COLOR
+		head.Material = Enum.Material.Metal
+		head.TopSurface = Enum.SurfaceType.Smooth
+		head.BottomSurface = Enum.SurfaceType.Smooth
+		head.CanCollide = false
+		head.Massless = true
+		-- Barra sobre el eje X, girada sobre Y para que la punta quede echada hacia atras
+		head.CFrame = handle.CFrame
+			* CFrame.new(headX * side, 0, headZ)
+			* CFrame.fromEulerAnglesXYZ(0, headAngle * side, 0)
+		head.Parent = tool
+		weld(handle, head)
+		return head
+	end
 
-	weld(handle, headLeft)
-	weld(handle, headRight)
+	makeHead("HeadLeft", -1)
+	makeHead("HeadRight", 1)
 
-	-- Como se agarra: la mano toma el mango cerca de la parte baja.
-	-- Si en tu avatar queda raro, ajusta este Grip en Studio (o aqui mismo).
-	tool.Grip = CFrame.new(0, -1, 0)
+	-- Punto de agarre: la mano toma el mango por detras (Z positivo)
+	local rotation = settings.GRIP_ROTATION
+	tool.Grip = CFrame.new(settings.GRIP_OFFSET)
+		* CFrame.fromEulerAnglesXYZ(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
 
 	return tool
 end

@@ -15,6 +15,7 @@ local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local PickaxeTool = require(script.Parent:WaitForChild("PickaxeTool"))
+local MoneyPopup = require(script.Parent:WaitForChild("MoneyPopup"))
 
 --------------------------------------------------------------------------------
 -- Remote
@@ -165,8 +166,45 @@ local function playCustomAnimation(character: Model)
 	end
 end
 
--- Animacion procedural: gira el pico hacia atras y lo baja de golpe (el picazo).
--- Se hace en el servidor para que la vean todos los jugadores.
+-- Rotacion sobre el eje X del agarre: es lo que baja la punta del pico hacia el suelo
+local function pitch(degrees: number): CFrame
+	return CFrame.fromEulerAnglesXYZ(math.rad(degrees * Config.SWING.AXIS_SIGN), 0, 0)
+end
+
+-- Cuanto hay que girar el pico para que la punta llegue justo al suelo.
+-- Se mide la altura de la mano sobre el piso: si el piso esta muy abajo se usa el
+-- angulo maximo, y si esta muy cerca el golpe es mas corto.
+local function computeStrikeAngle(character: Model): number
+	local swing = Config.SWING
+
+	local hand = character:FindFirstChild("RightHand") -- R15
+		or character:FindFirstChild("Right Arm") -- R6
+		or character:FindFirstChild("HumanoidRootPart")
+	if not hand or not hand:IsA("BasePart") then
+		return swing.MAX_ANGLE
+	end
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character }
+	params.IgnoreWater = true
+
+	local result = workspace:Raycast(hand.Position, Vector3.new(0, -Config.GROUND_CHECK_DISTANCE, 0), params)
+	if not result then
+		return swing.MAX_ANGLE
+	end
+
+	local height = hand.Position.Y - result.Position.Y
+	local ratio = math.clamp(height / swing.HEAD_REACH, 0, 1)
+
+	-- La punta baja HEAD_REACH * sin(angulo), asi que este es el angulo justo para tocar
+	local angle = math.deg(math.asin(ratio))
+
+	return math.min(angle, swing.MAX_ANGLE)
+end
+
+-- Animacion procedural: el pico gira sobre el punto donde lo agarra la mano,
+-- se levanta y baja hasta tocar la part. Corre en el servidor para que la vean todos.
 local function playSwing(tool: Tool, character: Model)
 	if swinging[tool] then
 		return
@@ -175,20 +213,22 @@ local function playSwing(tool: Tool, character: Model)
 
 	playCustomAnimation(character)
 
+	local swing = Config.SWING
+
 	local baseGrip = tool:GetAttribute("BaseGrip")
 	if typeof(baseGrip) ~= "CFrame" then
 		baseGrip = tool.Grip
 		tool:SetAttribute("BaseGrip", baseGrip)
 	end
 
-	local raised = baseGrip * CFrame.fromEulerAnglesXYZ(math.rad(75), 0, 0)
-	local struck = baseGrip * CFrame.fromEulerAnglesXYZ(math.rad(-60), 0, 0)
+	local raised = baseGrip * pitch(swing.START_ANGLE)
+	local struck = baseGrip * pitch(computeStrikeAngle(character))
 
 	task.spawn(function()
-		lerpGrip(tool, baseGrip, raised, Config.SWING_UP_TIME)
-		lerpGrip(tool, raised, struck, Config.SWING_DOWN_TIME)
-		task.wait(Config.SWING_HOLD_TIME)
-		lerpGrip(tool, struck, baseGrip, Config.SWING_RETURN_TIME)
+		lerpGrip(tool, baseGrip, raised, swing.RAISE_TIME)
+		lerpGrip(tool, raised, struck, swing.STRIKE_TIME)
+		task.wait(swing.HOLD_TIME)
+		lerpGrip(tool, struck, baseGrip, swing.RETURN_TIME)
 		tool.Grip = baseGrip
 		swinging[tool] = nil
 	end)
@@ -297,6 +337,9 @@ swingRemote.OnServerEvent:Connect(function(player: Player, target: any, hitPosit
 	end
 
 	addMoney(player, reward)
+
+	-- Cartel flotante (+1, +5, ...) en un punto random alrededor del jugador
+	MoneyPopup.show(character, reward)
 
 	if effectHost and effectPosition then
 		playHitEffect(effectHost, effectPosition, zoneName)
