@@ -221,8 +221,11 @@ local function playSwing(tool: Tool, character: Model)
 		tool:SetAttribute("BaseGrip", baseGrip)
 	end
 
-	local raised = baseGrip * pitch(swing.START_ANGLE)
-	local struck = baseGrip * pitch(computeStrikeAngle(character))
+	-- El Grip en reposo ya viene inclinado REST_ANGLE, asi que los angulos del golpe
+	-- se aplican restando esa inclinacion (asi siguen siendo angulos absolutos).
+	local rest = Config.PICKAXE.REST_ANGLE
+	local raised = baseGrip * pitch(swing.START_ANGLE - rest)
+	local struck = baseGrip * pitch(computeStrikeAngle(character) - rest)
 
 	task.spawn(function()
 		lerpGrip(tool, baseGrip, raised, swing.RAISE_TIME)

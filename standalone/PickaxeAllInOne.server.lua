@@ -48,20 +48,22 @@ local DEBUG = true
 
 -- El pico: mango a lo largo del eje Z, punta hacia -Z
 local PICKAXE = {
-	HANDLE_SIZE = Vector3.new(0.3, 0.3, 3),
+	HANDLE_SIZE = Vector3.new(0.32, 0.32, 3),
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
-	HEAD_SIZE = Vector3.new(1.3, 0.4, 0.35),
+	-- Dos barras sobre el eje Y (punta arriba y punta abajo), en el plano del picazo
+	HEAD_SIZE = Vector3.new(0.4, 1.15, 0.5),
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_ANGLE = 14,
-	GRIP_OFFSET = Vector3.new(0, 0, 1.2),
+	HEAD_ANGLE = 24, -- cuanto se echan las puntas hacia atras
+	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
+	REST_ANGLE = -20, -- inclinacion en reposo (negativo = punta levantada)
 }
 
 -- El picazo: gira sobre el punto de agarre y baja hasta tocar el suelo
 local SWING = {
 	START_ANGLE = -50,
 	MAX_ANGLE = 88,
-	HEAD_REACH = 2.7, -- del agarre a la punta: 1.2 + 1.5 con el mango por defecto
+	HEAD_REACH = 3.2, -- studs del agarre a la punta del pico
 	RAISE_TIME = 0.14,
 	STRIKE_TIME = 0.08,
 	HOLD_TIME = 0.06,
@@ -132,9 +134,9 @@ local function buildPickaxe()
 	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	local headZ = -(PICKAXE.HANDLE_SIZE.Z / 2 - PICKAXE.HEAD_SIZE.Y / 2)
-	local headX = PICKAXE.HEAD_SIZE.X / 2
+	local headZ = -(PICKAXE.HANDLE_SIZE.Z / 2 - PICKAXE.HEAD_SIZE.X / 2)
 	local headAngle = math.rad(PICKAXE.HEAD_ANGLE)
+	local headLength = PICKAXE.HEAD_SIZE.Y
 
 	local function makeHead(name, side)
 		local head = Instance.new("Part")
@@ -147,18 +149,20 @@ local function buildPickaxe()
 		head.CanCollide = false
 		head.Massless = true
 		head.CFrame = handle.CFrame
-			* CFrame.new(headX * side, 0, headZ)
-			* CFrame.fromEulerAnglesXYZ(0, headAngle * side, 0)
+			* CFrame.new(0, 0, headZ)
+			* CFrame.fromEulerAnglesXYZ(headAngle * side, 0, 0)
+			* CFrame.new(0, side * headLength / 2, 0)
 		head.Parent = tool
 		weld(handle, head)
 	end
 
-	makeHead("HeadLeft", -1)
-	makeHead("HeadRight", 1)
+	makeHead("HeadUp", 1)
+	makeHead("HeadDown", -1)
 
 	local rotation = PICKAXE.GRIP_ROTATION
 	tool.Grip = CFrame.new(PICKAXE.GRIP_OFFSET)
 		* CFrame.fromEulerAnglesXYZ(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
+		* CFrame.fromEulerAnglesXYZ(math.rad(PICKAXE.REST_ANGLE * SWING.AXIS_SIGN), 0, 0)
 
 	return tool
 end
@@ -393,8 +397,11 @@ local function playSwing(tool, character)
 		tool:SetAttribute("BaseGrip", baseGrip)
 	end
 
-	local raised = baseGrip * pitch(SWING.START_ANGLE)
-	local struck = baseGrip * pitch(computeStrikeAngle(character))
+	-- El Grip en reposo ya viene inclinado REST_ANGLE, se resta para que los angulos
+	-- del golpe sigan siendo absolutos
+	local rest = PICKAXE.REST_ANGLE
+	local raised = baseGrip * pitch(SWING.START_ANGLE - rest)
+	local struck = baseGrip * pitch(computeStrikeAngle(character) - rest)
 
 	task.spawn(function()
 		lerpGrip(tool, baseGrip, raised, SWING.RAISE_TIME)

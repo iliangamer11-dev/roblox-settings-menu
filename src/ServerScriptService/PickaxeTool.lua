@@ -44,11 +44,13 @@ function PickaxeTool.build(): Tool
 	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	-- La cabeza va en la punta delantera del mango (-Z)
-	local headZ = -(settings.HANDLE_SIZE.Z / 2 - settings.HEAD_SIZE.Y / 2)
-	local headX = settings.HEAD_SIZE.X / 2
+	-- La cabeza se cruza en la punta delantera del mango (-Z)
+	local headZ = -(settings.HANDLE_SIZE.Z / 2 - settings.HEAD_SIZE.X / 2)
 	local headAngle = math.rad(settings.HEAD_ANGLE)
+	local headLength = settings.HEAD_SIZE.Y
 
+	-- side = 1 -> punta de arriba, side = -1 -> punta de abajo (la que golpea el suelo).
+	-- Las dos barras van sobre el eje Y y se echan hacia atras (+Z) para dar la curva del pico.
 	local function makeHead(name: string, side: number)
 		local head = Instance.new("Part")
 		head.Name = name
@@ -59,22 +61,24 @@ function PickaxeTool.build(): Tool
 		head.BottomSurface = Enum.SurfaceType.Smooth
 		head.CanCollide = false
 		head.Massless = true
-		-- Barra sobre el eje X, girada sobre Y para que la punta quede echada hacia atras
 		head.CFrame = handle.CFrame
-			* CFrame.new(headX * side, 0, headZ)
-			* CFrame.fromEulerAnglesXYZ(0, headAngle * side, 0)
+			* CFrame.new(0, 0, headZ)
+			* CFrame.fromEulerAnglesXYZ(headAngle * side, 0, 0)
+			* CFrame.new(0, side * headLength / 2, 0)
 		head.Parent = tool
 		weld(handle, head)
 		return head
 	end
 
-	makeHead("HeadLeft", -1)
-	makeHead("HeadRight", 1)
+	makeHead("HeadUp", 1)
+	makeHead("HeadDown", -1)
 
-	-- Punto de agarre: la mano toma el mango por detras (Z positivo)
+	-- Punto de agarre: la mano toma el mango por detras (Z positivo) y el pico queda
+	-- un poco levantado en reposo (REST_ANGLE).
 	local rotation = settings.GRIP_ROTATION
 	tool.Grip = CFrame.new(settings.GRIP_OFFSET)
 		* CFrame.fromEulerAnglesXYZ(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
+		* CFrame.fromEulerAnglesXYZ(math.rad(settings.REST_ANGLE * Config.SWING.AXIS_SIGN), 0, 0)
 
 	return tool
 end

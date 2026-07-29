@@ -49,18 +49,23 @@ MiningConfig.GROUND_CHECK_DISTANCE = 12
 
 MiningConfig.PICKAXE = {
 	-- El mango va a lo largo del eje Z. La punta del pico queda en -Z.
-	HANDLE_SIZE = Vector3.new(0.3, 0.3, 3),
+	HANDLE_SIZE = Vector3.new(0.32, 0.32, 3),
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
 
-	HEAD_SIZE = Vector3.new(1.3, 0.4, 0.35),
+	-- La cabeza son dos barras a lo largo del eje Y (una punta arriba y otra abajo),
+	-- o sea en el mismo plano en el que baja el picazo. Asi se ve como un pico de verdad
+	-- y la punta de abajo es la que golpea el suelo.
+	HEAD_SIZE = Vector3.new(0.4, 1.15, 0.5), -- (grosor X, largo de la punta Y, grosor Z)
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_ANGLE = 14, -- grados: cuanto se abren las dos puntas hacia atras
+	HEAD_ANGLE = 24, -- grados: cuanto se echan las puntas hacia atras (curva del pico)
 
 	-- Donde agarra la mano el mango (offset dentro del propio mango, en studs).
 	-- Z positivo = mas atras en el mango.
-	GRIP_OFFSET = Vector3.new(0, 0, 1.2),
+	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	-- Rotacion del agarre en grados (X, Y, Z). Cambialo si te queda raro en la mano.
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
+	-- Inclinacion en reposo: negativo = la punta queda levantada, listo para picar
+	REST_ANGLE = -20,
 }
 
 --------------------------------------------------------------------------------
@@ -72,8 +77,8 @@ MiningConfig.SWING = {
 	START_ANGLE = -50, -- grados: cuanto se levanta el pico antes del golpe
 	MAX_ANGLE = 88, -- limite hacia abajo, para que no atraviese el piso
 	-- Studs desde el punto de agarre hasta la punta del pico.
-	-- Con el mango por defecto: 1.2 (agarre) + 1.5 (medio mango) = 2.7
-	HEAD_REACH = 2.7,
+	-- Con el mango por defecto: 1.3 (agarre) + 1.5 (medio mango) + la punta = ~3.2
+	HEAD_REACH = 3.2,
 
 	RAISE_TIME = 0.14, -- levantar
 	STRIKE_TIME = 0.08, -- bajar (el picazo)
