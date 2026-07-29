@@ -296,6 +296,24 @@ function SpawnPointRegistry:GetCount(): number
 	return self._count
 end
 
+--[[
+	Volcado del estado de cada punto, para diagnostico.
+--]]
+function SpawnPointRegistry:Describe(): { any }
+	local list = {}
+	for part, descriptor in pairs(self._points) do
+		table.insert(list, {
+			Name = part:GetFullName(),
+			ZoneId = descriptor.ZoneId,
+			Weight = descriptor.Weight,
+			Active = descriptor.Active,
+			MaxActive = descriptor.MaxActive,
+			Size = tostring(part.Size),
+		})
+	end
+	return list
+end
+
 function SpawnPointRegistry:GetZones(): { [string]: number }
 	local zones = {}
 	for _, descriptor in pairs(self._points) do

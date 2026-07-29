@@ -204,6 +204,68 @@ function BalloonManager:Start()
 		self._spawnPoints:GetCount(),
 		self:_typeCount()
 	)
+
+	task.spawn(function()
+		self:_selfCheck()
+	end)
+end
+
+--[[
+	Comprobacion automatica: si a los pocos segundos no hay ni un globo, se
+	imprime el estado completo del sistema en lugar de fallar en silencio.
+	Un sistema de aparicion que no aparece nada y no dice nada es lo peor que
+	puede pasarle a quien lo tiene que depurar.
+--]]
+function BalloonManager:_selfCheck()
+	task.wait(3)
+
+	if self._activeCount > 0 then
+		local sample
+		for _, entry in pairs(self._active) do
+			sample = entry
+			break
+		end
+
+		log:Info(
+			"Comprobacion OK: %d globos activos. Ejemplo: '%s' (%s) en %s",
+			self._activeCount,
+			sample.Id,
+			sample.DefinitionId,
+			tostring(sample.Position)
+		)
+		return
+	end
+
+	log:Error("NINGUN globo ha aparecido tras 3 s. Estado del sistema:")
+	log:Warn("  Spawning.Enabled = %s", tostring(SPAWNING.Enabled))
+	log:Warn("  planificador corriendo = %s", tostring(self._running))
+	log:Warn("  tipos en el catalogo = %d", self:_typeCount())
+	log:Warn("  contenedor = %s", self._container:GetFullName())
+
+	local points = self._spawnPoints:Describe()
+	log:Warn("  puntos de aparicion = %d", #points)
+	for _, point in ipairs(points) do
+		log:Warn(
+			"    '%s' zona=%s peso=%.1f activos=%d/%d tamano=%s",
+			point.Name,
+			point.ZoneId,
+			point.Weight,
+			point.Active,
+			point.MaxActive,
+			point.Size
+		)
+	end
+
+	for _, zoneId in ipairs(self._zoneOrder) do
+		local picker = self:_pickerFor(zoneId)
+		log:Warn("  zona '%s': %d tipos de globo elegibles", zoneId, picker:Count())
+	end
+
+	if #points == 0 then
+		log:Warn("  CAUSA PROBABLE: no hay ninguna Part en Workspace.World.Spawners")
+	elseif #self._zoneOrder == 0 then
+		log:Warn("  CAUSA PROBABLE: ninguna zona de ZoneConfig tiene BalloonIds")
+	end
 end
 
 function BalloonManager:Stop()

@@ -5,10 +5,9 @@
 	Lado cliente de los globos. Se encarga SOLO de lo visual: la aparicion, la
 	vida y las recompensas son responsabilidad del servidor.
 
-	Los globos se detectan por el tag "Balloon" de CollectionService, no
-	escuchando ChildAdded del contenedor. Con 150 globos apareciendo y
-	desapareciendo continuamente, los tags permiten reaccionar sin recorrer el
-	arbol.
+	Los globos se detectan escuchando Workspace.World.Balloons, el contenedor
+	que el servidor replica. No se usan tags de CollectionService porque los
+	tags anadidos en runtime NO se replican al cliente.
 
 	OPTIMIZACION DEL BALANCEO
 
@@ -31,7 +30,6 @@
 		* Resaltado del globo apuntado por la Tool (`GetBalloonData`).
 --]]
 
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -43,7 +41,6 @@ local Net = require(Shared.Network.Net)
 
 local log = Logger.new("BalloonController")
 
-local TAG = Config.Game.Tags.Balloon
 local ATTR = Config.Balloons.Attributes
 local VISUALS = Config.Balloons.Visuals
 
@@ -56,6 +53,7 @@ BalloonController.Priority = 400
 --------------------------------------------------------------------------------
 
 function BalloonController:Init()
+	self._container = nil
 	-- instancia -> { Instance, Phase, LastOffset }
 	self._tracked = {}
 	self._trackedCount = 0
@@ -67,16 +65,34 @@ function BalloonController:Init()
 end
 
 function BalloonController:Start()
-	for _, instance in ipairs(CollectionService:GetTagged(TAG)) do
-		self:_track(instance)
+	--[[
+		IMPORTANTE: los tags de CollectionService NO se replican entre servidor
+		y cliente. Solo existen en ambos lados si se guardaron en el archivo del
+		lugar desde Studio. Un tag anadido en runtime por el servidor es
+		invisible aqui, asi que el seguimiento va por el contenedor replicado.
+		El tag sigue siendo util en el servidor y para instancias colocadas a
+		mano en el mapa.
+	--]]
+	local world = Workspace:WaitForChild(Config.Game.Containers.World, 30)
+	local container = world and world:WaitForChild(Config.Game.Containers.Balloons, 30)
+
+	if not container then
+		log:Error("No se encontro Workspace.%s.%s", Config.Game.Containers.World, Config.Game.Containers.Balloons)
+		return
 	end
 
-	CollectionService:GetInstanceAddedSignal(TAG):Connect(function(instance)
-		self:_track(instance)
+	self._container = container
+
+	for _, child in ipairs(container:GetChildren()) do
+		self:_track(child)
+	end
+
+	container.ChildAdded:Connect(function(child)
+		self:_track(child)
 	end)
 
-	CollectionService:GetInstanceRemovedSignal(TAG):Connect(function(instance)
-		self:_untrack(instance)
+	container.ChildRemoved:Connect(function(child)
+		self:_untrack(child)
 	end)
 
 	-- Remotes reservados para efectos puntuales. La aparicion normal NO usa
