@@ -6,6 +6,9 @@
 
 local MiningConfig = {}
 
+-- true = escribe en Output el mineral y el dinero de cada picazo
+MiningConfig.DEBUG = false
+
 -- Nombre de la variable de dinero (aparece en leaderstats como "money")
 MiningConfig.MONEY_NAME = "money"
 MiningConfig.STARTING_MONEY = 0
@@ -16,8 +19,9 @@ MiningConfig.TOOL_NAME = "Pickaxe"
 -- Nombre del RemoteEvent que crea el servidor en ReplicatedStorage
 MiningConfig.REMOTE_NAME = "PickaxeSwing"
 
--- Dinero que suma cada picazo segun la zona (nombre exacto de la Part)
-MiningConfig.REWARDS = {
+-- Multiplicador de cada zona (nombre exacto de la Part).
+-- Dinero final = dinero base del mineral * multiplicador de la zona.
+MiningConfig.ZONE_MULTIPLIERS = {
 	Naturaleza = 1,
 	Desierto = 5,
 	Mina = 10,
@@ -25,7 +29,24 @@ MiningConfig.REWARDS = {
 	Dulces = 50,
 }
 
--- Color de las chispas del picazo por zona
+-- Minerales: probabilidad en %, dinero base y color que se usa en el popup.
+-- Las probabilidades suman 100, pero no hace falta que sumen exactamente eso:
+-- el sorteo usa el total real, asi que puedes anadir minerales sin recalcular nada.
+MiningConfig.MINERALS = {
+	{ NAME = "Piedra", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
+	{ NAME = "Carbon", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
+	{ NAME = "Cobre", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
+	{ NAME = "Hierro", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
+	{ NAME = "Oro", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
+	{ NAME = "Zafiro", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
+	{ NAME = "Amatista", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
+	{ NAME = "Diamante", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
+	{ NAME = "Esmeralda", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
+	-- RAINBOW = el color va cambiando (efecto arcoiris) y suelta mas chispas
+	{ NAME = "Legendario", CHANCE = 0.05, MONEY = 10000, COLOR = Color3.fromRGB(255, 255, 255), RAINBOW = true },
+}
+
+-- Color de cada zona, solo se usa para pintar las plataformas de prueba de ZonesSetup
 MiningConfig.ZONE_COLORS = {
 	Naturaleza = Color3.fromRGB(88, 200, 96),
 	Desierto = Color3.fromRGB(235, 200, 120),
@@ -43,8 +64,8 @@ MiningConfig.HOLE = {
 	MATERIAL = Enum.Material.Slate,
 	LIFETIME = 2, -- segundos que tarda en desaparecer
 
-	-- Si es true, el agujero usa el color de la zona oscurecido en vez de COLOR
-	USE_ZONE_COLOR = false,
+	-- Si es true, el agujero usa el color del mineral oscurecido en vez de COLOR
+	USE_MINERAL_COLOR = false,
 	DARKEN = 0.55,
 }
 
@@ -130,8 +151,15 @@ MiningConfig.POPUP = {
 	-- si ves el circulo pero no tu icono, el id de la imagen es el problema.
 	ALWAYS_SHOW_CIRCLE = false,
 
-	-- Texto de abajo. %d es la cantidad ganada.
-	TEXT_FORMAT = "+%d",
+	-- Texto de abajo. %s es la cantidad ya formateada (20.000 en vez de 20000).
+	TEXT_FORMAT = "+%s$",
+	-- true = ademas del dinero, escribe el nombre del mineral encima
+	SHOW_MINERAL_NAME = false,
+
+	-- El circulo (y la imagen, si no lo desactivas) se pintan del color del mineral
+	USE_MINERAL_COLOR = true,
+	-- Vueltas por segundo del arcoiris del mineral legendario
+	RAINBOW_SPEED = 1.2,
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
 	TEXT_STROKE_TRANSPARENCY = 0,

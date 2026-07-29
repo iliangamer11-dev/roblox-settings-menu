@@ -19,7 +19,7 @@ local ZONE_GAP = 10
 
 local function zoneAlreadyExists(): boolean
 	for _, descendant in workspace:GetDescendants() do
-		if Config.REWARDS[descendant.Name] then
+		if Config.ZONE_MULTIPLIERS[descendant.Name] then
 			return true
 		end
 	end
@@ -58,6 +58,6 @@ for index, zoneName in ZONE_ORDER do
 	label.TextScaled = true
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0
-	label.Text = string.format("%s (+%d money)", zoneName, Config.REWARDS[zoneName])
+	label.Text = string.format("%s (x%d)", zoneName, Config.ZONE_MULTIPLIERS[zoneName])
 	label.Parent = sign
 end

@@ -16,6 +16,7 @@ local Debris = game:GetService("Debris")
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local PickaxeTool = require(script.Parent:WaitForChild("PickaxeTool"))
 local MoneyPopup = require(script.Parent:WaitForChild("MoneyPopup"))
+local Minerals = require(script.Parent:WaitForChild("Minerals"))
 
 --------------------------------------------------------------------------------
 -- Remote
@@ -82,9 +83,9 @@ end
 local function findZone(instance: Instance?): (string?, number?)
 	local current = instance
 	while current and current ~= workspace do
-		local reward = Config.REWARDS[current.Name]
-		if reward then
-			return current.Name, reward
+		local multiplier = Config.ZONE_MULTIPLIERS[current.Name]
+		if multiplier then
+			return current.Name, multiplier
 		end
 		current = current.Parent
 	end
@@ -258,18 +259,15 @@ end
 --------------------------------------------------------------------------------
 
 -- Agujero que queda marcado donde se pico y desaparece a los HOLE.LIFETIME segundos
-local function spawnHole(position: Vector3, normal: Vector3, zoneName: string)
+local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
 	local cfg = Config.HOLE
 	if not cfg.ENABLED then
 		return
 	end
 
 	local color = cfg.COLOR
-	if cfg.USE_ZONE_COLOR then
-		local zoneColor = Config.ZONE_COLORS[zoneName]
-		if zoneColor then
-			color = zoneColor:Lerp(Color3.new(0, 0, 0), cfg.DARKEN)
-		end
+	if cfg.USE_MINERAL_COLOR and mineral and mineral.COLOR then
+		color = mineral.COLOR:Lerp(Color3.new(0, 0, 0), cfg.DARKEN)
 	end
 
 	local hole = Instance.new("Part")
@@ -293,23 +291,25 @@ local function spawnHole(position: Vector3, normal: Vector3, zoneName: string)
 	Debris:AddItem(hole, cfg.LIFETIME)
 end
 
--- Chispas en el punto golpeado, con el color de la zona.
+-- Chispas en el punto golpeado, del color del mineral que ha salido.
 -- Se usa un Attachment dentro de la propia zona (no hace falta crear partes extra).
-local function playHitEffect(host: BasePart, position: Vector3, zoneName: string)
+local function playHitEffect(host: BasePart, position: Vector3, mineral: any)
 	local attachment = Instance.new("Attachment")
 	attachment.Name = "PickaxeHit"
 	attachment.WorldPosition = position
 	attachment.Parent = host
 
 	local emitter = Instance.new("ParticleEmitter")
-	emitter.Color = ColorSequence.new(Config.ZONE_COLORS[zoneName] or Color3.new(1, 1, 1))
+	emitter.Color = ColorSequence.new(mineral and mineral.COLOR or Color3.new(1, 1, 1))
 	emitter.Lifetime = NumberRange.new(0.25, 0.45)
 	emitter.Rate = 0
 	emitter.Speed = NumberRange.new(6, 12)
 	emitter.SpreadAngle = Vector2.new(180, 180)
 	emitter.Size = NumberSequence.new(0.25)
 	emitter.Parent = attachment
-	emitter:Emit(18)
+
+	-- El legendario suelta bastante mas, para que se note el hallazgo
+	emitter:Emit(mineral and mineral.RAINBOW and 60 or 18)
 
 	if Config.HIT_SOUND_ID ~= "" then
 		local sound = Instance.new("Sound")
@@ -380,11 +380,11 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 	playSwing(tool, character)
 
 	-- 1) Donde cae el pico: delante del personaje
-	local zoneName, reward, effectHost, effectPosition, effectNormal
+	local zoneName, effectHost, effectPosition, effectNormal
 
 	local strikeHost, strikePosition, strikeNormal = findStrikePoint(character)
 	if strikeHost then
-		zoneName, reward = findZone(strikeHost)
+		zoneName = findZone(strikeHost)
 		if zoneName then
 			effectHost, effectPosition, effectNormal = strikeHost, strikePosition, strikeNormal
 		end
@@ -394,7 +394,7 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 	-- pero el efecto se deja igual en el punto donde cayo el pico
 	if not zoneName then
 		local standHost, standPosition, standNormal
-		zoneName, reward, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
+		zoneName, _, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
 		if zoneName then
 			effectHost = strikeHost or standHost
 			effectPosition = strikePosition or standPosition
@@ -402,11 +402,28 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 		end
 	end
 
-	if not zoneName or not reward then
+	if not zoneName then
 		return
 	end
 
+	-- Que mineral ha salido y cuanto vale en esta zona
+	local mineral = Minerals.roll()
+	local reward = Minerals.getReward(mineral, zoneName)
+
 	addMoney(player, reward)
+
+	if Config.DEBUG then
+		print(
+			string.format(
+				"[Mining] %s pico %s en %s (x%d) => +%s",
+				player.Name,
+				mineral.NAME,
+				zoneName,
+				Config.ZONE_MULTIPLIERS[zoneName] or 1,
+				Minerals.format(reward)
+			)
+		)
+	end
 
 	-- Los efectos salen en el instante en que la punta toca el suelo, no al hacer click.
 	-- El retardo se calcula solo con las duraciones de la animacion, asi que si cambias
@@ -416,12 +433,12 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 			return
 		end
 
-		-- Cartel flotante (+1, +5, ...) en un punto random alrededor del jugador
-		MoneyPopup.show(character, reward)
+		-- Cartel flotante con el color del mineral, en un punto random alrededor del jugador
+		MoneyPopup.show(character, reward, mineral)
 
 		if effectHost and effectHost.Parent and effectPosition then
-			playHitEffect(effectHost, effectPosition, zoneName)
-			spawnHole(effectPosition, effectNormal or Vector3.yAxis, zoneName)
+			playHitEffect(effectHost, effectPosition, mineral)
+			spawnHole(effectPosition, effectNormal or Vector3.yAxis, mineral)
 		end
 	end)
 end)

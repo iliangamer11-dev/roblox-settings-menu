@@ -26,7 +26,8 @@ local TOOL_NAME = "Pickaxe"
 local MONEY_NAME = "money"
 local STARTING_MONEY = 0
 
-local REWARDS = {
+-- Multiplicador de cada zona: dinero final = base del mineral * multiplicador
+local ZONE_MULTIPLIERS = {
 	Naturaleza = 1,
 	Desierto = 5,
 	Mina = 10,
@@ -34,12 +35,19 @@ local REWARDS = {
 	Dulces = 50,
 }
 
-local ZONE_COLORS = {
-	Naturaleza = Color3.fromRGB(88, 200, 96),
-	Desierto = Color3.fromRGB(235, 200, 120),
-	Mina = Color3.fromRGB(170, 170, 175),
-	Luna = Color3.fromRGB(150, 170, 230),
-	Dulces = Color3.fromRGB(245, 120, 190),
+-- Minerales: probabilidad en %, dinero base y color del popup.
+-- RAINBOW = el color cicla (arcoiris) y suelta muchas mas chispas.
+local MINERALS = {
+	{ NAME = "Piedra", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
+	{ NAME = "Carbon", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
+	{ NAME = "Cobre", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
+	{ NAME = "Hierro", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
+	{ NAME = "Oro", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
+	{ NAME = "Zafiro", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
+	{ NAME = "Amatista", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
+	{ NAME = "Diamante", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
+	{ NAME = "Esmeralda", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
+	{ NAME = "Legendario", CHANCE = 0.05, MONEY = 10000, COLOR = Color3.fromRGB(255, 255, 255), RAINBOW = true },
 }
 
 local SWING_COOLDOWN = 0.55
@@ -83,7 +91,7 @@ local HOLE = {
 	COLOR = Color3.fromRGB(38, 32, 28),
 	MATERIAL = Enum.Material.Slate,
 	LIFETIME = 2, -- segundos hasta que desaparece
-	USE_ZONE_COLOR = false, -- true = usa el color de la zona oscurecido
+	USE_MINERAL_COLOR = false, -- true = usa el color del mineral oscurecido
 	DARKEN = 0.55,
 }
 
@@ -93,7 +101,10 @@ local POPUP = {
 	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
 	IMAGE_TRANSPARENCY = 0,
 	ALWAYS_SHOW_CIRCLE = false, -- true = dibuja el circulo detras de tu imagen (para depurar)
-	TEXT_FORMAT = "+%d",
+	TEXT_FORMAT = "+%s$", -- %s es la cantidad ya formateada (20.000)
+	SHOW_MINERAL_NAME = false, -- true = escribe tambien el nombre del mineral
+	USE_MINERAL_COLOR = true, -- el circulo/imagen se pinta del color del mineral
+	RAINBOW_SPEED = 1.2, -- vueltas por segundo del arcoiris del legendario
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
 	TEXT_STROKE_TRANSPARENCY = 0,
@@ -255,7 +266,39 @@ local function normalizeImageId(value)
 	return value
 end
 
-local function showPopup(character, amount)
+-- Sorteo del mineral segun las probabilidades de MINERALS (siempre en el servidor)
+local totalChance = 0
+for _, mineral in MINERALS do
+	totalChance += mineral.CHANCE
+end
+
+local function rollMineral()
+	local roll = random:NextNumber(0, totalChance)
+	local accumulated = 0
+
+	for _, mineral in MINERALS do
+		accumulated += mineral.CHANCE
+		if roll <= accumulated then
+			return mineral
+		end
+	end
+
+	return MINERALS[#MINERALS]
+end
+
+-- "1000000" -> "1.000.000"
+local function formatMoney(value)
+	local text = tostring(math.floor(value))
+	local replacements
+
+	repeat
+		text, replacements = string.gsub(text, "^(-?%d+)(%d%d%d)", "%1.%2")
+	until replacements == 0
+
+	return text
+end
+
+local function showPopup(character, amount, mineral)
 	if not POPUP.ENABLED then
 		return
 	end
@@ -263,6 +306,12 @@ local function showPopup(character, amount)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root then
 		return
+	end
+
+	-- El color depende del mineral que ha salido
+	local color = POPUP.IMAGE_COLOR
+	if POPUP.USE_MINERAL_COLOR and mineral and mineral.COLOR then
+		color = mineral.COLOR
 	end
 
 	local angle = random:NextNumber(0, math.pi * 2)
@@ -289,7 +338,7 @@ local function showPopup(character, amount)
 	image.Size = UDim2.fromScale(POPUP.IMAGE_SCALE, POPUP.IMAGE_RATIO * POPUP.IMAGE_SCALE)
 	image.Position = UDim2.fromScale(0.5, POPUP.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
-	image.ImageColor3 = POPUP.IMAGE_COLOR
+	image.ImageColor3 = color
 	image.ImageTransparency = POPUP.IMAGE_TRANSPARENCY
 
 	local imageId = normalizeImageId(POPUP.IMAGE_ID)
@@ -299,7 +348,7 @@ local function showPopup(character, amount)
 	local usingPlaceholder = imageId == "" or POPUP.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = POPUP.IMAGE_TRANSPARENCY
-		image.BackgroundColor3 = POPUP.IMAGE_COLOR
+		image.BackgroundColor3 = color
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
 
 		local corner = Instance.new("UICorner")
@@ -314,11 +363,44 @@ local function showPopup(character, amount)
 	label.Position = UDim2.fromScale(0, POPUP.IMAGE_RATIO)
 	label.Font = POPUP.FONT
 	label.TextScaled = true
-	label.Text = string.format(POPUP.TEXT_FORMAT, amount)
+	label.Text = string.format(POPUP.TEXT_FORMAT, formatMoney(amount))
 	label.TextColor3 = POPUP.TEXT_COLOR
 	label.TextStrokeColor3 = POPUP.TEXT_STROKE_COLOR
 	label.TextStrokeTransparency = POPUP.TEXT_STROKE_TRANSPARENCY
 	label.Parent = billboard
+
+	-- Nombre del mineral encima del dinero (opcional)
+	local nameLabel = nil
+	if POPUP.SHOW_MINERAL_NAME and mineral and mineral.NAME then
+		nameLabel = label:Clone()
+		nameLabel.Name = "Mineral"
+		nameLabel.Text = mineral.NAME
+		nameLabel.TextColor3 = color
+		nameLabel.Size = UDim2.fromScale(1, (1 - POPUP.IMAGE_RATIO) * 0.7)
+		nameLabel.Position = UDim2.fromScale(0, -(1 - POPUP.IMAGE_RATIO) * 0.7)
+		nameLabel.Parent = billboard
+	end
+
+	-- Mineral legendario: el color va cambiando
+	if mineral and mineral.RAINBOW then
+		task.spawn(function()
+			local startClock = os.clock()
+			while attachment.Parent do
+				local hue = ((os.clock() - startClock) * POPUP.RAINBOW_SPEED) % 1
+				local rainbow = Color3.fromHSV(hue, 1, 1)
+
+				image.ImageColor3 = rainbow
+				if usingPlaceholder then
+					image.BackgroundColor3 = rainbow
+				end
+				if nameLabel then
+					nameLabel.TextColor3 = rainbow
+				end
+
+				task.wait(0.05)
+			end
+		end)
+	end
 
 	local riseInfo = TweenInfo.new(POPUP.DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	TweenService:Create(attachment, riseInfo, {
@@ -335,6 +417,9 @@ local function showPopup(character, amount)
 	end
 	TweenService:Create(image, fadeInfo, imageGoal):Play()
 	TweenService:Create(label, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	if nameLabel then
+		TweenService:Create(nameLabel, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	end
 
 	Debris:AddItem(attachment, POPUP.DURATION + 0.25)
 end
@@ -346,9 +431,9 @@ end
 local function findZone(instance)
 	local current = instance
 	while current and current ~= workspace do
-		local reward = REWARDS[current.Name]
-		if reward then
-			return current.Name, reward
+		local multiplier = ZONE_MULTIPLIERS[current.Name]
+		if multiplier then
+			return current.Name, multiplier
 		end
 		current = current.Parent
 	end
@@ -403,17 +488,14 @@ local function findStrikePoint(character)
 end
 
 -- Agujero que queda marcado donde se pico
-local function spawnHole(position, normal, zoneName)
+local function spawnHole(position, normal, mineral)
 	if not HOLE.ENABLED then
 		return
 	end
 
 	local color = HOLE.COLOR
-	if HOLE.USE_ZONE_COLOR then
-		local zoneColor = ZONE_COLORS[zoneName]
-		if zoneColor then
-			color = zoneColor:Lerp(Color3.new(0, 0, 0), HOLE.DARKEN)
-		end
+	if HOLE.USE_MINERAL_COLOR and mineral and mineral.COLOR then
+		color = mineral.COLOR:Lerp(Color3.new(0, 0, 0), HOLE.DARKEN)
 	end
 
 	local hole = Instance.new("Part")
@@ -525,21 +607,22 @@ local function playSwing(tool, character)
 	end)
 end
 
-local function playHitEffect(host, position, zoneName)
+local function playHitEffect(host, position, mineral)
 	local attachment = Instance.new("Attachment")
 	attachment.Name = "PickaxeHit"
 	attachment.WorldPosition = position
 	attachment.Parent = host
 
 	local emitter = Instance.new("ParticleEmitter")
-	emitter.Color = ColorSequence.new(ZONE_COLORS[zoneName] or Color3.new(1, 1, 1))
+	emitter.Color = ColorSequence.new(mineral and mineral.COLOR or Color3.new(1, 1, 1))
 	emitter.Lifetime = NumberRange.new(0.25, 0.45)
 	emitter.Rate = 0
 	emitter.Speed = NumberRange.new(6, 12)
 	emitter.SpreadAngle = Vector2.new(180, 180)
 	emitter.Size = NumberSequence.new(0.25)
 	emitter.Parent = attachment
-	emitter:Emit(18)
+	-- El legendario suelta bastante mas, para que se note el hallazgo
+	emitter:Emit(mineral and mineral.RAINBOW and 60 or 18)
 
 	Debris:AddItem(attachment, 2)
 end
@@ -573,15 +656,15 @@ local function onActivated(tool)
 	-- El efecto va donde cae el pico (delante del personaje), no bajo sus pies
 	local host, position, normal = findStrikePoint(character)
 
-	local zoneName, reward
+	local zoneName, multiplier
 	if host then
-		zoneName, reward = findZone(host)
+		zoneName, multiplier = findZone(host)
 	end
 
 	-- Si delante no hay zona valida, se usa la que esta pisando
 	if not zoneName then
 		local standHost, standPosition, standNormal
-		zoneName, reward, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
+		zoneName, multiplier, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
 		host = host or standHost
 		position = position or standPosition
 		normal = normal or standNormal
@@ -591,10 +674,24 @@ local function onActivated(tool)
 		return
 	end
 
+	-- Que mineral ha salido y cuanto vale en esta zona
+	local mineral = rollMineral()
+	local reward = math.floor(mineral.MONEY * (multiplier or 1))
+
 	local moneyValue = money[player]
 	if moneyValue then
 		moneyValue.Value += reward
-		log(player.Name, "pico en", zoneName, "+" .. reward, "=> money:", moneyValue.Value)
+		log(
+			string.format(
+				"%s pico %s en %s (x%d) => +%s | money: %s",
+				player.Name,
+				mineral.NAME,
+				zoneName,
+				multiplier or 1,
+				formatMoney(reward),
+				formatMoney(moneyValue.Value)
+			)
+		)
 	end
 
 	-- Los efectos salen cuando la punta toca el suelo, no al hacer click.
@@ -604,11 +701,11 @@ local function onActivated(tool)
 			return
 		end
 
-		showPopup(character, reward)
+		showPopup(character, reward, mineral)
 
 		if host and host.Parent and position then
-			playHitEffect(host, position, zoneName)
-			spawnHole(position, normal or Vector3.yAxis, zoneName)
+			playHitEffect(host, position, mineral)
+			spawnHole(position, normal or Vector3.yAxis, mineral)
 		end
 	end)
 end

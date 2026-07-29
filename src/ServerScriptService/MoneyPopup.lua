@@ -3,6 +3,9 @@
 	Cartel flotante que aparece al ganar dinero: un ImageLabel arriba (configurable)
 	y un TextLabel debajo con la cantidad, en un punto random alrededor del jugador.
 
+	El color depende del mineral que haya salido, asi se identifica de un vistazo.
+	El mineral legendario cicla colores (arcoiris).
+
 	Todo se configura en MiningConfig.POPUP.
 ]]
 
@@ -11,6 +14,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
+local Minerals = require(script.Parent:WaitForChild("Minerals"))
 
 local MoneyPopup = {}
 
@@ -50,7 +54,8 @@ local function randomOffset(cfg): Vector3
 	return Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
 end
 
-function MoneyPopup.show(character: Model, amount: number)
+-- mineral es una entrada de MiningConfig.MINERALS (puede ser nil)
+function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 	local cfg = Config.POPUP
 	if not cfg.ENABLED then
 		return
@@ -59,6 +64,11 @@ function MoneyPopup.show(character: Model, amount: number)
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root or not root:IsA("BasePart") then
 		return
+	end
+
+	local color = cfg.IMAGE_COLOR
+	if cfg.USE_MINERAL_COLOR and mineral and mineral.COLOR then
+		color = mineral.COLOR
 	end
 
 	-- El Attachment engancha el cartel al jugador, asi lo sigue mientras se mueve
@@ -84,18 +94,18 @@ function MoneyPopup.show(character: Model, amount: number)
 	image.Size = UDim2.fromScale(cfg.IMAGE_SCALE, cfg.IMAGE_RATIO * cfg.IMAGE_SCALE)
 	image.Position = UDim2.fromScale(0.5, cfg.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
-	image.ImageColor3 = cfg.IMAGE_COLOR
+	image.ImageColor3 = color
 	image.ImageTransparency = cfg.IMAGE_TRANSPARENCY
 
 	local imageId = normalizeImageId(cfg.IMAGE_ID)
 	image.Image = imageId
 	image.Parent = billboard
 
-	-- Sin imagen (o con ALWAYS_SHOW_CIRCLE) se dibuja un circulo del color elegido
+	-- Sin imagen (o con ALWAYS_SHOW_CIRCLE) se dibuja un circulo del color del mineral
 	local usingPlaceholder = imageId == "" or cfg.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = cfg.IMAGE_TRANSPARENCY
-		image.BackgroundColor3 = cfg.IMAGE_COLOR
+		image.BackgroundColor3 = color
 		-- RelativeYY: el ancho sigue al alto para que el circulo salga redondo
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
 
@@ -112,11 +122,44 @@ function MoneyPopup.show(character: Model, amount: number)
 	label.Position = UDim2.fromScale(0, cfg.IMAGE_RATIO)
 	label.Font = cfg.FONT
 	label.TextScaled = true
-	label.Text = string.format(cfg.TEXT_FORMAT, amount)
+	label.Text = string.format(cfg.TEXT_FORMAT, Minerals.format(amount))
 	label.TextColor3 = cfg.TEXT_COLOR
 	label.TextStrokeColor3 = cfg.TEXT_STROKE_COLOR
 	label.TextStrokeTransparency = cfg.TEXT_STROKE_TRANSPARENCY
 	label.Parent = billboard
+
+	-- Nombre del mineral encima del dinero (opcional)
+	local nameLabel = nil
+	if cfg.SHOW_MINERAL_NAME and mineral and mineral.NAME then
+		nameLabel = label:Clone()
+		nameLabel.Name = "Mineral"
+		nameLabel.Text = mineral.NAME
+		nameLabel.TextColor3 = color
+		nameLabel.Size = UDim2.fromScale(1, (1 - cfg.IMAGE_RATIO) * 0.7)
+		nameLabel.Position = UDim2.fromScale(0, -(1 - cfg.IMAGE_RATIO) * 0.7)
+		nameLabel.Parent = billboard
+	end
+
+	-- Mineral legendario: el color va cambiando
+	if mineral and mineral.RAINBOW then
+		task.spawn(function()
+			local startClock = os.clock()
+			while attachment.Parent do
+				local hue = ((os.clock() - startClock) * cfg.RAINBOW_SPEED) % 1
+				local rainbow = Color3.fromHSV(hue, 1, 1)
+
+				image.ImageColor3 = rainbow
+				if usingPlaceholder then
+					image.BackgroundColor3 = rainbow
+				end
+				if nameLabel then
+					nameLabel.TextColor3 = rainbow
+				end
+
+				task.wait(0.05)
+			end
+		end)
+	end
 
 	-- Sube mientras se desvanece
 	local riseInfo = TweenInfo.new(cfg.DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -133,6 +176,9 @@ function MoneyPopup.show(character: Model, amount: number)
 	end
 	TweenService:Create(image, fadeInfo, imageGoal):Play()
 	TweenService:Create(label, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	if nameLabel then
+		TweenService:Create(nameLabel, fadeInfo, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	end
 
 	Debris:AddItem(attachment, cfg.DURATION + 0.25)
 end

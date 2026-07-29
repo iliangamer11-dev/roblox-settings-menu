@@ -3,16 +3,40 @@
 
 ## Sistema de mineria: Pickaxe + variable money
 
-Herramienta **Pickaxe** con animacion de picazo al click izquierdo, y una variable
-**money** que sube segun la zona donde esta parado el jugador.
+Herramienta **Pickaxe** con animacion de picazo al click izquierdo. Cada golpe saca un
+**mineral** al azar y suma a la variable **money**:
 
-| Zona (nombre de la Part) | money por picazo |
+```
+dinero = dinero base del mineral x multiplicador de la zona
+```
+
+**Minerales** (`MiningConfig.MINERALS`):
+
+| Mineral | Probabilidad | Base | Color del popup |
+| --- | --- | --- | --- |
+| Piedra | 55 % | 1 | gris |
+| Carbon | 20 % | 3 | negro |
+| Cobre | 10 % | 8 | marron |
+| Hierro | 7 % | 15 | gris claro |
+| Oro | 4 % | 40 | dorado |
+| Zafiro | 2 % | 80 | azul |
+| Amatista | 1 % | 150 | morado |
+| Diamante | 0,8 % | 400 | cian |
+| Esmeralda | 0,15 % | 1.000 | verde |
+| Legendario | 0,05 % | 10.000 | arcoiris (cambia de color) |
+
+**Zonas** (`MiningConfig.ZONE_MULTIPLIERS`):
+
+| Zona (nombre de la Part) | Multiplicador |
 | --- | --- |
-| Naturaleza | +1 |
-| Desierto | +5 |
-| Mina | +10 |
-| Luna | +25 |
-| Dulces | +50 |
+| Naturaleza | x1 |
+| Desierto | x5 |
+| Mina | x10 |
+| Luna | x25 |
+| Dulces | x50 |
+
+Ejemplos: Piedra en Naturaleza = 1, Piedra en Dulces = 50, Diamante en Dulces = 20.000,
+Legendario en Dulces = 500.000.
 
 Las zonas pueden ser una `Part` sola o un `Model`/`Folder` con ese nombre (el script
 sube por la jerarquia buscando el nombre), y pueden estar en cualquier parte de Workspace.
@@ -38,11 +62,12 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
 | `src/ServerScriptService/PickaxeTool.lua` | ServerScriptService | ModuleScript `PickaxeTool` |
 | `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
+| `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
 
-`MiningService`, `PickaxeTool` y `MoneyPopup` deben quedar hermanos dentro de
+`MiningService`, `PickaxeTool`, `MoneyPopup` y `Minerals` deben quedar hermanos dentro de
 `ServerScriptService`.
 
 ### Como funciona
@@ -113,7 +138,11 @@ Causas mas comunes:
 Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 `standalone/PickaxeAllInOne.server.lua` si usas la version de un archivo).
 
-**Recompensas y ritmo**: `REWARDS`, `SWING_COOLDOWN`, `GROUND_CHECK_DISTANCE`.
+**Recompensas y ritmo**: `MINERALS` (probabilidad, dinero base y color de cada mineral),
+`ZONE_MULTIPLIERS`, `SWING_COOLDOWN`, `GROUND_CHECK_DISTANCE`, `DEBUG`.
+
+Para anadir un mineral basta con meter otra entrada en `MINERALS`: el sorteo usa la suma
+real de las probabilidades, asi que no hay que recalcular nada para que sigan cuadrando.
 
 **El pico** (`PICKAXE`):
 
@@ -140,7 +169,7 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 
 **El agujero** (`HOLE`): marca oscura que queda donde se pico y desaparece a los
 `LIFETIME` segundos (2 por defecto). Se ajusta con `SIZE` (diametro), `DEPTH`, `COLOR`,
-`MATERIAL` y `USE_ZONE_COLOR` (usa el color de la zona oscurecido). Se crea con
+`MATERIAL` y `USE_MINERAL_COLOR` (usa el color del mineral oscurecido). Se crea con
 `CanQuery = false` para que no interfiera con los raycast de las zonas.
 
 **El popup** (`POPUP`):
@@ -150,7 +179,10 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 | `IMAGE_ID` | Tu icono: `"rbxassetid://..."` (o solo el numero). Vacio = circulo de color |
 | `ALWAYS_SHOW_CIRCLE` | `true` dibuja el circulo detras de tu imagen, para depurar |
 | `IMAGE_COLOR`, `IMAGE_TRANSPARENCY` | Color y transparencia del icono |
-| `TEXT_FORMAT` | Texto de abajo, `%d` es la cantidad. Ej: `"+%d money"` |
+| `TEXT_FORMAT` | Texto de abajo. `%s` es la cantidad formateada. Ej: `"+%s$"` |
+| `SHOW_MINERAL_NAME` | `true` escribe tambien el nombre del mineral |
+| `USE_MINERAL_COLOR` | El circulo/imagen se pinta del color del mineral |
+| `RAINBOW_SPEED` | Velocidad del arcoiris del mineral legendario |
 | `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |
 | `WIDTH`, `HEIGHT`, `IMAGE_RATIO` | Tamano del cartel en studs y cuanto ocupa la imagen |
 | `IMAGE_SCALE` | Escala fina de la imagen dentro de su hueco (`1` = a tope) |
