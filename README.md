@@ -68,6 +68,9 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
   encima...), se cobra la zona que esta pisando.
 - **Agujero**: cada picazo deja una marca oscura pegada a la superficie que desaparece a los
   2 segundos (`HOLE.LIFETIME`).
+- **Sincronizado con el impacto**: el popup, las chispas y el agujero salen cuando la punta
+  toca el suelo, no al hacer click. El retardo se calcula con `SWING.RAISE_TIME +
+  SWING.STRIKE_TIME`, asi que sigue cuadrando si cambias las duraciones.
 - **Anti-exploit**: cooldown por jugador (0.55 s) y todo el dinero se calcula en el servidor.
 - **Efecto**: chispas del color de la zona en el punto golpeado.
 

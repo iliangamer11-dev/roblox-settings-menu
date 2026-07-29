@@ -168,6 +168,12 @@ local function playCustomAnimation(character: Model)
 	end
 end
 
+-- Cuanto tarda la punta del pico en llegar al suelo desde el click
+local function impactDelay(): number
+	local swing = Config.SWING
+	return swing.RAISE_TIME + swing.STRIKE_TIME
+end
+
 -- Rotacion sobre el eje X del agarre: es lo que baja la punta del pico hacia el suelo
 local function pitch(degrees: number): CFrame
 	return CFrame.fromEulerAnglesXYZ(math.rad(degrees * Config.SWING.AXIS_SIGN), 0, 0)
@@ -394,13 +400,22 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 
 	addMoney(player, reward)
 
-	-- Cartel flotante (+1, +5, ...) en un punto random alrededor del jugador
-	MoneyPopup.show(character, reward)
+	-- Los efectos salen en el instante en que la punta toca el suelo, no al hacer click.
+	-- El retardo se calcula solo con las duraciones de la animacion, asi que si cambias
+	-- RAISE_TIME o STRIKE_TIME sigue quedando sincronizado.
+	task.delay(impactDelay(), function()
+		if not character.Parent or humanoid.Health <= 0 then
+			return
+		end
 
-	if effectHost and effectPosition then
-		playHitEffect(effectHost, effectPosition, zoneName)
-		spawnHole(effectPosition, effectNormal or Vector3.yAxis, zoneName)
-	end
+		-- Cartel flotante (+1, +5, ...) en un punto random alrededor del jugador
+		MoneyPopup.show(character, reward)
+
+		if effectHost and effectHost.Parent and effectPosition then
+			playHitEffect(effectHost, effectPosition, zoneName)
+			spawnHole(effectPosition, effectNormal or Vector3.yAxis, zoneName)
+		end
+	end)
 end)
 
 --------------------------------------------------------------------------------

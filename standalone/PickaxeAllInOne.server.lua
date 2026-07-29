@@ -581,12 +581,20 @@ local function onActivated(tool)
 		log(player.Name, "pico en", zoneName, "+" .. reward, "=> money:", moneyValue.Value)
 	end
 
-	showPopup(character, reward)
+	-- Los efectos salen cuando la punta toca el suelo, no al hacer click.
+	-- El retardo se saca de las duraciones de la animacion (levantar + bajar).
+	task.delay(SWING.RAISE_TIME + SWING.STRIKE_TIME, function()
+		if not character.Parent or humanoid.Health <= 0 then
+			return
+		end
 
-	if host and position then
-		playHitEffect(host, position, zoneName)
-		spawnHole(position, normal or Vector3.yAxis, zoneName)
-	end
+		showPopup(character, reward)
+
+		if host and host.Parent and position then
+			playHitEffect(host, position, zoneName)
+			spawnHole(position, normal or Vector3.yAxis, zoneName)
+		end
+	end)
 end
 
 local function hookTool(tool)
