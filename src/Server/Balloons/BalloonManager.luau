@@ -50,6 +50,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
+local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
@@ -179,7 +180,7 @@ function BalloonManager:Start()
 	self._spawnPoints:Scan()
 	self._spawnPoints:EnsureDefault(
 		self._spawnersFolder or self._container,
-		Vector3.new(0, 0, 0),
+		self:_defaultSpawnCenter(),
 		Vector3.new(160, 1, 160)
 	)
 
@@ -270,6 +271,26 @@ end
 
 function BalloonManager:Stop()
 	self._running = false
+end
+
+--[[
+	Centro del area de aparicion por defecto.
+
+	Se usa el SpawnLocation del mapa en lugar del origen del mundo: si el mapa
+	no esta construido en (0,0,0), poner los globos en el origen los deja lejos
+	del jugador o enterrados. Con esto aparecen donde el jugador entra, que es
+	lo que se espera al probar el sistema sin haber colocado puntos.
+--]]
+function BalloonManager:_defaultSpawnCenter(): Vector3
+	local spawnLocation = Workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+
+	if spawnLocation then
+		log:Debug("Area por defecto centrada en el SpawnLocation '%s'", spawnLocation:GetFullName())
+		return spawnLocation.Position
+	end
+
+	log:Debug("Sin SpawnLocation en el mapa: area por defecto en el origen")
+	return Vector3.new(0, 0, 0)
 end
 
 function BalloonManager:_typeCount(): number
