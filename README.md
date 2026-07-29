@@ -131,8 +131,8 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 
 | Campo | Para que sirve |
 | --- | --- |
-| `START_ANGLE` | Cuanto se levanta el pico antes de golpear |
-| `MAX_ANGLE` | Limite hacia abajo, para no atravesar el piso |
+| `START_ANGLE` | Angulo del amago antes de golpear (`-105` = algo por detras de la vertical) |
+| `MAX_ANGLE` | Angulo final del golpe (`95` = pasa un poco de la vertical) |
 | `HEAD_REACH` | Studs desde el agarre hasta la punta (define el angulo del golpe) |
 | `RAISE_TIME`, `STRIKE_TIME`, `HOLD_TIME`, `RETURN_TIME` | Duraciones de cada fase |
 | `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |

@@ -76,9 +76,11 @@ MiningConfig.PICKAXE = {
 	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	-- Rotacion del agarre en grados (X, Y, Z). Cambialo si te queda raro en la mano.
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
-	-- Inclinacion en reposo. 0 = pico totalmente recto (mango horizontal).
-	-- Negativo lo levanta, positivo lo baja.
-	REST_ANGLE = 0,
+	-- Inclinacion en reposo, en grados.
+	--   -90 = mango vertical, cabeza arriba (asi se lleva el pico en alto)
+	--     0 = mango horizontal, apuntando al frente
+	-- Si te queda apuntando al suelo en vez de al cielo, ponlo en 90.
+	REST_ANGLE = -90,
 }
 
 --------------------------------------------------------------------------------
@@ -87,14 +89,17 @@ MiningConfig.PICKAXE = {
 
 MiningConfig.SWING = {
 	-- El pico gira sobre el punto donde lo agarra la mano, bajando hasta tocar el suelo.
-	START_ANGLE = -22, -- grados: pequeno amago hacia arriba antes del golpe (0 = sin amago)
-	MAX_ANGLE = 95, -- limite hacia abajo. Pasa un poco de la vertical para clavar la punta
+	-- Los angulos son absolutos: 0 = mango horizontal, negativo = arriba, positivo = abajo.
+	START_ANGLE = -105, -- amago: un poco mas atras de la vertical antes de bajar
+	MAX_ANGLE = 95, -- final del golpe: pasa un poco de la vertical para clavar la punta
 	-- Studs desde el punto de agarre hasta la punta del pico.
 	-- Con el mango por defecto: 1.3 (agarre) + 1.5 (medio mango) = 2.8
 	HEAD_REACH = 2.8,
 
-	RAISE_TIME = 0.14, -- levantar
-	STRIKE_TIME = 0.08, -- bajar (el picazo)
+	-- Ahora el recorrido es de casi 200 grados, asi que la bajada necesita algo mas de
+	-- tiempo para que se vea el arco y no un teletransporte
+	RAISE_TIME = 0.12, -- amago hacia atras
+	STRIKE_TIME = 0.13, -- bajar (el picazo)
 	HOLD_TIME = 0.06, -- quedarse clavado un instante
 	RETURN_TIME = 0.18, -- volver a la posicion normal
 

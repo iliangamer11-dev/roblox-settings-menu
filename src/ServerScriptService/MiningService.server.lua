@@ -121,9 +121,17 @@ end
 
 local swinging = {} -- swinging[tool] = true mientras la animacion corre
 
-local function lerpGrip(tool: Tool, from: CFrame, to: CFrame, duration: number)
+-- Rotacion sobre el eje X del agarre: es lo que baja la punta del pico hacia el suelo.
+-- Angulos absolutos: 0 = mango horizontal, negativo = arriba, positivo = abajo.
+local function pitch(degrees: number): CFrame
+	return CFrame.fromEulerAnglesXYZ(math.rad(degrees * Config.SWING.AXIS_SIGN), 0, 0)
+end
+
+-- Se interpola el ANGULO, no el CFrame: CFrame:Lerp siempre coge el camino mas corto,
+-- y como el recorrido del picazo pasa de 180 grados, el pico giraria hacia atras.
+local function sweepGrip(tool: Tool, base: CFrame, fromAngle: number, toAngle: number, duration: number)
 	if duration <= 0 then
-		tool.Grip = to
+		tool.Grip = base * pitch(toAngle)
 		return
 	end
 
@@ -134,9 +142,10 @@ local function lerpGrip(tool: Tool, from: CFrame, to: CFrame, duration: number)
 			return
 		end
 		elapsed += dt
-		tool.Grip = from:Lerp(to, math.clamp(elapsed / duration, 0, 1))
+		local alpha = math.clamp(elapsed / duration, 0, 1)
+		tool.Grip = base * pitch(fromAngle + (toAngle - fromAngle) * alpha)
 	end
-	tool.Grip = to
+	tool.Grip = base * pitch(toAngle)
 end
 
 local function playCustomAnimation(character: Model)
@@ -172,11 +181,6 @@ end
 local function impactDelay(): number
 	local swing = Config.SWING
 	return swing.RAISE_TIME + swing.STRIKE_TIME
-end
-
--- Rotacion sobre el eje X del agarre: es lo que baja la punta del pico hacia el suelo
-local function pitch(degrees: number): CFrame
-	return CFrame.fromEulerAnglesXYZ(math.rad(degrees * Config.SWING.AXIS_SIGN), 0, 0)
 end
 
 -- Cuanto hay que girar el pico para que la punta llegue justo al suelo.
@@ -227,25 +231,24 @@ local function playSwing(tool: Tool, character: Model)
 	playCustomAnimation(character)
 
 	local swing = Config.SWING
+	local rest = Config.PICKAXE.REST_ANGLE
 
+	-- BaseGrip es el agarre "neutro" (mango horizontal, angulo 0). El Grip que trae la
+	-- Tool ya viene con la inclinacion de reposo, asi que se le quita para guardarlo.
 	local baseGrip = tool:GetAttribute("BaseGrip")
 	if typeof(baseGrip) ~= "CFrame" then
-		baseGrip = tool.Grip
+		baseGrip = tool.Grip * pitch(-rest)
 		tool:SetAttribute("BaseGrip", baseGrip)
 	end
 
-	-- El Grip en reposo ya viene inclinado REST_ANGLE, asi que los angulos del golpe
-	-- se aplican restando esa inclinacion (asi siguen siendo angulos absolutos).
-	local rest = Config.PICKAXE.REST_ANGLE
-	local raised = baseGrip * pitch(swing.START_ANGLE - rest)
-	local struck = baseGrip * pitch(computeStrikeAngle(character) - rest)
+	local strikeAngle = computeStrikeAngle(character)
 
 	task.spawn(function()
-		lerpGrip(tool, baseGrip, raised, swing.RAISE_TIME)
-		lerpGrip(tool, raised, struck, swing.STRIKE_TIME)
+		sweepGrip(tool, baseGrip, rest, swing.START_ANGLE, swing.RAISE_TIME)
+		sweepGrip(tool, baseGrip, swing.START_ANGLE, strikeAngle, swing.STRIKE_TIME)
 		task.wait(swing.HOLD_TIME)
-		lerpGrip(tool, struck, baseGrip, swing.RETURN_TIME)
-		tool.Grip = baseGrip
+		sweepGrip(tool, baseGrip, strikeAngle, rest, swing.RETURN_TIME)
+		tool.Grip = baseGrip * pitch(rest)
 		swinging[tool] = nil
 	end)
 end
