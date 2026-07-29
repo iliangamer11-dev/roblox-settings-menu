@@ -81,6 +81,16 @@ Los scripts traen `DEBUG = true`. En Output veras:
 Si al picar sale `Piso detectado: ... - no es una zona valida`, ahi te dice el nombre real
 de lo que estas pisando. Ponlo en `false` cuando ya funcione.
 
+**Si pusiste `IMAGE_ID` y no se ve la imagen**: pon `POPUP.ALWAYS_SHOW_CIRCLE = true`.
+Si aparece el circulo de color pero no tu icono, el problema es el id, no el cartel.
+Causas mas comunes:
+
+- Subiste la imagen como **Decal** y copiaste el id del decal. `ImageLabel` necesita el id
+  de la **imagen**: en Studio, `Asset Manager` > `Images` > clic derecho > copiar el id.
+- La imagen todavia esta en moderacion (tarda un rato en aprobarse).
+- Falta el prefijo. Los scripts ya lo agregan si pones solo numeros, pero el formato
+  correcto es `"rbxassetid://123456789"`.
+
 ### Scripts extra
 
 - [`standalone/PickaxeBackpackFix.client.lua`](standalone/PickaxeBackpackFix.client.lua):
@@ -119,11 +129,17 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 | `RAISE_TIME`, `STRIKE_TIME`, `HOLD_TIME`, `RETURN_TIME` | Duraciones de cada fase |
 | `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |
 
+**El agujero** (`HOLE`): marca oscura que queda donde se pico y desaparece a los
+`LIFETIME` segundos (2 por defecto). Se ajusta con `SIZE` (diametro), `DEPTH`, `COLOR`,
+`MATERIAL` y `USE_ZONE_COLOR` (usa el color de la zona oscurecido). Se crea con
+`CanQuery = false` para que no interfiera con los raycast de las zonas.
+
 **El popup** (`POPUP`):
 
 | Campo | Para que sirve |
 | --- | --- |
-| `IMAGE_ID` | Tu icono: `"rbxassetid://..."`. Vacio = circulo del color de abajo |
+| `IMAGE_ID` | Tu icono: `"rbxassetid://..."` (o solo el numero). Vacio = circulo de color |
+| `ALWAYS_SHOW_CIRCLE` | `true` dibuja el circulo detras de tu imagen, para depurar |
 | `IMAGE_COLOR`, `IMAGE_TRANSPARENCY` | Color y transparencia del icono |
 | `TEXT_FORMAT` | Texto de abajo, `%d` es la cantidad. Ej: `"+%d money"` |
 | `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |

@@ -15,6 +15,31 @@ local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local MoneyPopup = {}
 
 local random = Random.new()
+local warnedAboutId = false
+
+-- Acepta "rbxassetid://123", "123" o "" (vacio = sin imagen)
+local function normalizeImageId(value: any): string
+	if typeof(value) ~= "string" or value == "" then
+		return ""
+	end
+
+	local digits = string.match(value, "^%s*(%d+)%s*$")
+	if digits then
+		return "rbxassetid://" .. digits
+	end
+
+	local looksValid = string.find(value, "rbxassetid://", 1, true)
+		or string.find(value, "rbxasset://", 1, true)
+		or string.find(value, "rbxthumb://", 1, true)
+		or string.find(value, "http", 1, true)
+
+	if not looksValid and not warnedAboutId then
+		warnedAboutId = true
+		warn(string.format('[MoneyPopup] IMAGE_ID = "%s" no parece un id valido. Usa "rbxassetid://123456789".', value))
+	end
+
+	return value
+end
 
 -- Punto random alrededor del personaje (circulo con altura variable)
 local function randomOffset(cfg): Vector3
@@ -59,11 +84,13 @@ function MoneyPopup.show(character: Model, amount: number)
 	image.ScaleType = Enum.ScaleType.Fit
 	image.ImageColor3 = cfg.IMAGE_COLOR
 	image.ImageTransparency = cfg.IMAGE_TRANSPARENCY
-	image.Image = cfg.IMAGE_ID
+
+	local imageId = normalizeImageId(cfg.IMAGE_ID)
+	image.Image = imageId
 	image.Parent = billboard
 
-	-- Sin imagen configurada: se dibuja un circulo del color elegido
-	local usingPlaceholder = cfg.IMAGE_ID == ""
+	-- Sin imagen (o con ALWAYS_SHOW_CIRCLE) se dibuja un circulo del color elegido
+	local usingPlaceholder = imageId == "" or cfg.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = cfg.IMAGE_TRANSPARENCY
 		image.BackgroundColor3 = cfg.IMAGE_COLOR

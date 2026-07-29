@@ -107,10 +107,25 @@ local function findZoneUnderCharacter(character: Model)
 	if result then
 		local zoneName, reward = findZone(result.Instance)
 		if zoneName then
-			return zoneName, reward, result.Instance, result.Position
+			return zoneName, reward, result.Instance, result.Position, result.Normal
 		end
 	end
-	return nil, nil, nil, nil
+	return nil, nil, nil, nil, nil
+end
+
+-- Normal de la superficie en el punto golpeado, para apoyar bien el agujero.
+-- Se tira un rayo hacia abajo contra la propia zona; si falla, se asume suelo plano.
+local function surfaceNormalAt(host: BasePart, position: Vector3): Vector3
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = { host }
+	params.IgnoreWater = true
+
+	local result = workspace:Raycast(position + Vector3.new(0, 3, 0), Vector3.new(0, -6, 0), params)
+	if result then
+		return result.Normal
+	end
+	return Vector3.yAxis
 end
 
 --------------------------------------------------------------------------------
@@ -241,6 +256,42 @@ end
 -- Efecto del golpe
 --------------------------------------------------------------------------------
 
+-- Agujero que queda marcado donde se pico y desaparece a los HOLE.LIFETIME segundos
+local function spawnHole(position: Vector3, normal: Vector3, zoneName: string)
+	local cfg = Config.HOLE
+	if not cfg.ENABLED then
+		return
+	end
+
+	local color = cfg.COLOR
+	if cfg.USE_ZONE_COLOR then
+		local zoneColor = Config.ZONE_COLORS[zoneName]
+		if zoneColor then
+			color = zoneColor:Lerp(Color3.new(0, 0, 0), cfg.DARKEN)
+		end
+	end
+
+	local hole = Instance.new("Part")
+	hole.Name = "PickaxeHole"
+	hole.Shape = Enum.PartType.Cylinder
+	hole.Size = Vector3.new(cfg.DEPTH, cfg.SIZE, cfg.SIZE)
+	hole.Color = color
+	hole.Material = cfg.MATERIAL
+	hole.Anchored = true
+	hole.CanCollide = false
+	hole.CanQuery = false -- para que no estorbe a los raycast de las zonas
+	hole.CanTouch = false
+	hole.CastShadow = false
+
+	-- El cilindro tiene el eje en X, se gira 90 grados para alinearlo con la normal.
+	-- Se apoya justo sobre la superficie para que se vea como un hueco oscuro.
+	hole.CFrame = CFrame.lookAt(position + normal * (cfg.DEPTH * 0.4), position + normal)
+		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
+	hole.Parent = workspace
+
+	Debris:AddItem(hole, cfg.LIFETIME)
+end
+
 -- Chispas en el punto golpeado, con el color de la zona.
 -- Se usa un Attachment dentro de la propia zona (no hace falta crear partes extra).
 local function playHitEffect(host: BasePart, position: Vector3, zoneName: string)
@@ -319,20 +370,21 @@ swingRemote.OnServerEvent:Connect(function(player: Player, target: any, hitPosit
 	playSwing(tool, character)
 
 	-- 1) Zona apuntada con el mouse (validando alcance)
-	local zoneName, reward, effectHost, effectPosition
+	local zoneName, reward, effectHost, effectPosition, effectNormal
 
 	if typeof(target) == "Instance" and target:IsA("BasePart") and typeof(hitPosition) == "Vector3" then
 		if isWithinReach(character, target, hitPosition) then
 			zoneName, reward = findZone(target)
 			if zoneName then
 				effectHost, effectPosition = target, hitPosition
+				effectNormal = surfaceNormalAt(target, hitPosition)
 			end
 		end
 	end
 
 	-- 2) Si no apunto a una zona, se usa la zona donde esta parado
 	if not zoneName then
-		zoneName, reward, effectHost, effectPosition = findZoneUnderCharacter(character)
+		zoneName, reward, effectHost, effectPosition, effectNormal = findZoneUnderCharacter(character)
 	end
 
 	if not zoneName or not reward then
@@ -346,6 +398,7 @@ swingRemote.OnServerEvent:Connect(function(player: Player, target: any, hitPosit
 
 	if effectHost and effectPosition then
 		playHitEffect(effectHost, effectPosition, zoneName)
+		spawnHole(effectPosition, effectNormal or Vector3.yAxis, zoneName)
 	end
 end)
 

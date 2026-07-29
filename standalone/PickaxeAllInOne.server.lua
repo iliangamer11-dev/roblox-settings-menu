@@ -72,11 +72,24 @@ local SWING = {
 }
 
 -- Cartel flotante al ganar dinero
+-- Agujero que queda donde se pica
+local HOLE = {
+	ENABLED = true,
+	SIZE = 1.6, -- diametro en studs
+	DEPTH = 0.15, -- grosor del disco
+	COLOR = Color3.fromRGB(38, 32, 28),
+	MATERIAL = Enum.Material.Slate,
+	LIFETIME = 2, -- segundos hasta que desaparece
+	USE_ZONE_COLOR = false, -- true = usa el color de la zona oscurecido
+	DARKEN = 0.55,
+}
+
 local POPUP = {
 	ENABLED = true,
-	IMAGE_ID = "", -- tu icono: "rbxassetid://1234567890". Vacio = circulo de color
+	IMAGE_ID = "", -- tu icono: "rbxassetid://1234567890" (o solo el numero). Vacio = circulo
 	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
 	IMAGE_TRANSPARENCY = 0,
+	ALWAYS_SHOW_CIRCLE = false, -- true = dibuja el circulo detras de tu imagen (para depurar)
 	TEXT_FORMAT = "+%d",
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
@@ -212,6 +225,31 @@ end
 --------------------------------------------------------------------------------
 
 local random = Random.new()
+local warnedAboutId = false
+
+-- Acepta "rbxassetid://123", "123" o "" (vacio = sin imagen)
+local function normalizeImageId(value)
+	if type(value) ~= "string" or value == "" then
+		return ""
+	end
+
+	local digits = string.match(value, "^%s*(%d+)%s*$")
+	if digits then
+		return "rbxassetid://" .. digits
+	end
+
+	local looksValid = string.find(value, "rbxassetid://", 1, true)
+		or string.find(value, "rbxasset://", 1, true)
+		or string.find(value, "rbxthumb://", 1, true)
+		or string.find(value, "http", 1, true)
+
+	if not looksValid and not warnedAboutId then
+		warnedAboutId = true
+		warn(string.format('[Pickaxe] IMAGE_ID = "%s" no parece un id valido. Usa "rbxassetid://123456789".', value))
+	end
+
+	return value
+end
 
 local function showPopup(character, amount)
 	if not POPUP.ENABLED then
@@ -248,10 +286,12 @@ local function showPopup(character, amount)
 	image.ScaleType = Enum.ScaleType.Fit
 	image.ImageColor3 = POPUP.IMAGE_COLOR
 	image.ImageTransparency = POPUP.IMAGE_TRANSPARENCY
-	image.Image = POPUP.IMAGE_ID
+
+	local imageId = normalizeImageId(POPUP.IMAGE_ID)
+	image.Image = imageId
 	image.Parent = billboard
 
-	local usingPlaceholder = POPUP.IMAGE_ID == ""
+	local usingPlaceholder = imageId == "" or POPUP.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = POPUP.IMAGE_TRANSPARENCY
 		image.BackgroundColor3 = POPUP.IMAGE_COLOR
@@ -327,14 +367,47 @@ local function findZoneUnderCharacter(character)
 	if result then
 		local zoneName, reward = findZone(result.Instance)
 		if zoneName then
-			return zoneName, reward, result.Instance, result.Position
+			return zoneName, reward, result.Instance, result.Position, result.Normal
 		end
 		log("Piso detectado:", result.Instance:GetFullName(), "- no es una zona valida")
 	else
 		log("No se detecto piso debajo del jugador")
 	end
 
-	return nil, nil, nil, nil
+	return nil, nil, nil, nil, nil
+end
+
+-- Agujero que queda marcado donde se pico
+local function spawnHole(position, normal, zoneName)
+	if not HOLE.ENABLED then
+		return
+	end
+
+	local color = HOLE.COLOR
+	if HOLE.USE_ZONE_COLOR then
+		local zoneColor = ZONE_COLORS[zoneName]
+		if zoneColor then
+			color = zoneColor:Lerp(Color3.new(0, 0, 0), HOLE.DARKEN)
+		end
+	end
+
+	local hole = Instance.new("Part")
+	hole.Name = "PickaxeHole"
+	hole.Shape = Enum.PartType.Cylinder
+	hole.Size = Vector3.new(HOLE.DEPTH, HOLE.SIZE, HOLE.SIZE)
+	hole.Color = color
+	hole.Material = HOLE.MATERIAL
+	hole.Anchored = true
+	hole.CanCollide = false
+	hole.CanQuery = false
+	hole.CanTouch = false
+	hole.CastShadow = false
+	-- El cilindro tiene el eje en X: se gira 90 grados para alinearlo con la normal
+	hole.CFrame = CFrame.lookAt(position + normal * (HOLE.DEPTH * 0.4), position + normal)
+		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
+	hole.Parent = workspace
+
+	Debris:AddItem(hole, HOLE.LIFETIME)
 end
 
 --------------------------------------------------------------------------------
@@ -458,7 +531,7 @@ local function onActivated(tool)
 
 	playSwing(tool, character)
 
-	local zoneName, reward, host, position = findZoneUnderCharacter(character)
+	local zoneName, reward, host, position, normal = findZoneUnderCharacter(character)
 	if not zoneName then
 		return
 	end
@@ -473,6 +546,7 @@ local function onActivated(tool)
 
 	if host and position then
 		playHitEffect(host, position, zoneName)
+		spawnHole(position, normal or Vector3.yAxis, zoneName)
 	end
 end
 

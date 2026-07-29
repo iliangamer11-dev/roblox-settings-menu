@@ -34,6 +34,20 @@ MiningConfig.ZONE_COLORS = {
 	Dulces = Color3.fromRGB(245, 120, 190),
 }
 
+-- Agujero que queda marcado donde se pica
+MiningConfig.HOLE = {
+	ENABLED = true,
+	SIZE = 1.6, -- diametro en studs
+	DEPTH = 0.15, -- grosor del disco
+	COLOR = Color3.fromRGB(38, 32, 28),
+	MATERIAL = Enum.Material.Slate,
+	LIFETIME = 2, -- segundos que tarda en desaparecer
+
+	-- Si es true, el agujero usa el color de la zona oscurecido en vez de COLOR
+	USE_ZONE_COLOR = false,
+	DARKEN = 0.55,
+}
+
 -- Tiempo minimo entre picazos (segundos)
 MiningConfig.SWING_COOLDOWN = 0.55
 
@@ -97,10 +111,16 @@ MiningConfig.POPUP = {
 	ENABLED = true,
 
 	-- Tu icono. Ej: "rbxassetid://1234567890"
+	-- Si pones solo el numero ("1234567890") tambien vale, se le agrega el prefijo.
 	-- Si lo dejas vacio se dibuja un circulo del color de abajo.
 	IMAGE_ID = "",
 	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
 	IMAGE_TRANSPARENCY = 0,
+
+	-- Ponlo en true para dibujar el circulo de color DETRAS de tu imagen.
+	-- Sirve para saber si el problema es la imagen (no carga) o el cartel (no aparece):
+	-- si ves el circulo pero no tu icono, el id de la imagen es el problema.
+	ALWAYS_SHOW_CIRCLE = false,
 
 	-- Texto de abajo. %d es la cantidad ganada.
 	TEXT_FORMAT = "+%d",
