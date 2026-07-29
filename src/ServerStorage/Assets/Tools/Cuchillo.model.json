@@ -1,0 +1,23 @@
+{
+  "ClassName": "Tool",
+  "Properties": {
+    "ToolTip": "Cuchillo",
+    "RequiresHandle": true,
+    "CanBeDropped": false,
+    "Enabled": true
+  },
+  "Children": [
+    {
+      "Name": "Handle",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [0.4, 2.2, 0.4] },
+        "Color": { "Color3": [0.63, 0.64, 0.67] },
+        "CanCollide": false,
+        "Massless": true,
+        "TopSurface": { "Enum": 0 },
+        "BottomSurface": { "Enum": 0 }
+      }
+    }
+  ]
+}
