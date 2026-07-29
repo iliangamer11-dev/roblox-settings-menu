@@ -87,6 +87,8 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 - **Popup de dinero**: al sumar, aparece un cartel con un `ImageLabel` arriba (tu icono) y un
   `TextLabel` debajo (`+1`, `+5`, ...) en un punto **random alrededor del jugador**, que sube
   y se desvanece. Todo configurable en `POPUP`.
+- **Minerales**: hacen falta `HITS_PER_MINERAL` picazos (3) para sacar un mineral. Los
+  golpes intermedios hacen chispas y agujero pero no dan dinero ni cartel.
 - **Zona y punto de impacto**: se tira un raycast hacia abajo a `SWING.HIT_OFFSET` studs
   **delante del personaje**, ahi es donde cae el pico. Ese punto decide la zona, las chispas
   y el agujero. El cursor no se usa. Si delante no hay zona valida (un borde, un objeto
@@ -139,7 +141,11 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 `standalone/PickaxeAllInOne.server.lua` si usas la version de un archivo).
 
 **Recompensas y ritmo**: `MINERALS` (probabilidad, dinero base y color de cada mineral),
-`ZONE_MULTIPLIERS`, `SWING_COOLDOWN`, `GROUND_CHECK_DISTANCE`, `DEBUG`.
+`ZONE_MULTIPLIERS`, `SWING_COOLDOWN` (0.75 s), `HITS_PER_MINERAL` (3 golpes por mineral),
+`GROUND_CHECK_DISTANCE`, `DEBUG`.
+
+Para que ganar dinero cueste mas o menos, lo que hay que tocar es `HITS_PER_MINERAL` y
+`SWING_COOLDOWN`, no las probabilidades: asi las rarezas siguen siendo las de la tabla.
 
 Para anadir un mineral basta con meter otra entrada en `MINERALS`: el sorteo usa la suma
 real de las probabilidades, asi que no hay que recalcular nada para que sigan cuadrando.
@@ -167,22 +173,24 @@ real de las probabilidades, asi que no hay que recalcular nada para que sigan cu
 | `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |
 | `HIT_OFFSET` | Studs delante del jugador donde cae la punta (chispas y agujero) |
 
-**El agujero** (`HOLE`): marca oscura que queda donde se pico y desaparece a los
-`LIFETIME` segundos (2 por defecto). Se ajusta con `SIZE` (diametro), `DEPTH`, `COLOR`,
-`MATERIAL` y `USE_MINERAL_COLOR` (usa el color del mineral oscurecido). Se crea con
+**El agujero** (`HOLE`): marca que queda donde se pico y desaparece a los `LIFETIME`
+segundos (2 por defecto). **Se pinta del color del mineral que ha salido**, asi se
+identifica mirando el suelo; con el legendario cicla colores (`RAINBOW_SPEED`). Se ajusta
+con `SIZE` (diametro), `DEPTH`, `DARKEN` (cuanto se oscurece el color del mineral) y
+`USE_MINERAL_COLOR` (ponlo en `false` para que siempre sea `COLOR`). Se crea con
 `CanQuery = false` para que no interfiera con los raycast de las zonas.
 
 **El popup** (`POPUP`):
 
 | Campo | Para que sirve |
 | --- | --- |
-| `IMAGE_ID` | Tu icono: `"rbxassetid://..."` (o solo el numero). Vacio = circulo de color |
+| `IMAGE_ID` | Tu icono: `"rbxassetid://..."` (o solo el numero). Vacio = circulo |
 | `ALWAYS_SHOW_CIRCLE` | `true` dibuja el circulo detras de tu imagen, para depurar |
-| `IMAGE_COLOR`, `IMAGE_TRANSPARENCY` | Color y transparencia del icono |
+| `IMAGE_COLOR` | Tinte de la imagen. Blanco = se ve con sus colores originales |
+| `CIRCLE_COLOR` | Color del circulo que sale cuando no hay imagen |
 | `TEXT_FORMAT` | Texto de abajo. `%s` es la cantidad formateada. Ej: `"+%s$"` |
 | `SHOW_MINERAL_NAME` | `true` escribe tambien el nombre del mineral |
-| `USE_MINERAL_COLOR` | El circulo/imagen se pinta del color del mineral |
-| `RAINBOW_SPEED` | Velocidad del arcoiris del mineral legendario |
+| `USE_MINERAL_COLOR` | `false` por defecto: el color del mineral va en el agujero, no aqui |
 | `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |
 | `WIDTH`, `HEIGHT`, `IMAGE_RATIO` | Tamano del cartel en studs y cuanto ocupa la imagen |
 | `IMAGE_SCALE` | Escala fina de la imagen dentro de su hueco (`1` = a tope) |

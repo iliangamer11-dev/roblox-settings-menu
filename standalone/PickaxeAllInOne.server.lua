@@ -50,8 +50,12 @@ local MINERALS = {
 	{ NAME = "Legendario", CHANCE = 0.05, MONEY = 10000, COLOR = Color3.fromRGB(255, 255, 255), RAINBOW = true },
 }
 
-local SWING_COOLDOWN = 0.55
+local SWING_COOLDOWN = 0.75
 local GROUND_CHECK_DISTANCE = 12
+
+-- Picazos necesarios para sacar un mineral. Los golpes intermedios hacen chispas y
+-- agujero pero no dan dinero: es la forma directa de que ganar dinero cueste mas.
+local HITS_PER_MINERAL = 3
 local DEBUG = true
 
 -- El pico: mango a lo largo del eje Z, punta hacia -Z
@@ -91,20 +95,22 @@ local HOLE = {
 	COLOR = Color3.fromRGB(38, 32, 28),
 	MATERIAL = Enum.Material.Slate,
 	LIFETIME = 2, -- segundos hasta que desaparece
-	USE_MINERAL_COLOR = false, -- true = usa el color del mineral oscurecido
-	DARKEN = 0.55,
+	USE_MINERAL_COLOR = true, -- el agujero se pinta del color del mineral
+	DARKEN = 0.25, -- cuanto se oscurece ese color (0 = tal cual)
+	RAINBOW_SPEED = 1.2, -- con el legendario el agujero cicla colores
 }
 
 local POPUP = {
 	ENABLED = true,
 	IMAGE_ID = "", -- tu icono: "rbxassetid://1234567890" (o solo el numero). Vacio = circulo
-	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
+	IMAGE_COLOR = Color3.fromRGB(255, 255, 255), -- tinte de la imagen (blanco = sin tintar)
+	CIRCLE_COLOR = Color3.fromRGB(255, 210, 60), -- color del circulo cuando no hay imagen
 	IMAGE_TRANSPARENCY = 0,
 	ALWAYS_SHOW_CIRCLE = false, -- true = dibuja el circulo detras de tu imagen (para depurar)
 	TEXT_FORMAT = "+%s$", -- %s es la cantidad ya formateada (20.000)
 	SHOW_MINERAL_NAME = false, -- true = escribe tambien el nombre del mineral
-	USE_MINERAL_COLOR = true, -- el circulo/imagen se pinta del color del mineral
-	RAINBOW_SPEED = 1.2, -- vueltas por segundo del arcoiris del legendario
+	-- false = el cartel NO se pinta del color del mineral (ese color va en el agujero)
+	USE_MINERAL_COLOR = false,
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
 	TEXT_STROKE_TRANSPARENCY = 0,
@@ -308,10 +314,13 @@ local function showPopup(character, amount, mineral)
 		return
 	end
 
-	-- El color depende del mineral que ha salido
-	local color = POPUP.IMAGE_COLOR
+	-- Por defecto el cartel NO usa el color del mineral: ese color va en el agujero
+	local tint = POPUP.IMAGE_COLOR
+	local circleColor = POPUP.CIRCLE_COLOR
+
 	if POPUP.USE_MINERAL_COLOR and mineral and mineral.COLOR then
-		color = mineral.COLOR
+		tint = mineral.COLOR
+		circleColor = mineral.COLOR
 	end
 
 	local angle = random:NextNumber(0, math.pi * 2)
@@ -338,7 +347,7 @@ local function showPopup(character, amount, mineral)
 	image.Size = UDim2.fromScale(POPUP.IMAGE_SCALE, POPUP.IMAGE_RATIO * POPUP.IMAGE_SCALE)
 	image.Position = UDim2.fromScale(0.5, POPUP.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
-	image.ImageColor3 = color
+	image.ImageColor3 = tint
 	image.ImageTransparency = POPUP.IMAGE_TRANSPARENCY
 
 	local imageId = normalizeImageId(POPUP.IMAGE_ID)
@@ -348,7 +357,7 @@ local function showPopup(character, amount, mineral)
 	local usingPlaceholder = imageId == "" or POPUP.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = POPUP.IMAGE_TRANSPARENCY
-		image.BackgroundColor3 = color
+		image.BackgroundColor3 = circleColor
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
 
 		local corner = Instance.new("UICorner")
@@ -375,28 +384,19 @@ local function showPopup(character, amount, mineral)
 		nameLabel = label:Clone()
 		nameLabel.Name = "Mineral"
 		nameLabel.Text = mineral.NAME
-		nameLabel.TextColor3 = color
+		nameLabel.TextColor3 = mineral.COLOR or POPUP.TEXT_COLOR
 		nameLabel.Size = UDim2.fromScale(1, (1 - POPUP.IMAGE_RATIO) * 0.7)
 		nameLabel.Position = UDim2.fromScale(0, -(1 - POPUP.IMAGE_RATIO) * 0.7)
 		nameLabel.Parent = billboard
 	end
 
-	-- Mineral legendario: el color va cambiando
-	if mineral and mineral.RAINBOW then
+	-- Legendario: solo el nombre cicla colores. El arcoiris principal esta en el agujero.
+	if mineral and mineral.RAINBOW and nameLabel then
 		task.spawn(function()
 			local startClock = os.clock()
 			while attachment.Parent do
-				local hue = ((os.clock() - startClock) * POPUP.RAINBOW_SPEED) % 1
-				local rainbow = Color3.fromHSV(hue, 1, 1)
-
-				image.ImageColor3 = rainbow
-				if usingPlaceholder then
-					image.BackgroundColor3 = rainbow
-				end
-				if nameLabel then
-					nameLabel.TextColor3 = rainbow
-				end
-
+				local hue = ((os.clock() - startClock) * HOLE.RAINBOW_SPEED) % 1
+				nameLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
 				task.wait(0.05)
 			end
 		end)
@@ -502,8 +502,9 @@ local function spawnHole(position, normal, mineral)
 	hole.Name = "PickaxeHole"
 	hole.Shape = Enum.PartType.Cylinder
 	hole.Size = Vector3.new(HOLE.DEPTH, HOLE.SIZE, HOLE.SIZE)
+	-- Con color de mineral queda mejor liso que con textura de piedra
 	hole.Color = color
-	hole.Material = HOLE.MATERIAL
+	hole.Material = (HOLE.USE_MINERAL_COLOR and mineral) and Enum.Material.SmoothPlastic or HOLE.MATERIAL
 	hole.Anchored = true
 	hole.CanCollide = false
 	hole.CanQuery = false
@@ -513,6 +514,18 @@ local function spawnHole(position, normal, mineral)
 	hole.CFrame = CFrame.lookAt(position + normal * (HOLE.DEPTH * 0.4), position + normal)
 		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
 	hole.Parent = workspace
+
+	-- Mineral legendario: el agujero cicla colores mientras dura
+	if mineral and mineral.RAINBOW then
+		task.spawn(function()
+			local startClock = os.clock()
+			while hole.Parent do
+				local hue = ((os.clock() - startClock) * HOLE.RAINBOW_SPEED) % 1
+				hole.Color = Color3.fromHSV(hue, 1, 1)
+				task.wait(0.05)
+			end
+		end)
+	end
 
 	Debris:AddItem(hole, HOLE.LIFETIME)
 end
@@ -632,6 +645,7 @@ end
 --------------------------------------------------------------------------------
 
 local lastSwing = {}
+local hitsSinceMineral = {} -- golpes dados sin sacar mineral, por jugador
 
 local function onActivated(tool)
 	local character = tool.Parent
@@ -673,6 +687,22 @@ local function onActivated(tool)
 	if not zoneName then
 		return
 	end
+
+	-- Hacen falta varios picazos por mineral: los intermedios solo hacen chispas y agujero
+	local needed = math.max(1, HITS_PER_MINERAL)
+	hitsSinceMineral[player] = (hitsSinceMineral[player] or 0) + 1
+
+	if hitsSinceMineral[player] < needed then
+		task.delay(SWING.RAISE_TIME + SWING.STRIKE_TIME, function()
+			if host and host.Parent and position then
+				playHitEffect(host, position, nil)
+				spawnHole(position, normal or Vector3.yAxis, nil)
+			end
+		end)
+		return
+	end
+
+	hitsSinceMineral[player] = 0
 
 	-- Que mineral ha salido y cuanto vale en esta zona
 	local mineral = rollMineral()
@@ -778,6 +808,7 @@ end
 Players.PlayerRemoving:Connect(function(player)
 	money[player] = nil
 	lastSwing[player] = nil
+	hitsSinceMineral[player] = nil
 end)
 
 log("MiningService listo")

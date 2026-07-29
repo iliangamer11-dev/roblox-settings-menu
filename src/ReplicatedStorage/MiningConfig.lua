@@ -64,13 +64,23 @@ MiningConfig.HOLE = {
 	MATERIAL = Enum.Material.Slate,
 	LIFETIME = 2, -- segundos que tarda en desaparecer
 
-	-- Si es true, el agujero usa el color del mineral oscurecido en vez de COLOR
-	USE_MINERAL_COLOR = false,
-	DARKEN = 0.55,
+	-- El agujero se pinta del color del mineral que ha salido: asi se identifica
+	-- mirando el suelo. DARKEN es cuanto se oscurece ese color (0 = tal cual).
+	USE_MINERAL_COLOR = true,
+	DARKEN = 0.25,
+
+	-- El mineral legendario hace que el agujero cicle colores (arcoiris)
+	RAINBOW_SPEED = 1.2, -- vueltas por segundo
 }
 
+-- Cuantos picazos hacen falta para sacar un mineral.
+-- Los golpes intermedios hacen chispas y agujero, pero no dan dinero.
+-- Es la forma mas directa de que ganar dinero no sea tan facil: con 3, la ganancia
+-- por segundo se divide entre 3 sin tocar las probabilidades ni las recompensas.
+MiningConfig.HITS_PER_MINERAL = 3
+
 -- Tiempo minimo entre picazos (segundos)
-MiningConfig.SWING_COOLDOWN = 0.55
+MiningConfig.SWING_COOLDOWN = 0.75
 
 -- Cuanto se busca hacia abajo para saber sobre que zona esta parado el jugador
 MiningConfig.GROUND_CHECK_DISTANCE = 12
@@ -141,9 +151,12 @@ MiningConfig.POPUP = {
 
 	-- Tu icono. Ej: "rbxassetid://1234567890"
 	-- Si pones solo el numero ("1234567890") tambien vale, se le agrega el prefijo.
-	-- Si lo dejas vacio se dibuja un circulo del color de abajo.
+	-- Si lo dejas vacio se dibuja un circulo del color CIRCLE_COLOR.
 	IMAGE_ID = "",
-	IMAGE_COLOR = Color3.fromRGB(255, 210, 60),
+	-- Tinte de la imagen. Blanco = se ve con sus colores originales.
+	IMAGE_COLOR = Color3.fromRGB(255, 255, 255),
+	-- Color del circulo que se dibuja cuando no hay imagen
+	CIRCLE_COLOR = Color3.fromRGB(255, 210, 60),
 	IMAGE_TRANSPARENCY = 0,
 
 	-- Ponlo en true para dibujar el circulo de color DETRAS de tu imagen.
@@ -156,10 +169,9 @@ MiningConfig.POPUP = {
 	-- true = ademas del dinero, escribe el nombre del mineral encima
 	SHOW_MINERAL_NAME = false,
 
-	-- El circulo (y la imagen, si no lo desactivas) se pintan del color del mineral
-	USE_MINERAL_COLOR = true,
-	-- Vueltas por segundo del arcoiris del mineral legendario
-	RAINBOW_SPEED = 1.2,
+	-- false = el popup NO se pinta del color del mineral (ese color va en el agujero).
+	-- Ponlo en true si algun dia quieres que tambien lo haga el cartel.
+	USE_MINERAL_COLOR = false,
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_STROKE_COLOR = Color3.fromRGB(0, 0, 0),
 	TEXT_STROKE_TRANSPARENCY = 0,

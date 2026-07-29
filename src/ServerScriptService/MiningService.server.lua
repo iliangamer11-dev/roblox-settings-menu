@@ -270,12 +270,15 @@ local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
 		color = mineral.COLOR:Lerp(Color3.new(0, 0, 0), cfg.DARKEN)
 	end
 
+	-- Con color de mineral queda mejor liso que con textura de piedra
+	local material = (cfg.USE_MINERAL_COLOR and mineral) and Enum.Material.SmoothPlastic or cfg.MATERIAL
+
 	local hole = Instance.new("Part")
 	hole.Name = "PickaxeHole"
 	hole.Shape = Enum.PartType.Cylinder
 	hole.Size = Vector3.new(cfg.DEPTH, cfg.SIZE, cfg.SIZE)
 	hole.Color = color
-	hole.Material = cfg.MATERIAL
+	hole.Material = material
 	hole.Anchored = true
 	hole.CanCollide = false
 	hole.CanQuery = false -- para que no estorbe a los raycast de las zonas
@@ -287,6 +290,18 @@ local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
 	hole.CFrame = CFrame.lookAt(position + normal * (cfg.DEPTH * 0.4), position + normal)
 		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
 	hole.Parent = workspace
+
+	-- Mineral legendario: el agujero cicla colores mientras dura
+	if mineral and mineral.RAINBOW then
+		task.spawn(function()
+			local startClock = os.clock()
+			while hole.Parent do
+				local hue = ((os.clock() - startClock) * cfg.RAINBOW_SPEED) % 1
+				hole.Color = Color3.fromHSV(hue, 1, 1)
+				task.wait(0.05)
+			end
+		end)
+	end
 
 	Debris:AddItem(hole, cfg.LIFETIME)
 end
@@ -327,6 +342,7 @@ end
 --------------------------------------------------------------------------------
 
 local lastSwing = {} -- lastSwing[player] = os.clock()
+local hitsSinceMineral = {} -- hitsSinceMineral[player] = golpes dados sin sacar mineral
 
 -- Donde golpea el pico: justo delante del personaje, a la distancia que alcanza la punta.
 -- No se usa el cursor a proposito: el agujero tiene que salir donde cae el pico.
@@ -405,6 +421,23 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 	if not zoneName then
 		return
 	end
+
+	-- Hacen falta varios picazos por mineral: los golpes intermedios solo hacen
+	-- chispas y agujero, sin dinero ni cartel.
+	local needed = math.max(1, Config.HITS_PER_MINERAL)
+	hitsSinceMineral[player] = (hitsSinceMineral[player] or 0) + 1
+
+	if hitsSinceMineral[player] < needed then
+		task.delay(impactDelay(), function()
+			if effectHost and effectHost.Parent and effectPosition then
+				playHitEffect(effectHost, effectPosition, nil)
+				spawnHole(effectPosition, effectNormal or Vector3.yAxis, nil)
+			end
+		end)
+		return
+	end
+
+	hitsSinceMineral[player] = 0
 
 	-- Que mineral ha salido y cuanto vale en esta zona
 	local mineral = Minerals.roll()
@@ -488,4 +521,5 @@ end
 Players.PlayerRemoving:Connect(function(player)
 	money[player] = nil
 	lastSwing[player] = nil
+	hitsSinceMineral[player] = nil
 end)

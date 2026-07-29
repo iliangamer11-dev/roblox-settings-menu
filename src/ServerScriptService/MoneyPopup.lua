@@ -3,8 +3,8 @@
 	Cartel flotante que aparece al ganar dinero: un ImageLabel arriba (configurable)
 	y un TextLabel debajo con la cantidad, en un punto random alrededor del jugador.
 
-	El color depende del mineral que haya salido, asi se identifica de un vistazo.
-	El mineral legendario cicla colores (arcoiris).
+	El color del mineral NO se usa aqui: ese color va en el agujero que queda en el suelo.
+	El cartel usa IMAGE_COLOR (tinte de la imagen) y CIRCLE_COLOR (circulo sin imagen).
 
 	Todo se configura en MiningConfig.POPUP.
 ]]
@@ -66,9 +66,13 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 		return
 	end
 
-	local color = cfg.IMAGE_COLOR
+	-- Por defecto el cartel NO usa el color del mineral (ese color va en el agujero)
+	local tint = cfg.IMAGE_COLOR
+	local circleColor = cfg.CIRCLE_COLOR
+
 	if cfg.USE_MINERAL_COLOR and mineral and mineral.COLOR then
-		color = mineral.COLOR
+		tint = mineral.COLOR
+		circleColor = mineral.COLOR
 	end
 
 	-- El Attachment engancha el cartel al jugador, asi lo sigue mientras se mueve
@@ -94,18 +98,18 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 	image.Size = UDim2.fromScale(cfg.IMAGE_SCALE, cfg.IMAGE_RATIO * cfg.IMAGE_SCALE)
 	image.Position = UDim2.fromScale(0.5, cfg.IMAGE_RATIO / 2)
 	image.ScaleType = Enum.ScaleType.Fit
-	image.ImageColor3 = color
+	image.ImageColor3 = tint
 	image.ImageTransparency = cfg.IMAGE_TRANSPARENCY
 
 	local imageId = normalizeImageId(cfg.IMAGE_ID)
 	image.Image = imageId
 	image.Parent = billboard
 
-	-- Sin imagen (o con ALWAYS_SHOW_CIRCLE) se dibuja un circulo del color del mineral
+	-- Sin imagen (o con ALWAYS_SHOW_CIRCLE) se dibuja un circulo
 	local usingPlaceholder = imageId == "" or cfg.ALWAYS_SHOW_CIRCLE == true
 	if usingPlaceholder then
 		image.BackgroundTransparency = cfg.IMAGE_TRANSPARENCY
-		image.BackgroundColor3 = color
+		image.BackgroundColor3 = circleColor
 		-- RelativeYY: el ancho sigue al alto para que el circulo salga redondo
 		image.SizeConstraint = Enum.SizeConstraint.RelativeYY
 
@@ -134,28 +138,20 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 		nameLabel = label:Clone()
 		nameLabel.Name = "Mineral"
 		nameLabel.Text = mineral.NAME
-		nameLabel.TextColor3 = color
+		nameLabel.TextColor3 = mineral.COLOR or cfg.TEXT_COLOR
 		nameLabel.Size = UDim2.fromScale(1, (1 - cfg.IMAGE_RATIO) * 0.7)
 		nameLabel.Position = UDim2.fromScale(0, -(1 - cfg.IMAGE_RATIO) * 0.7)
 		nameLabel.Parent = billboard
 	end
 
-	-- Mineral legendario: el color va cambiando
-	if mineral and mineral.RAINBOW then
+	-- Mineral legendario: el nombre cicla colores. El arcoiris principal esta en el
+	-- agujero (MiningService.spawnHole), no en el cartel.
+	if mineral and mineral.RAINBOW and nameLabel then
 		task.spawn(function()
 			local startClock = os.clock()
 			while attachment.Parent do
-				local hue = ((os.clock() - startClock) * cfg.RAINBOW_SPEED) % 1
-				local rainbow = Color3.fromHSV(hue, 1, 1)
-
-				image.ImageColor3 = rainbow
-				if usingPlaceholder then
-					image.BackgroundColor3 = rainbow
-				end
-				if nameLabel then
-					nameLabel.TextColor3 = rainbow
-				end
-
+				local hue = ((os.clock() - startClock) * Config.HOLE.RAINBOW_SPEED) % 1
+				nameLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
 				task.wait(0.05)
 			end
 		end)
