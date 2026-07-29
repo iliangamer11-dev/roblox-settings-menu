@@ -1,0 +1,55 @@
+{
+  "name": "BalloonSimulator",
+  "globIgnorePaths": ["**/.DS_Store", "**/*.md"],
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$ignoreUnknownInstances": false,
+      "Shared": {
+        "$path": "src/Shared"
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/Server"
+      }
+    },
+
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Assets": {
+        "$path": "src/ServerStorage/Assets"
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/Client"
+        }
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$ignoreUnknownInstances": false,
+      "Interface": {
+        "$path": "src/StarterGui/Interface"
+      }
+    },
+
+    "Workspace": {
+      "$className": "Workspace",
+      "$ignoreUnknownInstances": true,
+      "World": {
+        "$path": "src/Workspace/World"
+      }
+    }
+  }
+}
