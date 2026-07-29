@@ -2,130 +2,191 @@
 --[[
 	BalloonService
 	----------------------------------------------------------------------------
-	ESQUELETO. Sera el dueno de los globos del mundo: aparicion, registro de
-	globos activos y validacion del pinchado.
+	Servicio que conecta el BalloonManager con el resto del juego. Es
+	deliberadamente fino: prepara los contenedores, arranca el manager y expone
+	su API. Toda la logica de aparicion vive en Server/Balloons/BalloonManager,
+	que no depende de ningun otro servicio.
 
-	PREPARADO PARA: aparicion de globos + sistema de pinchar globos.
+	Arbol que garantiza al arrancar:
 
-	Estado actual:
-		* Crea el contenedor Workspace.World.Balloons si no existe.
-		* Registra el handler de RequestPopBalloon (sin efecto todavia).
-		* Deja el bucle de aparicion desactivado (BalloonConfig.Spawning.Enabled).
+		Workspace.World
+		├── Balloons     globos activos (replicado a los clientes)
+		└── Spawners     areas de aparicion (Parts)
 
-	Plan del siguiente paso:
-		1. Modelos de globo en ServerStorage.Assets.Balloons.
-		2. Spawner por zona leyendo ZoneConfig.BalloonIds y los pesos de rareza.
-		3. Pop: validar distancia (BalloonConfig.Popping.MaxHitDistance),
-		   cooldown segun ToolService:GetStats, aplicar dano y al morir dar
-		   recompensa via CurrencyService/StatsService/LevelService.
+		ServerStorage
+		└── BalloonReserve   instancias recicladas (NO replicadas)
+
+	Poner la reserva en ServerStorage es intencionado: las instancias dormidas
+	no se replican al cliente, asi que reciclar no cuesta ancho de banda.
+
+	PREPARADO PARA (siguiente paso: pinchar globos)
+		Net.OnEvent("RequestPopBalloon", ...) ya esta enganchado y valida la
+		forma del mensaje. Lo unico que falta es la validacion de distancia y
+		cooldown, y llamar a Manager:ApplyDamage con la potencia de la Tool.
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
-local Loader = require(Shared.Framework.Loader)
 local Logger = require(Shared.Util.Logger)
 local Net = require(Shared.Network.Net)
-local Signal = require(Shared.Util.Signal)
+
+local BalloonManager = require(script.Parent.Parent.Balloons.BalloonManager)
 
 local log = Logger.new("BalloonService")
+
+local RESERVE_NAME = "BalloonReserve"
 
 local BalloonService = {}
 BalloonService.Name = "BalloonService"
 BalloonService.Priority = 400
 
+--------------------------------------------------------------------------------
+-- Ciclo de vida
+--------------------------------------------------------------------------------
+
 function BalloonService:Init()
-	self._tools = nil
-	self._currency = nil
-	self._stats = nil
-
-	-- BalloonId de instancia -> datos del globo activo
-	self._active = {} :: { [string]: any }
-	self._nextId = 0
-
-	self.BalloonSpawned = Signal.new() -- (balloonId, model)
-	self.BalloonPopped = Signal.new() -- (player, balloonId, definition)
+	self.Manager = nil
+	self._containers = nil
 end
 
 function BalloonService:Start()
-	self._tools = Loader.Get("ToolService")
-	self._currency = Loader.Get("CurrencyService")
-	self._stats = Loader.Get("StatsService")
+	self._containers = self:_ensureContainers()
 
-	self._container = self:_ensureContainer()
+	self.Manager = BalloonManager.new({
+		Container = self._containers.Balloons,
+		Reserve = self._containers.Reserve,
+		Assets = self._containers.Assets,
+		SpawnersFolder = self._containers.Spawners,
+	})
 
+	-- Handler ya registrado: el sistema de pinchado solo tendra que rellenar
+	-- _onPopRequest, sin tocar la capa de red.
 	Net.OnEvent("RequestPopBalloon", function(player, balloonId)
 		self:_onPopRequest(player, balloonId)
 	end)
 
 	if Config.Balloons.Spawning.Enabled then
-		task.spawn(function()
-			self:_spawnLoop()
-		end)
+		self.Manager:Start()
 	else
-		log:Debug("Aparicion de globos desactivada (BalloonConfig.Spawning.Enabled = false)")
+		log:Warn("Aparicion desactivada (BalloonConfig.Spawning.Enabled = false)")
+	end
+
+	if Config.Game.Debug then
+		task.spawn(function()
+			self:_statsLoop()
+		end)
 	end
 end
 
---[[
-	Contenedor en tiempo de ejecucion de los globos activos.
---]]
-function BalloonService:_ensureContainer(): Folder
-	local world = Workspace:FindFirstChild(Config.Game.Containers.World)
-	if not world then
-		world = Instance.new("Folder")
-		world.Name = Config.Game.Containers.World
-		world.Parent = Workspace
+--------------------------------------------------------------------------------
+-- Contenedores
+--------------------------------------------------------------------------------
+
+local function ensureFolder(parent: Instance, name: string): Folder
+	local existing = parent:FindFirstChild(name)
+	if existing and existing:IsA("Folder") then
+		return existing
 	end
 
-	local balloons = world:FindFirstChild(Config.Game.Containers.Balloons)
-	if not balloons then
-		balloons = Instance.new("Folder")
-		balloons.Name = Config.Game.Containers.Balloons
-		balloons.Parent = world
+	local folder = Instance.new("Folder")
+	folder.Name = name
+	folder.Parent = parent
+	return folder
+end
+
+function BalloonService:_ensureContainers()
+	local names = Config.Game.Containers
+
+	local world = ensureFolder(Workspace, names.World)
+	local balloons = ensureFolder(world, names.Balloons)
+	local spawners = ensureFolder(world, names.Spawners)
+	local reserve = ensureFolder(ServerStorage, RESERVE_NAME)
+
+	local assets = ServerStorage:FindFirstChild("Assets")
+	local balloonAssets = assets and assets:FindFirstChild(names.Balloons)
+
+	if not balloonAssets then
+		log:Debug("Sin modelos en ServerStorage.Assets.Balloons: se generaran por codigo")
 	end
 
-	return balloons
+	return {
+		World = world,
+		Balloons = balloons,
+		Spawners = spawners,
+		Reserve = reserve,
+		Assets = balloonAssets,
+	}
 end
 
-function BalloonService:_nextBalloonId(): string
-	self._nextId += 1
-	return string.format("B%d", self._nextId)
-end
-
---[[
-	TODO: implementar la aparicion real.
---]]
-function BalloonService:_spawnLoop()
-	log:Warn("_spawnLoop todavia no esta implementado")
-end
+--------------------------------------------------------------------------------
+-- Red
+--------------------------------------------------------------------------------
 
 --[[
-	TODO: validar y aplicar el pinchado.
-	Pasos previstos:
-		1. Comprobar que el globo existe en self._active.
-		2. Comprobar cooldown del jugador (ToolService:GetStats().Cooldown).
-		3. Comprobar distancia entre el personaje y el globo.
-		4. Restar vida; si llega a 0 -> recompensa + BalloonPopped.
+	TODO (sistema de pinchado):
+		1. entry = self.Manager:GetFromInstance(...) o :Get(balloonId)
+		2. Validar distancia: (character.Position - entry.Position).Magnitude
+		   <= Config.Balloons.Popping.MaxHitDistance
+		3. Validar cooldown segun ToolService:GetStats(player).Cooldown
+		4. self.Manager:ApplyDamage(balloonId, stats.Power, player)
+		5. Si devuelve destruido, pagar con CurrencyService y sumar StatsService
 --]]
 function BalloonService:_onPopRequest(player: Player, balloonId: any)
 	if type(balloonId) ~= "string" then
 		return
 	end
-	log:Debug("Peticion de pinchado de %s sobre %s (sin implementar)", player.Name, balloonId)
+
+	local entry = self.Manager and self.Manager:Get(balloonId)
+	if not entry then
+		return
+	end
+
+	log:Debug("%s intento pinchar '%s' (%s) - pinchado sin implementar", player.Name, balloonId, entry.DefinitionId)
+end
+
+--------------------------------------------------------------------------------
+-- API para otros servicios
+--------------------------------------------------------------------------------
+
+function BalloonService:GetStats()
+	return if self.Manager then self.Manager:GetStats() else nil
+end
+
+function BalloonService:GetActiveCount(): number
+	return if self.Manager then self.Manager:GetActiveCount() else 0
 end
 
 --[[
-	Globos activos, para depuracion y para el sistema de zonas.
+	Fuerza la aparicion de un globo. Util para pruebas y para futuros eventos.
 --]]
-function BalloonService:GetActiveCount(): number
-	local count = 0
-	for _ in pairs(self._active) do
-		count += 1
+function BalloonService:SpawnOne(zoneId: string?)
+	return if self.Manager then self.Manager:SpawnOne(zoneId) else nil
+end
+
+--------------------------------------------------------------------------------
+-- Diagnostico
+--------------------------------------------------------------------------------
+
+function BalloonService:_statsLoop()
+	while true do
+		task.wait(30)
+
+		local stats = self:GetStats()
+		if stats then
+			log:Debug(
+				"activos %d/%d | puntos %d | instancias creadas %d | en reserva %d",
+				stats.Active,
+				stats.MaxActive,
+				stats.SpawnPoints,
+				stats.InstancesCreated,
+				stats.InstancesPooled
+			)
+		end
 	end
-	return count
 end
 
 return BalloonService

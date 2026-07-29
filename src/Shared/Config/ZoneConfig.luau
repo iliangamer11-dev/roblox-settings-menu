@@ -31,7 +31,8 @@ local Zones: { [string]: ZoneDefinition } = {
 		UnlockCurrency = "Coins",
 		RequiredLevel = 1,
 		Unlocked = true,
-		BalloonIds = {},
+		-- Globos que pueden aparecer aqui (los pesos estan en BalloonConfig)
+		BalloonIds = { "Red", "Blue", "Green", "Purple", "Golden" },
 		CoinMultiplier = 1,
 	},
 	-- TODO: anadir mas zonas

@@ -31,4 +31,12 @@ return {
 		Spawners = "Spawners",
 		Effects = "Effects",
 	},
+
+	-- Tags de CollectionService. Usar tags en lugar de recorrer el arbol
+	-- permite al cliente encontrar los globos en O(1) y reaccionar a los que
+	-- aparecen sin escuchar ChildAdded de un contenedor gigante.
+	Tags = {
+		Balloon = "Balloon",
+		BalloonSpawn = "BalloonSpawn",
+	},
 }

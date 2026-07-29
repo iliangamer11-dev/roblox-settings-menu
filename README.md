@@ -127,7 +127,7 @@ en el servidor.
 
 | Sistema | Dónde tocar |
 |---|---|
-| Aparición de globos | `BalloonConfig.Spawning.Enabled = true` + `BalloonService:_spawnLoop` |
+| ~~Aparición de globos~~ | hecho — ver sección siguiente |
 | Pinchar globos | `BalloonService:_onPopRequest` + `ToolController:_onActivated` |
 | Tool Cuchillo | modelo en `ServerStorage.Assets.Tools.Cuchillo` |
 | Dinero | recompensas en `BalloonService` vía `CurrencyService:Add` |
@@ -138,3 +138,124 @@ en el servidor.
 | Mascotas | `PetConfig.Pets` + modelo seguidor en `PetService` |
 | Misiones | `QuestConfig.Quests` (se auto-enlazan a `StatsService.StatChanged`) |
 | Nuevas zonas | modelo en `Workspace.World.Zones` + entrada en `ZoneConfig.Zones` |
+
+
+---
+
+# Sistema de aparición de globos
+
+## Módulos
+
+```
+ServerScriptService.Server
+├── Balloons
+│   ├── BalloonManager       núcleo: registro, planificador, daño
+│   ├── BalloonFactory       construcción, atributos y pooling
+│   └── SpawnPointRegistry   descubrimiento y selección de puntos
+└── Services
+    └── BalloonService       arranca el manager y expone su API
+```
+
+`BalloonManager` no depende de ningún servicio: recibe sus contenedores por
+parámetro, así que se puede instanciar aislado.
+
+## Contenedores
+
+```
+Workspace.World
+├── Balloons          globos activos (se replican a los clientes)
+└── Spawners          áreas de aparición
+
+ServerStorage
+├── Assets.Balloons   modelos opcionales
+└── BalloonReserve    instancias recicladas (NO se replican)
+```
+
+## Puntos de aparición
+
+Un punto es cualquier `BasePart` dentro de `Workspace.World.Spawners`, o con el
+tag `BalloonSpawn`. Define un **área**, no un punto exacto: la posición final es
+aleatoria dentro del volumen de la Part respetando su rotación, así que una sola
+Part plana y grande cubre toda una zona.
+
+Atributos opcionales en la Part:
+
+| Atributo | Tipo | Efecto |
+|---|---|---|
+| `ZoneId` | string | Zona a la que pertenece (por defecto `Spawn`) |
+| `Weight` | number | Peso relativo de aparición (por defecto 1) |
+| `MaxActive` | number | Tope propio de globos vivos |
+| `BalloonId` | string | Fuerza un tipo concreto de globo |
+
+Se actualiza en caliente: añadir o borrar Parts en Studio se refleja al instante.
+Si el mapa no tiene ninguna, se crea un área invisible de 160×160 en el origen
+para que el sistema no parezca roto en un Baseplate vacío.
+
+## Tipos de globo
+
+Añadir un tipo es **solo** añadir una entrada en `BalloonConfig.Balloons` y
+referenciar su id en `ZoneConfig.Zones[].BalloonIds`. Ningún script cambia.
+
+Vienen 5 de ejemplo: Red, Blue, Green, Purple y Golden (legendario, con
+`Lifetime = 90` para que desaparezca si nadie lo pincha).
+
+Si `Model` apunta a un modelo de `ServerStorage.Assets.Balloons` se clona; si no
+existe, el globo se genera por código como Part esférica. El sistema funciona sin
+ningún asset.
+
+## Atributos de cada globo
+
+Los datos viajan como atributos de la instancia, no como `ValueObject` hijos:
+menos instancias que replicar y se leen con `instance:GetAttribute()`. Los
+nombres están centralizados en `BalloonConfig.Attributes`.
+
+| Atributo | Contenido |
+|---|---|
+| `BalloonId` | Identificador único de la instancia |
+| `BalloonType` | Id de la definición (`Red`, `Golden`…) |
+| `DisplayName` | Nombre visible |
+| `Rarity` | Rareza |
+| `Reward` | Monedas |
+| `RewardExperience` | Experiencia |
+| `Health` / `MaxHealth` | Vida actual y máxima |
+| `ZoneId` | Zona de origen |
+
+## Optimización
+
+1. **Un solo hilo planificador** para todo el servidor. El coste no crece con el
+   número de jugadores, solo con el tope de globos.
+2. **Globos compartidos**: 30 jugadores ven los mismos 150 globos, no 4.500.
+3. **Pooling**: las instancias se reciclan en `ServerStorage` en vez de
+   destruirse. `Instance.new` solo ocurre en el precalentamiento.
+4. **Cero replicación manual**: Roblox ya replica la instancia y sus atributos;
+   mandar además un RemoteEvent por globo sería tráfico duplicado.
+5. **Presupuesto por ciclo** (`SpawnsPerTick`): el trabajo se reparte en el
+   tiempo en lugar de crear 150 globos en un frame.
+6. **Sin física**: partes ancladas, sin colisión y sin sombra.
+7. **Balanceo en el cliente**, con culling por distancia y tope por frame. Coste
+   cero para el servidor y sin tráfico de red.
+8. **Búsqueda O(1)** de globo por instancia, lista para validar los hits del
+   cliente.
+9. **Distancias al cuadrado** en los bucles calientes, sin raíces cuadradas.
+
+## Topes (en `BalloonConfig.Spawning`)
+
+| Ajuste | Valor |
+|---|---|
+| `MaxActive` | 150 globos en el servidor |
+| `MaxActivePerZone` | 40 |
+| `MaxActivePerSpawnPoint` | 6 |
+| `Interval` | 0.4 s por ciclo |
+| `SpawnsPerTick` | 4 (12 durante el llenado inicial) |
+| `MinSeparation` | 4 studs entre globos del mismo punto |
+| `PrewarmPerType` | 10 instancias por tipo |
+
+## Preparado para el siguiente paso
+
+`BalloonManager:ApplyDamage(balloonId, cantidad, player)` ya aplica daño,
+actualiza el atributo `Health` y emite `BalloonDestroyed` cuando llega a 0. **No
+reparte recompensas a propósito**: quien pague será `CurrencyService`, para que el
+dinero siga teniendo un único dueño.
+
+El handler `RequestPopBalloon` ya está enganchado en `BalloonService`. Falta
+validar distancia y cooldown, y llamar a `ApplyDamage` con la potencia de la Tool.
