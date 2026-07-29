@@ -263,9 +263,17 @@ function BalloonManager:_selfCheck()
 	end
 
 	if #points == 0 then
-		log:Warn("  CAUSA PROBABLE: no hay ninguna Part en Workspace.World.Spawners")
+		log:Warn(
+			"  CAUSA PROBABLE: no existe ninguna Part llamada '%s' en el Workspace",
+			SPAWNING.SpawnPartName
+		)
 	elseif #self._zoneOrder == 0 then
 		log:Warn("  CAUSA PROBABLE: ninguna zona de ZoneConfig tiene BalloonIds")
+	else
+		log:Warn(
+			"  CAUSA PROBABLE: las areas son demasiado pequenas para MinSeparation = %d studs",
+			SPAWNING.MinSeparation
+		)
 	end
 end
 

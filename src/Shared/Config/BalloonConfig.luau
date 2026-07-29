@@ -156,12 +156,24 @@ local Balloons: { [string]: BalloonDefinition } = {
 local Spawning = {
 	Enabled = true,
 
+	-- Nombre de la Part que hace de area de aparicion. Cualquier BasePart del
+	-- Workspace con este nombre se convierte en punto de aparicion, este donde
+	-- este en el arbol. Es la forma mas simple: colocas una Part, la llamas
+	-- asi, y ya salen globos encima.
+	SpawnPartName = "BalloonSpawn",
+	-- Detectar Parts anadidas o borradas durante la partida. El coste es una
+	-- comparacion de nombre por instancia que entra en Workspace.
+	WatchWorkspace = true,
+
 	-- Tope global de globos vivos en el servidor. Es el limite que protege el
 	-- rendimiento: no crece con el numero de jugadores.
 	MaxActive = 150,
 	-- Tope por zona, para que una zona no se coma el presupuesto global
 	MaxActivePerZone = 40,
-	-- Tope por punto de aparicion, para que no se apilen en el mismo sitio
+	-- Tope MINIMO por punto de aparicion. Si el area de la Part da para mas
+	-- globos respetando MinSeparation, el tope real se calcula a partir de su
+	-- superficie. Asi una Part pequena no se apelmaza y una grande se
+	-- aprovecha, sin tener que configurar nada.
 	MaxActivePerSpawnPoint = 6,
 
 	-- Segundos entre ciclos del planificador (un solo hilo para todo)

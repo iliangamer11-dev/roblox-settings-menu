@@ -173,10 +173,23 @@ ServerStorage
 
 ## Puntos de aparición
 
-Un punto es cualquier `BasePart` dentro de `Workspace.World.Spawners`, o con el
-tag `BalloonSpawn`. Define un **área**, no un punto exacto: la posición final es
-aleatoria dentro del volumen de la Part respetando su rotación, así que una sola
-Part plana y grande cubre toda una zona.
+**Lo más rápido: coloca una Part y llámala `BalloonSpawn`.** Los globos saldrán
+encima, esté donde esté en el `Workspace`.
+
+Un punto de aparición es cualquier `BasePart` que cumpla una de estas tres:
+
+1. Llamarse `BalloonSpawn` (configurable en `Spawning.SpawnPartName`)
+2. Estar dentro de `Workspace.World.Spawners`
+3. Tener el tag `BalloonSpawn` de CollectionService
+
+Define un **área**, no un punto exacto: la posición final es aleatoria dentro del
+volumen de la Part respetando su rotación, así que una sola Part plana y grande
+cubre toda una zona. La altura es la cara superior de la Part más un valor
+aleatorio entre `FloatHeightMin` y `FloatHeightMax`.
+
+El tope de globos de cada área **se calcula solo** a partir de su superficie y de
+`MinSeparation`, con `MaxActivePerSpawnPoint` como mínimo. Así una Part de
+200×200 aprovecha su tamaño y una de 4×4 no se apelmaza, sin configurar nada.
 
 Atributos opcionales en la Part:
 
@@ -188,8 +201,10 @@ Atributos opcionales en la Part:
 | `BalloonId` | string | Fuerza un tipo concreto de globo |
 
 Se actualiza en caliente: añadir o borrar Parts en Studio se refleja al instante.
-Si el mapa no tiene ninguna, se crea un área invisible de 160×160 en el origen
-para que el sistema no parezca roto en un Baseplate vacío.
+
+Si el mapa no tiene ninguna, se crea una temporal de 160×160 centrada en el
+`SpawnLocation` (o en el origen si no hay), para que el sistema no parezca roto en
+un Baseplate vacío.
 
 ## Tipos de globo
 
@@ -244,7 +259,7 @@ nombres están centralizados en `BalloonConfig.Attributes`.
 |---|---|
 | `MaxActive` | 150 globos en el servidor |
 | `MaxActivePerZone` | 40 |
-| `MaxActivePerSpawnPoint` | 6 |
+| `MaxActivePerSpawnPoint` | 6 como mínimo, más si el área lo permite |
 | `Interval` | 0.4 s por ciclo |
 | `SpawnsPerTick` | 4 (12 durante el llenado inicial) |
 | `MinSeparation` | 4 studs entre globos del mismo punto |
