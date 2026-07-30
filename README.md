@@ -47,6 +47,28 @@ tocar los `ZONE_MULTIPLIERS` o el cooldown.
 Las zonas pueden ser una `Part` sola o un `Model`/`Folder` con ese nombre (el script
 sube por la jerarquia buscando el nombre), y pueden estar en cualquier parte de Workspace.
 
+## Paredes de pago (Pared1..Pared4)
+
+Al acercarse a una part llamada `Pared1`, `Pared2`, `Pared3` o `Pared4` sale un boton
+(`ProximityPrompt`, se activa con **E**) para comprar el acceso. Al pagarlo, **la pared
+desaparece solo para ese jugador**: los demas siguen viendo la suya.
+
+| Pared | Precio | Texto del boton |
+| --- | --- | --- |
+| Pared1 | 100 | `Buy for $100` / `Desert Zone` |
+| Pared2 | 1.000 | `Buy for $1.000` / `Mine Zone` |
+| Pared3 | 5.000 | `Buy for $5.000` / `Moon Zone` |
+| Pared4 | 10.000 | `Buy for $10.000` / `Candy Zone` |
+
+Si no llega el dinero, el boton muestra un momento `Need $X more`. Todos los textos estan
+en ingles y se cambian en `MiningConfig.WALL_PROMPT`; los precios y los titulos, en
+`MiningConfig.WALLS`.
+
+Como funciona por dentro: el servidor (`WallShop`) cobra y guarda quien ha comprado que
+pared, y avisa solo a ese jugador; su cliente (`WallShopClient`) pone esas partes
+invisibles y sin colision. La compra dura la sesion: al salir y volver a entrar hay que
+comprarla otra vez (haria falta DataStore para guardarla).
+
 ### Opcion A: un solo script (copiar y pegar)
 
 La mas simple, no necesita Rojo ni ModuleScripts:
@@ -54,6 +76,9 @@ La mas simple, no necesita Rojo ni ModuleScripts:
 1. `ServerScriptService` > Insert Object > **Script**
 2. Pega el contenido de [`standalone/PickaxeAllInOne.server.lua`](standalone/PickaxeAllInOne.server.lua)
 3. Play
+
+Esta version **no** incluye las paredes de pago ni los agujeros privados: las dos cosas
+necesitan LocalScripts, asi que estan solo en la version modular.
 
 ### Opcion B: version modular con Rojo
 
@@ -70,8 +95,11 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
 | `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
+| `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
+| `src/StarterPlayer/StarterPlayerScripts/HoleClient.client.lua` | StarterPlayerScripts | LocalScript `HoleClient` |
+| `src/StarterPlayer/StarterPlayerScripts/WallShopClient.client.lua` | StarterPlayerScripts | LocalScript `WallShopClient` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup` y `Minerals` deben quedar hermanos dentro de
 `ServerScriptService`.
@@ -184,7 +212,8 @@ real de las probabilidades, asi que no hay que recalcular nada para que sigan cu
 **El agujero** (`HOLE`): marca que queda donde se pico, dura `LIFETIME` segundos (3) y se
 va **desvaneciendo poco a poco** durante `FADE_TIME` (3) en vez de desaparecer de golpe.
 **Se pinta del color del mineral que ha salido**, asi se identifica mirando el suelo; con
-el legendario cicla colores (`RAINBOW_SPEED`). Se ajusta con `SIZE` (diametro), `DEPTH`,
+el legendario cicla colores (`RAINBOW_SPEED`). Lo dibuja el cliente del jugador que ha
+picado (`HoleClient`), asi que **cada jugador ve solo sus propios agujeros**. Se ajusta con `SIZE` (diametro), `DEPTH`,
 `DARKEN` (cuanto se oscurece el color del mineral) y `USE_MINERAL_COLOR` (ponlo en `false`
 para que siempre sea `COLOR`). Se crea con `CanQuery = false` para que no interfiera con
 los raycast de las zonas.

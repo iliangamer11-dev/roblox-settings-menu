@@ -11,7 +11,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
@@ -23,12 +22,18 @@ local Minerals = require(script.Parent:WaitForChild("Minerals"))
 -- Remote
 --------------------------------------------------------------------------------
 
-local swingRemote = ReplicatedStorage:FindFirstChild(Config.REMOTE_NAME)
-if not swingRemote or not swingRemote:IsA("RemoteEvent") then
-	swingRemote = Instance.new("RemoteEvent")
-	swingRemote.Name = Config.REMOTE_NAME
-	swingRemote.Parent = ReplicatedStorage
+local function ensureRemote(name: string): RemoteEvent
+	local remote = ReplicatedStorage:FindFirstChild(name)
+	if not remote or not remote:IsA("RemoteEvent") then
+		remote = Instance.new("RemoteEvent")
+		remote.Name = name
+		remote.Parent = ReplicatedStorage
+	end
+	return remote
 end
+
+local swingRemote = ensureRemote(Config.REMOTE_NAME)
+local holeRemote = ensureRemote(Config.HOLE_REMOTE_NAME)
 
 --------------------------------------------------------------------------------
 -- Herramienta base
@@ -259,8 +264,9 @@ end
 -- Efecto del golpe
 --------------------------------------------------------------------------------
 
--- Agujero que queda marcado donde se pico y desaparece a los HOLE.LIFETIME segundos
-local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
+-- El agujero lo dibuja el propio cliente que ha picado (ver HoleClient), asi cada
+-- jugador ve solo sus agujeros y no los de los demas. Aqui solo se le manda el aviso.
+local function sendHole(player: Player, position: Vector3, normal: Vector3, mineral: any)
 	local cfg = Config.HOLE
 	if not cfg.ENABLED then
 		return
@@ -271,54 +277,7 @@ local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
 		color = mineral.COLOR:Lerp(Color3.new(0, 0, 0), cfg.DARKEN)
 	end
 
-	-- Con color de mineral queda mejor liso que con textura de piedra
-	local material = (cfg.USE_MINERAL_COLOR and mineral) and Enum.Material.SmoothPlastic or cfg.MATERIAL
-
-	local hole = Instance.new("Part")
-	hole.Name = "PickaxeHole"
-	hole.Shape = Enum.PartType.Cylinder
-	hole.Size = Vector3.new(cfg.DEPTH, cfg.SIZE, cfg.SIZE)
-	hole.Color = color
-	hole.Material = material
-	hole.Anchored = true
-	hole.CanCollide = false
-	hole.CanQuery = false -- para que no estorbe a los raycast de las zonas
-	hole.CanTouch = false
-	hole.CastShadow = false
-
-	-- El cilindro tiene el eje en X, se gira 90 grados para alinearlo con la normal.
-	-- Se apoya justo sobre la superficie para que se vea como un hueco oscuro.
-	hole.CFrame = CFrame.lookAt(position + normal * (cfg.DEPTH * 0.4), position + normal)
-		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
-	hole.Parent = workspace
-
-	-- Se desvanece poco a poco en vez de desaparecer de golpe
-	local fadeTime = math.clamp(cfg.FADE_TIME, 0, cfg.LIFETIME)
-	if fadeTime > 0 then
-		local fadeInfo = TweenInfo.new(
-			fadeTime,
-			Enum.EasingStyle.Linear,
-			Enum.EasingDirection.Out,
-			0,
-			false,
-			cfg.LIFETIME - fadeTime -- espera antes de empezar a desvanecerse
-		)
-		TweenService:Create(hole, fadeInfo, { Transparency = 1 }):Play()
-	end
-
-	-- Mineral legendario: el agujero cicla colores mientras dura
-	if mineral and mineral.RAINBOW then
-		task.spawn(function()
-			local startClock = os.clock()
-			while hole.Parent do
-				local hue = ((os.clock() - startClock) * cfg.RAINBOW_SPEED) % 1
-				hole.Color = Color3.fromHSV(hue, 1, 1)
-				task.wait(0.05)
-			end
-		end)
-	end
-
-	Debris:AddItem(hole, cfg.LIFETIME)
+	holeRemote:FireClient(player, position, normal, color, mineral ~= nil and mineral.RAINBOW == true)
 end
 
 -- Chispas en el punto golpeado, del color del mineral que ha salido.
@@ -446,7 +405,7 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 		task.delay(impactDelay(), function()
 			if effectHost and effectHost.Parent and effectPosition then
 				playHitEffect(effectHost, effectPosition, nil)
-				spawnHole(effectPosition, effectNormal or Vector3.yAxis, nil)
+				sendHole(player, effectPosition, effectNormal or Vector3.yAxis, nil)
 			end
 		end)
 		return
@@ -486,7 +445,7 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 
 		if effectHost and effectHost.Parent and effectPosition then
 			playHitEffect(effectHost, effectPosition, mineral)
-			spawnHole(effectPosition, effectNormal or Vector3.yAxis, mineral)
+			sendHole(player, effectPosition, effectNormal or Vector3.yAxis, mineral)
 		end
 	end)
 end)

@@ -151,7 +151,7 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 	end
 
 	-- Mineral legendario: el nombre cicla colores. El arcoiris principal esta en el
-	-- agujero (MiningService.spawnHole), no en el cartel.
+	-- agujero (lo dibuja HoleClient), no en el cartel.
 	if mineral and mineral.RAINBOW and nameLabel then
 		task.spawn(function()
 			local startClock = os.clock()

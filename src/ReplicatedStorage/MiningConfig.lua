@@ -16,8 +16,37 @@ MiningConfig.STARTING_MONEY = 0
 -- Nombre de la herramienta
 MiningConfig.TOOL_NAME = "Pickaxe"
 
--- Nombre del RemoteEvent que crea el servidor en ReplicatedStorage
-MiningConfig.REMOTE_NAME = "PickaxeSwing"
+-- Nombres de los RemoteEvent que crea el servidor en ReplicatedStorage
+MiningConfig.REMOTE_NAME = "PickaxeSwing" -- click del pico
+MiningConfig.HOLE_REMOTE_NAME = "PickaxeHole" -- avisa al jugador para que dibuje su agujero
+MiningConfig.WALL_REMOTE_NAME = "WallPurchase" -- compra de paredes
+
+--------------------------------------------------------------------------------
+-- PAREDES QUE SE COMPRAN (una por zona)
+--------------------------------------------------------------------------------
+
+-- Cada pared se quita SOLO para el jugador que la compra.
+-- TITLE es lo que se lee en el boton, en ingles.
+MiningConfig.WALLS = {
+	{ NAME = "Pared1", PRICE = 100, TITLE = "Desert Zone" },
+	{ NAME = "Pared2", PRICE = 1000, TITLE = "Mine Zone" },
+	{ NAME = "Pared3", PRICE = 5000, TITLE = "Moon Zone" },
+	{ NAME = "Pared4", PRICE = 10000, TITLE = "Candy Zone" },
+}
+
+-- Textos y comportamiento del boton que sale al acercarse (ProximityPrompt).
+-- Todo en ingles, como pediste.
+MiningConfig.WALL_PROMPT = {
+	KEY = Enum.KeyCode.E,
+	HOLD_DURATION = 0.4, -- segundos que hay que mantener la tecla
+	MAX_DISTANCE = 14, -- a cuantos studs aparece el boton
+	REQUIRES_LINE_OF_SIGHT = false,
+
+	ACTION_TEXT = "Buy for $%s", -- %s = precio
+	OBJECT_TEXT = "%s", -- %s = TITLE de la pared
+	FAILED_TEXT = "Need $%s more", -- %s = lo que falta
+	FEEDBACK_TIME = 1.5, -- cuanto se queda el aviso antes de volver al texto normal
+}
 
 -- Multiplicador de cada zona (nombre exacto de la Part).
 -- Dinero final = dinero base del mineral * multiplicador de la zona.

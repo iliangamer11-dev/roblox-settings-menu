@@ -4,6 +4,11 @@
 	Alternativa a la version modular de src/ para quien no usa Rojo.
 	NO uses las dos a la vez: harian el trabajo doble.
 
+	OJO, esta version NO trae dos cosas que necesitan scripts de cliente:
+	  - Agujeros privados (aqui los ve todo el mundo, no solo quien pico)
+	  - Las paredes de pago Pared1..Pared4 (WallShop)
+	Para eso usa la version modular de src/.
+
 	INSTALACION:
 	1. ServerScriptService > Insert Object > Script
 	2. Pega TODO este codigo
