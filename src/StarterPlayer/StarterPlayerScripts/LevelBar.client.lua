@@ -1,8 +1,11 @@
 --[[
 	LevelBar (LocalScript en StarterPlayer > StarterPlayerScripts)
 
-	Barra de nivel: el progreso en verde, lo que falta en blanco, "Level X" dentro a la
-	izquierda y los puntos dentro a la derecha. Texto y cuadro con contorno negro.
+	Barra de nivel abajo en la pantalla: el progreso en verde, lo que falta en blanco,
+	"Level X" dentro a la izquierda y los puntos dentro a la derecha. Texto y cuadro con
+	contorno negro.
+
+	Al subir de nivel sale "LEVEL UP!" encima de la barra y suena el aviso.
 
 	Se dibuja por codigo, no hace falta montar nada a mano. Se ajusta todo en
 	MiningConfig.LEVEL_BAR y lee los atributos que publica LevelService.
@@ -11,6 +14,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local Format = require(ReplicatedStorage:WaitForChild("Format"))
@@ -112,6 +116,83 @@ progressLabel.Position = UDim2.new(1, -cfg.PADDING, 0.5, 0)
 progressLabel.Size = UDim2.new(0.45, -cfg.PADDING, 0.62, 0)
 
 --------------------------------------------------------------------------------
+-- Aviso de subida de nivel
+--------------------------------------------------------------------------------
+
+local upCfg = Config.LEVEL_UP
+
+-- Texto que aparece justo encima de la barra
+local levelUpLabel = Instance.new("TextLabel")
+levelUpLabel.Name = "LevelUp"
+levelUpLabel.BackgroundTransparency = 1
+levelUpLabel.AnchorPoint = Vector2.new(0.5, 1)
+levelUpLabel.Size = UDim2.new(0, cfg.SIZE.X.Offset, 0, upCfg.TEXT_SIZE)
+levelUpLabel.Font = cfg.FONT
+levelUpLabel.TextScaled = true
+levelUpLabel.TextColor3 = upCfg.TEXT_COLOR
+levelUpLabel.TextTransparency = 1
+levelUpLabel.Visible = false
+levelUpLabel.Parent = screenGui
+
+local levelUpStroke = addOutline(levelUpLabel, cfg.TEXT_OUTLINE_THICKNESS, cfg.TEXT_OUTLINE_COLOR)
+levelUpStroke.LineJoinMode = Enum.LineJoinMode.Round
+levelUpStroke.Transparency = 1
+
+-- Posicion de reposo: pegada encima de la barra
+local function restingPosition(): UDim2
+	local barTop = bar.Position.Y.Offset - bar.Size.Y.Offset
+	return UDim2.new(bar.Position.X.Scale, bar.Position.X.Offset, bar.Position.Y.Scale, barTop - upCfg.OFFSET)
+end
+
+-- Sonido en el cliente: lo oye solo este jugador, no todo el servidor
+local levelUpSound = Instance.new("Sound")
+levelUpSound.Name = "LevelUpSound"
+levelUpSound.SoundId = upCfg.SOUND_ID
+levelUpSound.Volume = upCfg.SOUND_VOLUME
+levelUpSound.Parent = screenGui
+
+-- Se precarga para que la primera subida de nivel no suene con retraso
+task.spawn(function()
+	pcall(function()
+		ContentProvider:PreloadAsync({ levelUpSound })
+	end)
+end)
+
+local function announceLevelUp(level: number)
+	if not upCfg.ENABLED then
+		return
+	end
+
+	-- Si el texto lleva %d se sustituye por el nivel; si no, string.format lo ignora
+	levelUpLabel.Text = string.format(upCfg.TEXT_FORMAT, level)
+	levelUpLabel.Position = restingPosition()
+	levelUpLabel.Visible = true
+	levelUpLabel.TextTransparency = 0
+	levelUpStroke.Transparency = 0
+
+	pcall(function()
+		levelUpSound:Play()
+	end)
+
+	local start = levelUpLabel.Position
+	local riseInfo = TweenInfo.new(upCfg.DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(levelUpLabel, riseInfo, {
+		Position = start - UDim2.fromOffset(0, upCfg.RISE),
+	}):Play()
+
+	-- El desvanecido entra en la segunda mitad, para que se lea bien al principio
+	local fadeTime = upCfg.DURATION * 0.5
+	local fadeInfo =
+		TweenInfo.new(fadeTime, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, upCfg.DURATION - fadeTime)
+	TweenService:Create(levelUpLabel, fadeInfo, { TextTransparency = 1 }):Play()
+	TweenService:Create(levelUpStroke, fadeInfo, { Transparency = 1 }):Play()
+
+	task.delay(upCfg.DURATION + 0.1, function()
+		levelUpLabel.Visible = false
+	end)
+end
+
+--------------------------------------------------------------------------------
 -- Actualizacion
 --------------------------------------------------------------------------------
 
@@ -129,7 +210,18 @@ local function update()
 	TweenService:Create(fill, tweenInfo, { Size = UDim2.fromScale(alpha, 1) }):Play()
 end
 
-player:GetAttributeChangedSignal("level"):Connect(update)
+-- La subida de nivel se detecta comparando el atributo, no hace falta RemoteEvent
+local lastLevel = player:GetAttribute("level") or 1
+
+player:GetAttributeChangedSignal("level"):Connect(function()
+	local level = player:GetAttribute("level") or 1
+	if level > lastLevel then
+		announceLevelUp(level)
+	end
+	lastLevel = level
+	update()
+end)
+
 player:GetAttributeChangedSignal("xp"):Connect(update)
 player:GetAttributeChangedSignal("xpNeeded"):Connect(update)
 

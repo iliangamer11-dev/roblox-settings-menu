@@ -31,8 +31,10 @@ MiningConfig.LEVEL = {
 -- y los puntos a la derecha, todo con contorno negro.
 MiningConfig.LEVEL_BAR = {
 	SIZE = UDim2.new(0, 440, 0, 46),
-	POSITION = UDim2.new(0.5, 0, 0, 18),
-	ANCHOR = Vector2.new(0.5, 0),
+	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
+	-- y el -18 la separa un poco.
+	POSITION = UDim2.new(0.5, 0, 1, -18),
+	ANCHOR = Vector2.new(0.5, 1),
 
 	FILL_COLOR = Color3.fromRGB(60, 220, 45), -- progreso (verde)
 	BACKGROUND_COLOR = Color3.fromRGB(238, 238, 238), -- lo que falta (blanco)
@@ -49,6 +51,24 @@ MiningConfig.LEVEL_BAR = {
 	LEVEL_FORMAT = "Level %d",
 	PROGRESS_FORMAT = "%s / %s", -- puntos actuales / puntos del nivel
 	TWEEN_TIME = 0.35, -- lo que tarda la barra en moverse
+}
+
+-- Aviso de subida de nivel: texto en ingles encima de la barra + sonido
+MiningConfig.LEVEL_UP = {
+	ENABLED = true,
+
+	-- Si pones un %d dentro del texto, se sustituye por el nivel nuevo.
+	-- Ej: "LEVEL UP!  Level %d"
+	TEXT_FORMAT = "LEVEL UP!",
+	TEXT_COLOR = Color3.fromRGB(255, 232, 120),
+	TEXT_SIZE = 46, -- alto del texto en pixeles
+	OFFSET = 18, -- separacion sobre la barra
+
+	SOUND_ID = "rbxassetid://112485797063762",
+	SOUND_VOLUME = 0.7,
+
+	RISE = 45, -- pixeles que sube el texto mientras se desvanece
+	DURATION = 1.5, -- cuanto dura el aviso
 }
 
 -- Nombre de la variable de dinero (aparece en leaderstats como "money")

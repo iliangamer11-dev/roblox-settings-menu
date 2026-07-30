@@ -164,9 +164,14 @@ Causas mas comunes:
 
 ## Barra de nivel
 
-Barra en la parte de arriba de la pantalla: el progreso en **verde**, lo que falta en
+Barra en la parte **de abajo** de la pantalla: el progreso en **verde**, lo que falta en
 **blanco**, `Level X` dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha.
 Texto y cuadro con contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.
+
+Al subir de nivel aparece **`LEVEL UP!`** encima de la barra (sube y se desvanece) y suena
+el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_FORMAT`
+(si le pones un `%d` se sustituye por el nivel nuevo), `SOUND_ID`, `SOUND_VOLUME`,
+`DURATION` y `RISE`. La subida se detecta comparando el atributo `level`, sin RemoteEvents.
 
 - Los puntos se ganan al picar y no se gastan, asi que comprar paredes no baja el nivel.
 - Por defecto (`XP_FROM_BASE_VALUE = true`) los puntos salen del valor **base** del mineral,
