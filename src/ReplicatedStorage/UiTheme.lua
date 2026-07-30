@@ -96,25 +96,37 @@ function UiTheme.text(parent: Instance, text: string, size: UDim2, position: UDi
 	return label
 end
 
--- Escala toda la interfaz de un ScreenGui segun el tamano de la pantalla, para que se
--- vea bien en movil, tablet, monitor y 4K. Se mete un UIScale en cada elemento de
--- primer nivel y se recalcula cuando cambia la resolucion.
--- Los AnchorPoint ya colocan cada cosa respecto a su borde, asi que el escalado no
--- descoloca nada.
-function UiTheme.autoScale(gui: ScreenGui)
-	local settings = theme.SCALE
-	local scales = {}
+--[[
+	Contenedor escalado. TODO lo de un ScreenGui se mete aqui dentro en vez de colgarlo
+	del ScreenGui directamente.
 
-	local function ensure(child: Instance)
-		if child:IsA("GuiObject") and not child:FindFirstChildOfClass("UIScale") then
-			local scale = Instance.new("UIScale")
-			scale.Parent = child
-			table.insert(scales, scale)
-		end
-	end
+	Por que: un UIScale escala el tamano de un objeto y las posiciones de sus HIJOS, pero
+	no la posicion del objeto en si. Si se escalaba cada elemento por separado, los
+	tamanos cambiaban pero las separaciones (que estan en pixeles) se quedaban fijas: en
+	PC los botones salian grandes y pegados, y en movil pequenos y muy separados.
+
+	Metiendo todo dentro de este contenedor, posiciones, huecos y tamanos escalan juntos,
+	asi que la interfaz se ve igual en cualquier pantalla.
+
+	El truco del tamano: el contenedor se hace 1/factor de la pantalla para que, ya
+	escalado por el UIScale, ocupe exactamente la pantalla. Asi las posiciones en escala
+	(centrado, abajo, derecha) siguen cuadrando.
+]]
+function UiTheme.root(gui: ScreenGui): Frame
+	local settings = theme.SCALE
+
+	local root = Instance.new("Frame")
+	root.Name = "Root"
+	root.BackgroundTransparency = 1
+	root.AnchorPoint = Vector2.new(0, 0)
+	root.Position = UDim2.fromScale(0, 0)
+	root.Size = UDim2.fromScale(1, 1)
+	root.Parent = gui
+
+	local scale = Instance.new("UIScale")
+	scale.Parent = root
 
 	local function update()
-		-- AbsoluteSize del ScreenGui es el tamano util de la pantalla
 		local viewport = gui.AbsoluteSize
 		if viewport.X <= 0 or viewport.Y <= 0 then
 			return
@@ -123,22 +135,14 @@ function UiTheme.autoScale(gui: ScreenGui)
 		local factor = math.min(viewport.X / settings.REFERENCE.X, viewport.Y / settings.REFERENCE.Y)
 		factor = math.clamp(factor, settings.MIN, settings.MAX)
 
-		for _, scale in scales do
-			scale.Scale = factor
-		end
+		scale.Scale = factor
+		root.Size = UDim2.fromScale(1 / factor, 1 / factor)
 	end
-
-	for _, child in gui:GetChildren() do
-		ensure(child)
-	end
-
-	gui.ChildAdded:Connect(function(child)
-		ensure(child)
-		update()
-	end)
 
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)
 	update()
+
+	return root
 end
 
 -- Degradado vertical (de TOP arriba a BOTTOM abajo) sobre un texto

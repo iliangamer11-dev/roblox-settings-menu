@@ -44,7 +44,9 @@ buttonGui.Parent = playerGui
 
 -- El boton (cuadro + icono + texto debajo) lo monta UiTheme, que tambien calcula el
 -- hueco segun el SLOT, asi que ajustes, tienda y tags nunca se pisan
-local icon = UiTheme.hudButton(buttonGui, buttonCfg.SLOT, buttonCfg.ICON_ID, buttonCfg.LABEL)
+local buttonRoot = UiTheme.root(buttonGui)
+
+local icon = UiTheme.hudButton(buttonRoot, buttonCfg.SLOT, buttonCfg.ICON_ID, buttonCfg.LABEL)
 
 --------------------------------------------------------------------------------
 -- Panel
@@ -57,7 +59,9 @@ panelGui.IgnoreGuiInset = true
 panelGui.Enabled = false
 panelGui.Parent = playerGui
 
-local _, panel = UiTheme.framedBox(panelGui, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+local panelRoot = UiTheme.root(panelGui)
+
+local _, panel = UiTheme.framedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
 
 -- Cabecera
 local header = Instance.new("Frame")
@@ -300,6 +304,4 @@ closeButton.MouseButton1Click:Connect(function()
 	panelGui.Enabled = false
 end)
 
--- Se ajustan al tamano de la pantalla
-UiTheme.autoScale(buttonGui)
-UiTheme.autoScale(panelGui)
+

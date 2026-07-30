@@ -46,7 +46,10 @@ buttonGui.ResetOnSpawn = false
 buttonGui.IgnoreGuiInset = true
 buttonGui.Parent = playerGui
 
-local _, buttonBody = makeFramedBox(buttonGui, buttonCfg.SIZE, buttonCfg.POSITION, buttonCfg.ANCHOR)
+-- Contenedor escalado: dentro de el, tamanos y separaciones crecen juntos
+local buttonRoot = UiTheme.root(buttonGui)
+
+local _, buttonBody = makeFramedBox(buttonRoot, buttonCfg.SIZE, buttonCfg.POSITION, buttonCfg.ANCHOR)
 
 -- ImageButton para que se pueda pulsar el propio icono. Ocupa todo el cuadro,
 -- porque el texto ahora va por fuera, debajo.
@@ -67,7 +70,7 @@ local labelY = buttonCfg.POSITION.Y.Offset + buttonCfg.SIZE.Y.Offset * (1 - butt
 local centerX = buttonCfg.POSITION.X.Offset + buttonCfg.SIZE.X.Offset * (0.5 - buttonCfg.ANCHOR.X)
 
 local buttonLabel = makeText(
-	buttonGui,
+	buttonRoot,
 	buttonCfg.LABEL,
 	UDim2.new(0, buttonCfg.SIZE.X.Offset + 8, 0, buttonCfg.LABEL_HEIGHT),
 	UDim2.new(buttonCfg.POSITION.X.Scale, centerX, buttonCfg.POSITION.Y.Scale, labelY)
@@ -86,7 +89,9 @@ panelGui.IgnoreGuiInset = true
 panelGui.Enabled = false
 panelGui.Parent = playerGui
 
-local _, panel = makeFramedBox(panelGui, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+local panelRoot = UiTheme.root(panelGui)
+
+local _, panel = makeFramedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
 
 local title = makeText(panel, panelCfg.TITLE, UDim2.new(1, -80, 0, 44), UDim2.new(0, 20, 0, 12))
 title.Name = "Title"
@@ -270,10 +275,6 @@ end)
 closeButton.MouseButton1Click:Connect(function()
 	panelGui.Enabled = false
 end)
-
--- Se ajustan al tamano de la pantalla
-UiTheme.autoScale(buttonGui)
-UiTheme.autoScale(panelGui)
 
 -- Estado inicial
 refreshMusic()

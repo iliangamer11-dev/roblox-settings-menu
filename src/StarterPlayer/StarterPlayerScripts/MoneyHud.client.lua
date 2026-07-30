@@ -53,7 +53,10 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
 local anchor = Vector2.new(buttonCfg.ANCHOR.X, 1) -- misma columna, pegado por abajo
-local _, body = UiTheme.framedBox(screenGui, cfg.SIZE, moneyPosition(), anchor)
+-- Todo cuelga del contenedor escalado, asi tamanos y posiciones crecen juntos
+local root = UiTheme.root(screenGui)
+
+local _, body = UiTheme.framedBox(root, cfg.SIZE, moneyPosition(), anchor)
 
 -- Icono a la IZQUIERDA, cuadrado, con el alto del cartel
 local iconSide = math.floor(cfg.SIZE.Y.Offset * cfg.ICON_SIZE)
@@ -89,7 +92,5 @@ local function update()
 end
 
 player:GetAttributeChangedSignal(Config.MONEY_NAME):Connect(update)
-
-UiTheme.autoScale(screenGui)
 
 update()

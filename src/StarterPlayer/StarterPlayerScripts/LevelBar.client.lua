@@ -45,6 +45,10 @@ screenGui.IgnoreGuiInset = true
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
+-- Contenedor escalado: dentro de el, tamanos, posiciones y huecos crecen juntos,
+-- asi la barra se ve igual en movil y en PC
+local root = UiTheme.root(screenGui)
+
 -- Fondo blanco = lo que falta
 local bar = Instance.new("Frame")
 bar.Name = "Bar"
@@ -54,7 +58,7 @@ bar.AnchorPoint = cfg.ANCHOR
 bar.BackgroundColor3 = cfg.BACKGROUND_COLOR
 bar.BorderSizePixel = 0
 bar.ClipsDescendants = true -- para que el verde respete las esquinas redondeadas
-bar.Parent = screenGui
+bar.Parent = root
 
 local barCorner = Instance.new("UICorner")
 barCorner.CornerRadius = UDim.new(0, cfg.CORNER_RADIUS)
@@ -135,7 +139,7 @@ levelUpLabel.TextScaled = true
 levelUpLabel.TextColor3 = upCfg.TEXT_COLOR
 levelUpLabel.TextTransparency = 1
 levelUpLabel.Visible = false
-levelUpLabel.Parent = screenGui
+levelUpLabel.Parent = root
 
 local levelUpStroke = addOutline(levelUpLabel, cfg.TEXT_OUTLINE_THICKNESS, cfg.TEXT_OUTLINE_COLOR)
 levelUpStroke.LineJoinMode = Enum.LineJoinMode.Round
@@ -212,9 +216,6 @@ local function update()
 	local alpha = needed > 0 and math.clamp(xp / needed, 0, 1) or 0
 	TweenService:Create(fill, tweenInfo, { Size = UDim2.fromScale(alpha, 1) }):Play()
 end
-
--- Se ajusta al tamano de la pantalla (movil, monitor, 4K)
-UiTheme.autoScale(screenGui)
 
 -- La subida de nivel se detecta comparando el atributo, no hace falta RemoteEvent
 local lastLevel = player:GetAttribute("level") or 1

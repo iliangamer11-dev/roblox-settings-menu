@@ -50,7 +50,9 @@ buttonGui.ResetOnSpawn = false
 buttonGui.IgnoreGuiInset = true
 buttonGui.Parent = playerGui
 
-local icon = UiTheme.hudButton(buttonGui, buttonCfg.SLOT, buttonCfg.ICON_ID, buttonCfg.LABEL)
+local buttonRoot = UiTheme.root(buttonGui)
+
+local icon = UiTheme.hudButton(buttonRoot, buttonCfg.SLOT, buttonCfg.ICON_ID, buttonCfg.LABEL)
 
 --------------------------------------------------------------------------------
 -- Panel
@@ -63,7 +65,9 @@ panelGui.IgnoreGuiInset = true
 panelGui.Enabled = false
 panelGui.Parent = playerGui
 
-local _, panel = UiTheme.framedBox(panelGui, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+local panelRoot = UiTheme.root(panelGui)
+
+local _, panel = UiTheme.framedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
 
 local header = Instance.new("Frame")
 header.Name = "Header"
@@ -219,8 +223,10 @@ noticeGui.IgnoreGuiInset = true
 noticeGui.Enabled = false
 noticeGui.Parent = playerGui
 
+local noticeRoot = UiTheme.root(noticeGui)
+
 local _, noticeBody =
-	UiTheme.framedBox(noticeGui, panelCfg.UNLOCK_SIZE, panelCfg.UNLOCK_POSITION, Vector2.new(0.5, 0))
+	UiTheme.framedBox(noticeRoot, panelCfg.UNLOCK_SIZE, panelCfg.UNLOCK_POSITION, Vector2.new(0.5, 0))
 
 local noticeTitle = UiTheme.text(noticeBody, "", UDim2.new(1, -16, 0.5, 0), UDim2.new(0, 8, 0, 6))
 noticeTitle.Name = "Message"
@@ -289,10 +295,6 @@ end)
 closeButton.MouseButton1Click:Connect(function()
 	panelGui.Enabled = false
 end)
-
-UiTheme.autoScale(buttonGui)
-UiTheme.autoScale(panelGui)
-UiTheme.autoScale(noticeGui)
 
 refresh()
 checkNewTags()

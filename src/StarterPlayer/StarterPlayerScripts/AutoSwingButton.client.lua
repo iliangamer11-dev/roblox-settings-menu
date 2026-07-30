@@ -29,7 +29,10 @@ screenGui.IgnoreGuiInset = true
 screenGui.Enabled = false -- se enciende si tiene el pase
 screenGui.Parent = playerGui
 
-local _, body = UiTheme.framedBox(screenGui, cfg.SIZE, cfg.POSITION, cfg.ANCHOR)
+-- Todo cuelga del contenedor escalado, asi tamanos y posiciones crecen juntos
+local root = UiTheme.root(screenGui)
+
+local _, body = UiTheme.framedBox(root, cfg.SIZE, cfg.POSITION, cfg.ANCHOR)
 
 local button = UiTheme.button(body, cfg.ON_TEXT, UDim2.new(1, -10, 1, -10), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
 button.Name = "Toggle"
@@ -52,8 +55,6 @@ local function refreshVisibility()
 end
 
 player:GetAttributeChangedSignal("autoSwing"):Connect(refreshVisibility)
-
-UiTheme.autoScale(screenGui)
 
 refresh()
 refreshVisibility()
