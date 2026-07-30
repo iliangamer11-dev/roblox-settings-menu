@@ -87,8 +87,8 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 - **Popup de dinero**: al sumar, aparece un cartel con un `ImageLabel` arriba (tu icono) y un
   `TextLabel` debajo (`+1`, `+5`, ...) en un punto **random alrededor del jugador**, que sube
   y se desvanece. Todo configurable en `POPUP`.
-- **Minerales**: hacen falta `HITS_PER_MINERAL` picazos (3) para sacar un mineral. Los
-  golpes intermedios hacen chispas y agujero pero no dan dinero ni cartel.
+- **Minerales**: cada picazo saca un mineral (`HITS_PER_MINERAL = 1`), asi que el cartel
+  sale siempre. Subiendo ese numero hacen falta varios golpes por mineral.
 - **Zona y punto de impacto**: se tira un raycast hacia abajo a `SWING.HIT_OFFSET` studs
   **delante del personaje**, ahi es donde cae el pico. Ese punto decide la zona, las chispas
   y el agujero. El cursor no se usa. Si delante no hay zona valida (un borde, un objeto
@@ -141,11 +141,11 @@ Todo esta en `src/ReplicatedStorage/MiningConfig.lua` (o arriba de
 `standalone/PickaxeAllInOne.server.lua` si usas la version de un archivo).
 
 **Recompensas y ritmo**: `MINERALS` (probabilidad, dinero base y color de cada mineral),
-`ZONE_MULTIPLIERS`, `SWING_COOLDOWN` (0.75 s), `HITS_PER_MINERAL` (3 golpes por mineral),
-`GROUND_CHECK_DISTANCE`, `DEBUG`.
+`ZONE_MULTIPLIERS`, `SWING_COOLDOWN` (0.75 s), `HITS_PER_MINERAL` (1 = cada golpe da
+mineral), `GROUND_CHECK_DISTANCE`, `DEBUG`.
 
-Para que ganar dinero cueste mas o menos, lo que hay que tocar es `HITS_PER_MINERAL` y
-`SWING_COOLDOWN`, no las probabilidades: asi las rarezas siguen siendo las de la tabla.
+Para que ganar dinero cueste mas o menos, lo mejor es tocar `SWING_COOLDOWN` y los
+`ZONE_MULTIPLIERS`, no las probabilidades: asi las rarezas siguen siendo las de la tabla.
 
 Para anadir un mineral basta con meter otra entrada en `MINERALS`: el sorteo usa la suma
 real de las probabilidades, asi que no hay que recalcular nada para que sigan cuadrando.

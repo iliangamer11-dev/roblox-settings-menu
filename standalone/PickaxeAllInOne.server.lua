@@ -53,9 +53,9 @@ local MINERALS = {
 local SWING_COOLDOWN = 0.75
 local GROUND_CHECK_DISTANCE = 12
 
--- Picazos necesarios para sacar un mineral. Los golpes intermedios hacen chispas y
--- agujero pero no dan dinero: es la forma directa de que ganar dinero cueste mas.
-local HITS_PER_MINERAL = 3
+-- Picazos necesarios para sacar un mineral. 1 = cada golpe da mineral (lo normal).
+-- Subelo si quieres que cueste mas, pero los golpes intermedios no muestran cartel.
+local HITS_PER_MINERAL = 1
 local DEBUG = true
 
 -- El pico: mango a lo largo del eje Z, punta hacia -Z

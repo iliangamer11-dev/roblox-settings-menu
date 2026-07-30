@@ -74,10 +74,10 @@ MiningConfig.HOLE = {
 }
 
 -- Cuantos picazos hacen falta para sacar un mineral.
--- Los golpes intermedios hacen chispas y agujero, pero no dan dinero.
--- Es la forma mas directa de que ganar dinero no sea tan facil: con 3, la ganancia
--- por segundo se divide entre 3 sin tocar las probabilidades ni las recompensas.
-MiningConfig.HITS_PER_MINERAL = 3
+-- 1 = cada golpe da mineral y sale el cartel siempre (lo normal).
+-- Si algun dia quieres que ganar dinero cueste mas, sube este numero: con 3 la ganancia
+-- se divide entre 3, pero ojo, los golpes intermedios no muestran cartel.
+MiningConfig.HITS_PER_MINERAL = 1
 
 -- Tiempo minimo entre picazos (segundos)
 MiningConfig.SWING_COOLDOWN = 0.75
