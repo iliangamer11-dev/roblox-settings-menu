@@ -244,9 +244,8 @@ MiningConfig.PASS_EFFECTS = {
 	-- VIP: incluye estos pases, ademas de la placa VIP sobre el personaje
 	VIP_INCLUDES = { "X2_MONEY", "FAST_PICKAXE" },
 	-- El texto y el degradado del tag VIP estan en MiningConfig.TAGS (clave "VIP"),
-	-- junto con Noob, Principiante y Pro.
-	-- Delante del nombre, cuando lleva el tag VIP equipado
-	VIP_NAME_PREFIX = "[VIP] ",
+	-- junto con Noob, Principiante y Pro. Como se escribe al lado del nombre se
+	-- configura en NAMEPLATE.TAG_PREFIX_FORMAT.
 }
 
 --------------------------------------------------------------------------------
@@ -351,13 +350,23 @@ MiningConfig.NAMEPLATE = {
 	-- Quita el nombre que dibuja Roblox por defecto, para que no salga duplicado
 	HIDE_DEFAULT_NAME = true,
 
-	SIZE = UDim2.new(0, 260, 0, 76), -- tamano del cartel
+	-- 380 de ancho para que quepa "[Principiante] Nombre" en una linea
+	SIZE = UDim2.new(0, 380, 0, 76),
 	OFFSET = Vector3.new(0, 1.9, 0), -- altura sobre la cabeza, en studs (mas bajo = mas cerca)
 	MAX_DISTANCE = 140, -- desde cuan lejos se ve
 	ALWAYS_ON_TOP = false, -- true = se ve a traves de las paredes
 
 	FONT = Enum.Font.FredokaOne,
 	NAME_HEIGHT = 0.56, -- parte del cartel que ocupa el nombre (el resto, el nivel)
+
+	-- El nombre y el [Tag] van en la misma linea, cada uno con su ancho automatico, asi
+	-- que el tamano del texto es fijo (con TextScaled no se puede medir el ancho).
+	NAME_TEXT_SIZE = 28,
+	TAG_PREFIX_FORMAT = "[%s]", -- como se escribe el tag al lado del nombre
+	TAG_PREFIX_PADDING = 6, -- hueco entre el tag y el nombre
+	-- false = el tag solo sale al lado del nombre. Ponlo en true si tambien lo quieres
+	-- repetido encima, en grande.
+	SHOW_TAG_ABOVE = false,
 
 	-- Nombre: blanco con contorno negro
 	NAME_COLOR = Color3.fromRGB(255, 255, 255),

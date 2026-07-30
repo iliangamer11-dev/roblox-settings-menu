@@ -328,8 +328,11 @@ Como funciona por dentro:
   los lee, y al pedir un cambio el **servidor comprueba** que lo tenga desbloqueado.
 - `WallShop` publica `ownsPared2`, `ownsPared4`... como atributos del jugador. Asi `Tags`
   sabe que paredes tiene sin depender del script de las paredes.
-- El tag equipado tambien sale en la columna `Tag` de la lista de jugadores, y con VIP el
-  nombre de la placa pasa a `[VIP] Nombre`.
+- El tag equipado sale **al lado del nombre** con su degradado (`[VIP] Nombre`,
+  `[Pro] Nombre`...) y tambien en la columna `Tag` de la lista de jugadores. El `[Tag]` es
+  un TextLabel aparte del nombre, porque un `UIGradient` tine el texto entero y el nombre
+  tiene que quedarse blanco. Los dos van en una fila con `UIListLayout` y ancho automatico,
+  asi el conjunto queda centrado sobre la cabeza.
 - Anadir un tag nuevo es meter una entrada en `MiningConfig.TAGS` con su `WALL` o `PASS`
   y sus dos colores: el menu y la placa se actualizan solos.
 

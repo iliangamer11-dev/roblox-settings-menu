@@ -59,21 +59,56 @@ local function buildNameplate(player: Player, character: Model)
 	billboard.LightInfluence = 0
 	billboard.Parent = head
 
+	-- Fila del nombre: [Tag] y nombre en la misma linea, centrados como un bloque.
+	-- Se usa UIListLayout con ancho automatico para que el conjunto quede centrado
+	-- sea corto o largo el nombre.
+	local nameRow = Instance.new("Frame")
+	nameRow.Name = "NameRow"
+	nameRow.BackgroundTransparency = 1
+	nameRow.Size = UDim2.fromScale(1, cfg.NAME_HEIGHT)
+	nameRow.Position = UDim2.fromScale(0, 0)
+	nameRow.Parent = billboard
+
+	local rowLayout = Instance.new("UIListLayout")
+	rowLayout.FillDirection = Enum.FillDirection.Horizontal
+	rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	rowLayout.Padding = UDim.new(0, cfg.TAG_PREFIX_PADDING)
+	rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	rowLayout.Parent = nameRow
+
+	-- [Tag] con su degradado, delante del nombre
+	local prefixLabel = Instance.new("TextLabel")
+	prefixLabel.Name = "TagPrefix"
+	prefixLabel.LayoutOrder = 1
+	prefixLabel.BackgroundTransparency = 1
+	prefixLabel.AutomaticSize = Enum.AutomaticSize.X
+	prefixLabel.Size = UDim2.fromOffset(0, cfg.NAME_TEXT_SIZE + 6)
+	prefixLabel.Font = cfg.FONT
+	prefixLabel.TextSize = cfg.NAME_TEXT_SIZE
+	prefixLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- el color real lo pone el degradado
+	prefixLabel.Text = ""
+	prefixLabel.Visible = false
+	prefixLabel.Parent = nameRow
+	addOutline(prefixLabel)
+
+	local prefixGradient = Instance.new("UIGradient")
+	prefixGradient.Rotation = 90
+	prefixGradient.Parent = prefixLabel
+
 	-- Nombre: blanco con contorno negro
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "PlayerName"
+	nameLabel.LayoutOrder = 2
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Size = UDim2.fromScale(1, cfg.NAME_HEIGHT)
-	nameLabel.Position = UDim2.fromScale(0, 0)
+	nameLabel.AutomaticSize = Enum.AutomaticSize.X
+	nameLabel.Size = UDim2.fromOffset(0, cfg.NAME_TEXT_SIZE + 6)
 	nameLabel.Font = cfg.FONT
-	nameLabel.TextScaled = true
+	nameLabel.TextSize = cfg.NAME_TEXT_SIZE
 	nameLabel.TextColor3 = cfg.NAME_COLOR
 	nameLabel.Text = cfg.USE_DISPLAY_NAME and player.DisplayName or player.Name
-	nameLabel.Parent = billboard
+	nameLabel.Parent = nameRow
 	addOutline(nameLabel)
-
-	-- Con VIP equipado el nombre sale como "[VIP] Nombre"
-	local baseName = nameLabel.Text
 
 	-- Nivel: degradado azul claro -> azul oscuro, con contorno negro
 	local levelLabel = Instance.new("TextLabel")
@@ -120,29 +155,32 @@ local function buildNameplate(player: Player, character: Model)
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	end
 
-	-- Pinta el tag equipado: texto, colores del degradado y el prefijo del nombre
+	-- Pinta el tag equipado: el [Tag] al lado del nombre y el suelto de encima,
+	-- los dos con el degradado de ese tag
 	local function refreshTag()
 		local key = player:GetAttribute("tag")
 		local tag = key and tagByKey[key]
 
 		if not tag then
 			tagLabel.Visible = false
-			nameLabel.Text = baseName
+			prefixLabel.Visible = false
 			return
 		end
 
-		tagLabel.Visible = true
-		tagLabel.Text = tag.LABEL
-		tagGradient.Color = ColorSequence.new({
+		local colors = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, tag.TOP),
 			ColorSequenceKeypoint.new(1, tag.BOTTOM),
 		})
 
-		if tag.KEY == "VIP" then
-			nameLabel.Text = Config.PASS_EFFECTS.VIP_NAME_PREFIX .. baseName
-		else
-			nameLabel.Text = baseName
-		end
+		-- Al lado del nombre
+		prefixLabel.Visible = true
+		prefixLabel.Text = string.format(cfg.TAG_PREFIX_FORMAT, tag.LABEL)
+		prefixGradient.Color = colors
+
+		-- Encima del nombre (opcional)
+		tagLabel.Visible = cfg.SHOW_TAG_ABOVE
+		tagLabel.Text = tag.LABEL
+		tagGradient.Color = colors
 	end
 
 	refreshTag()
