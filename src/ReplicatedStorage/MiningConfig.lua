@@ -100,7 +100,8 @@ MiningConfig.SETTINGS_BUTTON = {
 -- Boton de la tienda, al lado del de ajustes
 MiningConfig.SHOP_BUTTON = {
 	ENABLED = true,
-	GAP_X = 12, -- separacion con el boton de ajustes
+	SLOT = 1, -- 0 = ajustes, 1 = tienda, 2 = tags
+	GAP_X = 12, -- separacion entre los botones del HUD
 
 	-- >>> AQUI PONES TU IMAGEN DEL BOTON DE LA TIENDA <<<
 	ICON_ID = "",
@@ -146,6 +147,72 @@ MiningConfig.SETTINGS_PANEL = {
 }
 
 --------------------------------------------------------------------------------
+-- TAGS (etiqueta sobre el personaje)
+--------------------------------------------------------------------------------
+
+-- Cada tag tiene su degradado (TOP arriba, BOTTOM abajo) y como se desbloquea:
+--   DEFAULT = true -> lo tiene todo el mundo desde el principio
+--   WALL = "ParedX" -> se desbloquea al comprar esa pared
+--   PASS = "VIP"    -> se desbloquea con ese gamepass
+MiningConfig.TAGS = {
+	{
+		KEY = "NOOB",
+		LABEL = "Noob",
+		DEFAULT = true,
+		TOP = Color3.fromRGB(190, 145, 95), -- marron claro
+		BOTTOM = Color3.fromRGB(85, 55, 25), -- marron oscuro
+	},
+	{
+		KEY = "PRINCIPIANTE",
+		LABEL = "Principiante",
+		WALL = "Pared2",
+		TOP = Color3.fromRGB(130, 205, 255), -- azul claro
+		BOTTOM = Color3.fromRGB(18, 62, 175), -- azul oscuro
+	},
+	{
+		KEY = "PRO",
+		LABEL = "Pro",
+		WALL = "Pared4",
+		TOP = Color3.fromRGB(255, 155, 30), -- naranja
+		BOTTOM = Color3.fromRGB(190, 25, 25), -- rojo
+	},
+	{
+		KEY = "VIP",
+		LABEL = "VIP",
+		PASS = "VIP",
+		TOP = Color3.fromRGB(255, 140, 20), -- naranja
+		BOTTOM = Color3.fromRGB(255, 240, 90), -- amarillo
+	},
+}
+
+MiningConfig.TAG_REMOTE_NAME = "TagSelect"
+
+-- Boton para cambiar de tag, en la misma fila que ajustes y tienda
+MiningConfig.TAG_BUTTON = {
+	ENABLED = true,
+	SLOT = 2, -- 0 = ajustes, 1 = tienda, 2 = tags
+	ICON_ID = "", -- >>> AQUI PONES TU IMAGEN DEL BOTON DE TAGS <<<
+	LABEL = "TAGS",
+}
+
+MiningConfig.TAG_PANEL = {
+	SIZE = UDim2.fromOffset(560, 460),
+	TITLE = "Tags",
+	TITLE_ICON_ID = "",
+
+	EQUIP_TEXT = "EQUIP",
+	EQUIPPED_TEXT = "EQUIPPED",
+	LOCKED_TEXT = "LOCKED",
+	-- Como se lee el requisito de los que faltan
+	WALL_REQUIREMENT = "Buy %s", -- %s = titulo de la pared
+	PASS_REQUIREMENT = "Gamepass",
+
+	ROW_HEIGHT = 76,
+	ROW_PADDING = 10,
+	EXTRA_SCROLL = 40,
+}
+
+--------------------------------------------------------------------------------
 -- GAMEPASSES: IDS Y EFECTOS
 --------------------------------------------------------------------------------
 
@@ -176,11 +243,9 @@ MiningConfig.PASS_EFFECTS = {
 
 	-- VIP: incluye estos pases, ademas de la placa VIP sobre el personaje
 	VIP_INCLUDES = { "X2_MONEY", "FAST_PICKAXE" },
-	VIP_TAG = "VIP",
-	-- Degradado del tag: naranja arriba, amarillo abajo
-	VIP_GRADIENT_TOP = Color3.fromRGB(255, 140, 20),
-	VIP_GRADIENT_BOTTOM = Color3.fromRGB(255, 240, 90),
-	-- Delante del nombre, en la placa del personaje y en la lista de jugadores
+	-- El texto y el degradado del tag VIP estan en MiningConfig.TAGS (clave "VIP"),
+	-- junto con Noob, Principiante y Pro.
+	-- Delante del nombre, cuando lleva el tag VIP equipado
 	VIP_NAME_PREFIX = "[VIP] ",
 }
 

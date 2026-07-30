@@ -62,6 +62,8 @@ local function unlockAll(player: Player)
 
 	for wallName in wallByName do
 		playerWalls[wallName] = true
+		-- Atributo publico: lo leen Tags (para desbloquear) y el propio cliente
+		player:SetAttribute("owns" .. wallName, true)
 		wallRemote:FireClient(player, "unlocked", wallName)
 	end
 
@@ -106,6 +108,9 @@ local function attemptPurchase(player: Player, wallName: string)
 
 	moneyValue.Value -= wall.PRICE
 	playerWalls[wallName] = true
+
+	-- Atributo publico: asi Tags desbloquea Principiante/Pro sin acoplarse a este script
+	player:SetAttribute("owns" .. wallName, true)
 
 	wallRemote:FireClient(player, "unlocked", wallName)
 

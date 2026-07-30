@@ -23,6 +23,12 @@ if not cfg.ENABLED then
 	return
 end
 
+-- Los tags, para poder pintar el equipado con sus colores
+local tagByKey = {}
+for _, tag in Config.TAGS do
+	tagByKey[tag.KEY] = tag
+end
+
 local function addOutline(parent: Instance)
 	local stroke = Instance.new("UIStroke")
 	stroke.Thickness = cfg.OUTLINE_THICKNESS
@@ -66,18 +72,8 @@ local function buildNameplate(player: Player, character: Model)
 	nameLabel.Parent = billboard
 	addOutline(nameLabel)
 
-	-- Aqui si se puede poner el [VIP] delante del nombre
+	-- Con VIP equipado el nombre sale como "[VIP] Nombre"
 	local baseName = nameLabel.Text
-	local function refreshName()
-		if player:GetAttribute("vip") then
-			nameLabel.Text = Config.PASS_EFFECTS.VIP_NAME_PREFIX .. baseName
-		else
-			nameLabel.Text = baseName
-		end
-	end
-
-	refreshName()
-	player:GetAttributeChangedSignal("vip"):Connect(refreshName)
 
 	-- Nivel: degradado azul claro -> azul oscuro, con contorno negro
 	local levelLabel = Instance.new("TextLabel")
@@ -101,28 +97,22 @@ local function buildNameplate(player: Player, character: Model)
 	})
 	gradient.Parent = levelLabel
 
-	-- Etiqueta VIP encima del nombre, si tiene el gamepass
-	local vipLabel = Instance.new("TextLabel")
-	vipLabel.Name = "VipTag"
-	vipLabel.BackgroundTransparency = 1
-	vipLabel.Size = UDim2.fromScale(1, cfg.NAME_HEIGHT * 0.62)
-	vipLabel.Position = UDim2.fromScale(0, -cfg.NAME_HEIGHT * 0.62)
-	vipLabel.Font = cfg.FONT
-	vipLabel.TextScaled = true
-	vipLabel.Text = Config.PASS_EFFECTS.VIP_TAG
-	vipLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- el color real lo pone el degradado
-	vipLabel.Visible = player:GetAttribute("vip") == true
-	vipLabel.Parent = billboard
-	addOutline(vipLabel)
+	-- Tag encima del nombre (Noob, Principiante, Pro, VIP...) con su degradado
+	local tagLabel = Instance.new("TextLabel")
+	tagLabel.Name = "Tag"
+	tagLabel.BackgroundTransparency = 1
+	tagLabel.Size = UDim2.fromScale(1, cfg.NAME_HEIGHT * 0.62)
+	tagLabel.Position = UDim2.fromScale(0, -cfg.NAME_HEIGHT * 0.62)
+	tagLabel.Font = cfg.FONT
+	tagLabel.TextScaled = true
+	tagLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- el color real lo pone el degradado
+	tagLabel.Parent = billboard
+	addOutline(tagLabel)
 
-	-- Degradado naranja (arriba) a amarillo (abajo)
-	local vipGradient = Instance.new("UIGradient")
-	vipGradient.Rotation = 90
-	vipGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Config.PASS_EFFECTS.VIP_GRADIENT_TOP),
-		ColorSequenceKeypoint.new(1, Config.PASS_EFFECTS.VIP_GRADIENT_BOTTOM),
-	})
-	vipGradient.Parent = vipLabel
+	-- El degradado se reutiliza y solo se le cambian los colores al cambiar de tag
+	local tagGradient = Instance.new("UIGradient")
+	tagGradient.Rotation = 90
+	tagGradient.Parent = tagLabel
 
 	-- El nombre por defecto de Roblox se quita para que no salga duplicado
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -130,12 +120,39 @@ local function buildNameplate(player: Player, character: Model)
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	end
 
-	return levelLabel, vipLabel
+	-- Pinta el tag equipado: texto, colores del degradado y el prefijo del nombre
+	local function refreshTag()
+		local key = player:GetAttribute("tag")
+		local tag = key and tagByKey[key]
+
+		if not tag then
+			tagLabel.Visible = false
+			nameLabel.Text = baseName
+			return
+		end
+
+		tagLabel.Visible = true
+		tagLabel.Text = tag.LABEL
+		tagGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, tag.TOP),
+			ColorSequenceKeypoint.new(1, tag.BOTTOM),
+		})
+
+		if tag.KEY == "VIP" then
+			nameLabel.Text = Config.PASS_EFFECTS.VIP_NAME_PREFIX .. baseName
+		else
+			nameLabel.Text = baseName
+		end
+	end
+
+	refreshTag()
+	player:GetAttributeChangedSignal("tag"):Connect(refreshTag)
+
+	return levelLabel
 end
 
 local function onPlayerAdded(player: Player)
 	local levelLabel: TextLabel? = nil
-	local vipLabel: TextLabel? = nil
 
 	local function refresh()
 		if levelLabel and levelLabel.Parent then
@@ -143,17 +160,10 @@ local function onPlayerAdded(player: Player)
 		end
 	end
 
-	local function refreshVip()
-		if vipLabel and vipLabel.Parent then
-			vipLabel.Visible = player:GetAttribute("vip") == true
-		end
-	end
-
 	player:GetAttributeChangedSignal("level"):Connect(refresh)
-	player:GetAttributeChangedSignal("vip"):Connect(refreshVip)
 
 	local function onCharacterAdded(character: Model)
-		levelLabel, vipLabel = buildNameplate(player, character)
+		levelLabel = buildNameplate(player, character)
 	end
 
 	player.CharacterAdded:Connect(onCharacterAdded)

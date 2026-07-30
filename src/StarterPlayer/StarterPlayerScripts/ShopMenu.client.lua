@@ -42,39 +42,9 @@ buttonGui.ResetOnSpawn = false
 buttonGui.IgnoreGuiInset = true
 buttonGui.Parent = playerGui
 
--- Se calcula desde el boton de ajustes: si mueves ese, este lo sigue.
--- Con ANCHOR X 0 (izquierda) va a su derecha; con ANCHOR X 1 (derecha) va a su izquierda.
-local side = settingsCfg.ANCHOR.X >= 0.5 and -1 or 1
-local buttonX = settingsCfg.POSITION.X.Offset + side * (settingsCfg.SIZE.X.Offset + buttonCfg.GAP_X)
-
-local buttonPosition =
-	UDim2.new(settingsCfg.POSITION.X.Scale, buttonX, settingsCfg.POSITION.Y.Scale, settingsCfg.POSITION.Y.Offset)
-
-local _, buttonBody = UiTheme.framedBox(buttonGui, settingsCfg.SIZE, buttonPosition, settingsCfg.ANCHOR)
-
-local icon = Instance.new("ImageButton")
-icon.Name = "Icon"
-icon.BackgroundTransparency = 1
-icon.AnchorPoint = Vector2.new(0.5, 0.5)
-icon.Position = UDim2.fromScale(0.5, 0.5)
-icon.Size = UDim2.fromScale(0.82, 0.82)
-icon.ScaleType = Enum.ScaleType.Fit
-icon.Image = UiTheme.assetId(buttonCfg.ICON_ID)
-icon.Parent = buttonBody
-
--- Texto debajo del cuadro, igual que en ajustes: centrado en su propio cuadro y solo un
--- poco mas ancho que el, para que no toque la etiqueta de ajustes
-local labelY = settingsCfg.POSITION.Y.Offset + settingsCfg.SIZE.Y.Offset * (1 - settingsCfg.ANCHOR.Y) + 2
-local centerX = buttonX + settingsCfg.SIZE.X.Offset * (0.5 - settingsCfg.ANCHOR.X)
-
-local buttonLabel = UiTheme.text(
-	buttonGui,
-	buttonCfg.LABEL,
-	UDim2.new(0, settingsCfg.SIZE.X.Offset + 8, 0, settingsCfg.LABEL_HEIGHT),
-	UDim2.new(settingsCfg.POSITION.X.Scale, centerX, settingsCfg.POSITION.Y.Scale, labelY)
-)
-buttonLabel.Name = "Label"
-buttonLabel.AnchorPoint = Vector2.new(0.5, 0)
+-- El boton (cuadro + icono + texto debajo) lo monta UiTheme, que tambien calcula el
+-- hueco segun el SLOT, asi que ajustes, tienda y tags nunca se pisan
+local icon = UiTheme.hudButton(buttonGui, buttonCfg.SLOT, buttonCfg.ICON_ID, buttonCfg.LABEL)
 
 --------------------------------------------------------------------------------
 -- Panel

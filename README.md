@@ -101,6 +101,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ServerScriptService/LevelService.lua` | ServerScriptService | ModuleScript `LevelService` |
 | `src/ServerScriptService/Nameplate.server.lua` | ServerScriptService | Script `Nameplate` |
 | `src/ServerScriptService/Passes.lua` | ServerScriptService | ModuleScript `Passes` |
+| `src/ServerScriptService/Tags.server.lua` | ServerScriptService | Script `Tags` |
 | `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
@@ -111,6 +112,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/MoneyHud.client.lua` | StarterPlayerScripts | LocalScript `MoneyHud` |
 | `src/StarterPlayer/StarterPlayerScripts/ShopMenu.client.lua` | StarterPlayerScripts | LocalScript `ShopMenu` |
 | `src/StarterPlayer/StarterPlayerScripts/AutoSwingButton.client.lua` | StarterPlayerScripts | LocalScript `AutoSwingButton` |
+| `src/StarterPlayer/StarterPlayerScripts/TagsMenu.client.lua` | StarterPlayerScripts | LocalScript `TagsMenu` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -303,6 +305,33 @@ Los carteles de dinero y las placas de nombre los crea el servidor, asi que ocul
 hace poniendo `Enabled = false` en este cliente: los demas siguen viendolos.
 
 Los ajustes **no se guardan al salir** (harian falta DataStore o atributos guardados).
+
+## Tags
+
+Etiqueta sobre el personaje, con degradado propio, que se desbloquea con el progreso:
+
+| Tag | Como se consigue | Degradado |
+| --- | --- | --- |
+| Noob | lo tiene todo el mundo | marron claro -> marron oscuro |
+| Principiante | comprar `Pared2` | azul claro -> azul oscuro |
+| Pro | comprar `Pared4` | naranja -> rojo |
+| VIP | gamepass VIP | naranja -> amarillo |
+
+Boton **TAGS** en la fila del HUD: abre un panel con todos, el equipado marcado como
+`EQUIPPED`, los que faltan como `LOCKED` con su requisito (`Buy Mine Zone`), y se equipa el
+que quieras. Al desbloquear uno nuevo se equipa solo.
+
+Como funciona por dentro:
+
+- `Tags.server.lua` decide que tags tiene cada jugador y publica dos atributos:
+  `tag` (el equipado) y `tagsUnlocked` (los que tiene, separados por comas). El menu solo
+  los lee, y al pedir un cambio el **servidor comprueba** que lo tenga desbloqueado.
+- `WallShop` publica `ownsPared2`, `ownsPared4`... como atributos del jugador. Asi `Tags`
+  sabe que paredes tiene sin depender del script de las paredes.
+- El tag equipado tambien sale en la columna `Tag` de la lista de jugadores, y con VIP el
+  nombre de la placa pasa a `[VIP] Nombre`.
+- Anadir un tag nuevo es meter una entrada en `MiningConfig.TAGS` con su `WALL` o `PASS`
+  y sus dos colores: el menu y la placa se actualizan solos.
 
 ## Placa sobre el personaje
 

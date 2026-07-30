@@ -96,6 +96,66 @@ function UiTheme.text(parent: Instance, text: string, size: UDim2, position: UDi
 	return label
 end
 
+-- Degradado vertical (de TOP arriba a BOTTOM abajo) sobre un texto
+function UiTheme.gradient(label: Instance, top: Color3, bottom: Color3): UIGradient
+	local gradient = Instance.new("UIGradient")
+	gradient.Rotation = 90
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, top),
+		ColorSequenceKeypoint.new(1, bottom),
+	})
+	gradient.Parent = label
+	return gradient
+end
+
+-- Posicion de los botones del HUD en fila: 0 = ajustes, 1 = tienda, 2 = tags...
+-- Se calcula desde SETTINGS_BUTTON, y si el HUD esta a la derecha crecen hacia la
+-- izquierda para no salirse de la pantalla.
+function UiTheme.hudSlotX(slot: number): number
+	local settingsCfg = Config.SETTINGS_BUTTON
+	local gap = Config.SHOP_BUTTON.GAP_X
+	local side = settingsCfg.ANCHOR.X >= 0.5 and -1 or 1
+
+	return settingsCfg.POSITION.X.Offset + side * slot * (settingsCfg.SIZE.X.Offset + gap)
+end
+
+-- Boton del HUD completo: cuadro con doble contorno, icono pulsable y texto debajo.
+-- Devuelve el ImageButton (para conectar el clic).
+function UiTheme.hudButton(parent: Instance, slot: number, iconId: any, labelText: string): ImageButton
+	local settingsCfg = Config.SETTINGS_BUTTON
+	local x = UiTheme.hudSlotX(slot)
+
+	local position =
+		UDim2.new(settingsCfg.POSITION.X.Scale, x, settingsCfg.POSITION.Y.Scale, settingsCfg.POSITION.Y.Offset)
+
+	local _, body = UiTheme.framedBox(parent, settingsCfg.SIZE, position, settingsCfg.ANCHOR)
+
+	local icon = Instance.new("ImageButton")
+	icon.Name = "Icon"
+	icon.BackgroundTransparency = 1
+	icon.AnchorPoint = Vector2.new(0.5, 0.5)
+	icon.Position = UDim2.fromScale(0.5, 0.5)
+	icon.Size = UDim2.fromScale(0.82, 0.82)
+	icon.ScaleType = Enum.ScaleType.Fit
+	icon.Image = UiTheme.assetId(iconId)
+	icon.Parent = body
+
+	-- Texto centrado en su propio cuadro, para que no toque el del boton de al lado
+	local labelY = settingsCfg.POSITION.Y.Offset + settingsCfg.SIZE.Y.Offset * (1 - settingsCfg.ANCHOR.Y) + 2
+	local centerX = x + settingsCfg.SIZE.X.Offset * (0.5 - settingsCfg.ANCHOR.X)
+
+	local label = UiTheme.text(
+		parent,
+		labelText,
+		UDim2.new(0, settingsCfg.SIZE.X.Offset + 8, 0, settingsCfg.LABEL_HEIGHT),
+		UDim2.new(settingsCfg.POSITION.X.Scale, centerX, settingsCfg.POSITION.Y.Scale, labelY)
+	)
+	label.Name = "Label"
+	label.AnchorPoint = Vector2.new(0.5, 0)
+
+	return icon
+end
+
 function UiTheme.button(parent: Instance, text: string, size: UDim2, position: UDim2, anchor: Vector2): TextButton
 	local button = Instance.new("TextButton")
 	button.Size = size

@@ -87,17 +87,8 @@ local function setupMoney(player: Player)
 	end
 end
 
--- Pone o quita el [VIP] de la lista de jugadores
-local function refreshTag(player: Player)
-	local leaderstats = player:FindFirstChild("leaderstats")
-	local tag = leaderstats and leaderstats:FindFirstChild(Config.LEADERSTATS_TAG_NAME)
-	if not tag or not tag:IsA("StringValue") then
-		return
-	end
-
-	local prefix = Config.PASS_EFFECTS.VIP_NAME_PREFIX
-	tag.Value = Passes.has(player, "VIP") and string.gsub(prefix, "%s+$", "") or ""
-end
+-- La columna del tag la rellena Tags.server.lua (sabe cual lleva equipado),
+-- aqui solo se crea el StringValue en setupMoney.
 
 local function addMoney(player: Player, amount: number)
 	local moneyValue = money[player]
@@ -529,8 +520,6 @@ end
 
 -- Al entrar y al comprar un pase
 Passes.Changed.Event:Connect(function(player: Player)
-	refreshTag(player)
-
 	if Passes.autoSwing(player) then
 		startAutoSwing(player)
 	end
