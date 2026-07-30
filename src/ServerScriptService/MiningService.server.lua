@@ -36,6 +36,7 @@ end
 
 local swingRemote = ensureRemote(Config.REMOTE_NAME)
 local holeRemote = ensureRemote(Config.HOLE_REMOTE_NAME)
+local autoRemote = ensureRemote(Config.AUTO_REMOTE_NAME)
 
 --------------------------------------------------------------------------------
 -- Herramienta base
@@ -73,6 +74,29 @@ local function setupMoney(player: Player)
 	moneyValue:GetPropertyChangedSignal("Value"):Connect(function()
 		player:SetAttribute(Config.MONEY_NAME, moneyValue.Value)
 	end)
+
+	-- Columna para el [VIP] en la lista de jugadores.
+	-- Roblox no deja cambiar la columna del nombre, asi que el tag va en su propia
+	-- columna, justo a la izquierda del dinero.
+	local tag = leaderstats:FindFirstChild(Config.LEADERSTATS_TAG_NAME)
+	if not tag then
+		tag = Instance.new("StringValue")
+		tag.Name = Config.LEADERSTATS_TAG_NAME
+		tag.Value = ""
+		tag.Parent = leaderstats
+	end
+end
+
+-- Pone o quita el [VIP] de la lista de jugadores
+local function refreshTag(player: Player)
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local tag = leaderstats and leaderstats:FindFirstChild(Config.LEADERSTATS_TAG_NAME)
+	if not tag or not tag:IsA("StringValue") then
+		return
+	end
+
+	local prefix = Config.PASS_EFFECTS.VIP_NAME_PREFIX
+	tag.Value = Passes.has(player, "VIP") and string.gsub(prefix, "%s+$", "") or ""
 end
 
 local function addMoney(player: Player, amount: number)
@@ -470,6 +494,13 @@ swingRemote.OnServerEvent:Connect(performSwing)
 --------------------------------------------------------------------------------
 
 local autoLoops = {} -- autoLoops[player] = true si ya tiene el bucle corriendo
+local autoEnabled = {} -- autoEnabled[player] = si lo tiene encendido con el boton
+
+-- El boton solo enciende o apaga. Aunque alguien falsee el remote, lo unico que
+-- consigue es activar su propio auto swing, y solo si tiene el gamepass.
+autoRemote.OnServerEvent:Connect(function(player: Player, value: any)
+	autoEnabled[player] = value ~= false
+end)
 
 local function startAutoSwing(player: Player)
 	if autoLoops[player] then
@@ -477,11 +508,18 @@ local function startAutoSwing(player: Player)
 	end
 	autoLoops[player] = true
 
+	if autoEnabled[player] == nil then
+		autoEnabled[player] = true -- por defecto encendido al comprarlo
+	end
+
 	task.spawn(function()
 		while player.Parent and Passes.autoSwing(player) do
 			-- performSwing ya comprueba personaje, pico equipado, cooldown y zona,
 			-- asi que el auto swing no puede dar mas dinero que picando a mano
-			performSwing(player)
+			if autoEnabled[player] then
+				performSwing(player)
+			end
+
 			task.wait(Passes.cooldown(player))
 		end
 
@@ -489,8 +527,10 @@ local function startAutoSwing(player: Player)
 	end)
 end
 
--- Al entrar y al comprar el pase
+-- Al entrar y al comprar un pase
 Passes.Changed.Event:Connect(function(player: Player)
+	refreshTag(player)
+
 	if Passes.autoSwing(player) then
 		startAutoSwing(player)
 	end
@@ -579,4 +619,5 @@ Players.PlayerRemoving:Connect(function(player)
 	hitsSinceMineral[player] = nil
 	LevelService.clear(player)
 	Passes.clear(player)
+	autoEnabled[player] = nil
 end)

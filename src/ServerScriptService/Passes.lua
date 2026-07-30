@@ -79,6 +79,8 @@ end
 local function publish(player: Player)
 	player:SetAttribute("swingCooldown", Passes.cooldown(player))
 	player:SetAttribute("vip", Passes.has(player, "VIP"))
+	-- Lo usa el boton de Auto Swing para saber si debe salir en pantalla
+	player:SetAttribute("autoSwing", Passes.autoSwing(player))
 	Passes.Changed:Fire(player)
 end
 

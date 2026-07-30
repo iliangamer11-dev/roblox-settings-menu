@@ -110,6 +110,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/SettingsMenu.client.lua` | StarterPlayerScripts | LocalScript `SettingsMenu` |
 | `src/StarterPlayer/StarterPlayerScripts/MoneyHud.client.lua` | StarterPlayerScripts | LocalScript `MoneyHud` |
 | `src/StarterPlayer/StarterPlayerScripts/ShopMenu.client.lua` | StarterPlayerScripts | LocalScript `ShopMenu` |
+| `src/StarterPlayer/StarterPlayerScripts/AutoSwingButton.client.lua` | StarterPlayerScripts | LocalScript `AutoSwingButton` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -246,11 +247,11 @@ sin reconectar. Los ids viven en `MiningConfig.PASSES` y los valores en `PASS_EF
 | Pase | Efecto real |
 | --- | --- |
 | X2 Money | `MONEY_MULTIPLIER = 2`: el doble de dinero por mineral |
-| Fast Pickaxe | `COOLDOWN_MULTIPLIER = 0.6`: cooldown de 0.75 s a 0.45 s |
-| Lucky Ores | `LUCK_MULTIPLIER = 2`: dobla el peso de los minerales `RARE` (Gold y mejores) |
-| Auto Swing | Pica solo mientras estas sobre una zona, al ritmo del cooldown |
+| Fast Pickaxe | `COOLDOWN_MULTIPLIER = 0.35`: cooldown de 0.75 s a 0.26 s (2.9x mas golpes) |
+| Lucky Ores | `LUCK_MULTIPLIER = 5`: Gold de 1.4 % a 6.5 %, Diamond de 0.04 % a 0.185 % |
+| Auto Swing | Pica solo mientras estas sobre una zona, con **boton arriba en el centro** para encenderlo o apagarlo |
 | All Zones | Abre las 4 paredes sin pagarlas |
-| VIP | Incluye X2 Money y Fast Pickaxe (`VIP_INCLUDES`) y anade la etiqueta VIP dorada sobre el personaje |
+| VIP | Incluye X2 Money y Fast Pickaxe (`VIP_INCLUDES`), pone `VIP` con degradado naranja-amarillo sobre el personaje y `[VIP]` delante del nombre |
 
 Notas de como esta hecho:
 
@@ -260,6 +261,13 @@ Notas de como esta hecho:
   pico equipado, cooldown y zona: asi no puede dar mas dinero que picando a mano.
 - Lucky Ores multiplica el peso de los raros y deja los comunes igual, asi que los
   porcentajes se recalculan solos sin tener que reescribir la tabla.
+- El boton de Auto Swing solo manda "encendido/apagado" al servidor. Aunque alguien falsee
+  ese remote, lo unico que consigue es activar su propio auto swing, y solo si tiene el pase.
+- **La lista de jugadores de Roblox no permite cambiar la columna del nombre**, asi que el
+  `[VIP]` va en su propia columna (`LEADERSTATS_TAG_NAME`, por defecto `Tag`) a la izquierda
+  del dinero. Donde si aparece delante del nombre es en la placa sobre el personaje.
+  Para tener literalmente `[VIP] nombre` en la lista habria que sustituirla por una GUI
+  propia.
 
 ### Poner tus imagenes
 

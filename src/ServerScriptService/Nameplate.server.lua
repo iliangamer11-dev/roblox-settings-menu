@@ -66,6 +66,19 @@ local function buildNameplate(player: Player, character: Model)
 	nameLabel.Parent = billboard
 	addOutline(nameLabel)
 
+	-- Aqui si se puede poner el [VIP] delante del nombre
+	local baseName = nameLabel.Text
+	local function refreshName()
+		if player:GetAttribute("vip") then
+			nameLabel.Text = Config.PASS_EFFECTS.VIP_NAME_PREFIX .. baseName
+		else
+			nameLabel.Text = baseName
+		end
+	end
+
+	refreshName()
+	player:GetAttributeChangedSignal("vip"):Connect(refreshName)
+
 	-- Nivel: degradado azul claro -> azul oscuro, con contorno negro
 	local levelLabel = Instance.new("TextLabel")
 	levelLabel.Name = "PlayerLevel"
@@ -97,10 +110,19 @@ local function buildNameplate(player: Player, character: Model)
 	vipLabel.Font = cfg.FONT
 	vipLabel.TextScaled = true
 	vipLabel.Text = Config.PASS_EFFECTS.VIP_TAG
-	vipLabel.TextColor3 = Config.PASS_EFFECTS.VIP_TAG_COLOR
+	vipLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- el color real lo pone el degradado
 	vipLabel.Visible = player:GetAttribute("vip") == true
 	vipLabel.Parent = billboard
 	addOutline(vipLabel)
+
+	-- Degradado naranja (arriba) a amarillo (abajo)
+	local vipGradient = Instance.new("UIGradient")
+	vipGradient.Rotation = 90
+	vipGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Config.PASS_EFFECTS.VIP_GRADIENT_TOP),
+		ColorSequenceKeypoint.new(1, Config.PASS_EFFECTS.VIP_GRADIENT_BOTTOM),
+	})
+	vipGradient.Parent = vipLabel
 
 	-- El nombre por defecto de Roblox se quita para que no salga duplicado
 	local humanoid = character:FindFirstChildOfClass("Humanoid")

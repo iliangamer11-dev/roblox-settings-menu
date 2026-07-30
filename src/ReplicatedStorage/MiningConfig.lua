@@ -164,11 +164,12 @@ MiningConfig.PASS_EFFECTS = {
 	-- X2 Money: multiplica el dinero de cada mineral
 	MONEY_MULTIPLIER = 2,
 
-	-- Fast Pickaxe: multiplica el cooldown (0.6 => de 0.75s a 0.45s)
-	COOLDOWN_MULTIPLIER = 0.6,
+	-- Fast Pickaxe: multiplica el cooldown (0.35 => de 0.75s a 0.26s, casi 3x mas golpes)
+	COOLDOWN_MULTIPLIER = 0.35,
 
-	-- Lucky Ores: multiplica la probabilidad de los minerales marcados como RARE
-	LUCK_MULTIPLIER = 2,
+	-- Lucky Ores: multiplica la probabilidad de los minerales marcados como RARE.
+	-- Con 5: Gold pasa de 1.4% a 6.5% y Diamond de 0.04% a 0.185% (4.6 veces mas).
+	LUCK_MULTIPLIER = 5,
 
 	-- Auto Swing: pica solo mientras estas sobre una zona
 	AUTO_SWING = true,
@@ -176,7 +177,11 @@ MiningConfig.PASS_EFFECTS = {
 	-- VIP: incluye estos pases, ademas de la placa VIP sobre el personaje
 	VIP_INCLUDES = { "X2_MONEY", "FAST_PICKAXE" },
 	VIP_TAG = "VIP",
-	VIP_TAG_COLOR = Color3.fromRGB(255, 205, 60),
+	-- Degradado del tag: naranja arriba, amarillo abajo
+	VIP_GRADIENT_TOP = Color3.fromRGB(255, 140, 20),
+	VIP_GRADIENT_BOTTOM = Color3.fromRGB(255, 240, 90),
+	-- Delante del nombre, en la placa del personaje y en la lista de jugadores
+	VIP_NAME_PREFIX = "[VIP] ",
 }
 
 --------------------------------------------------------------------------------
@@ -338,6 +343,19 @@ MiningConfig.HIDE_BACKPACK_GUI = true
 MiningConfig.REMOTE_NAME = "PickaxeSwing" -- click del pico
 MiningConfig.HOLE_REMOTE_NAME = "PickaxeHole" -- avisa al jugador para que dibuje su agujero
 MiningConfig.WALL_REMOTE_NAME = "WallPurchase" -- compra de paredes
+MiningConfig.AUTO_REMOTE_NAME = "AutoSwingToggle" -- boton de auto swing
+
+-- Columna de la lista de jugadores donde sale el [VIP]
+MiningConfig.LEADERSTATS_TAG_NAME = "Tag"
+
+-- Boton para activar o desactivar el Auto Swing. Solo lo ve quien tiene el gamepass.
+MiningConfig.AUTO_SWING_BUTTON = {
+	SIZE = UDim2.fromOffset(190, 54),
+	POSITION = UDim2.new(0.5, 0, 0, 18), -- arriba en el centro
+	ANCHOR = Vector2.new(0.5, 0),
+	ON_TEXT = "AUTO: ON",
+	OFF_TEXT = "AUTO: OFF",
+}
 
 --------------------------------------------------------------------------------
 -- PAREDES QUE SE COMPRAN (una por zona)
