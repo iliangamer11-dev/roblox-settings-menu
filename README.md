@@ -200,21 +200,35 @@ cartel del dinero**. Al pulsar el icono se abre el panel. Mismo estilo en todo
 (`MiningConfig.UI_THEME`, montado con `UiTheme`): gris con opacidad, contorno blanco muy
 fino por dentro, contorno negro por fuera y esquinas redondeadas.
 
+Los dos van **a la derecha de la pantalla**, centrados en vertical:
+
 ```
-   ┌────────┐
-   │  $1.250│   <- MoneyHud (MONEY_PANEL)
-   │  Money │
-   └────────┘
-   ┌────────┐
-   │  icono │   <- SettingsMenu (SETTINGS_BUTTON), centrado en la pantalla
-   │Settings│
-   └────────┘
+        ┌──────────────────────┐
+        │ $1.250        [icono]│   <- MoneyHud, ancho
+        └──────────────────────┘
+        ┌──────┐
+        │icono │                   <- SettingsMenu (se pulsa aqui)
+        └──────┘
+        SETTINGS                   <- texto debajo del cuadro
 ```
 
 El cartel del dinero calcula su posicion desde la del boton de ajustes, asi que si mueves
 `SETTINGS_BUTTON.POSITION` el dinero lo sigue solo. La cantidad se lee del atributo `money`
 y se actualiza en cada picazo y en cada compra. Se ajusta en `MiningConfig.MONEY_PANEL`
-(tamano, separacion, `ICON_ID` para la imagen de la moneda, `LABEL` y `PREFIX`).
+(tamano, separacion, `ICON_ID` de la moneda, `ICON_SIZE` y `PREFIX`).
+
+### Poner tus imagenes
+
+Los dos iconos se cambian en `src/ReplicatedStorage/MiningConfig.lua`:
+
+```lua
+MiningConfig.SETTINGS_BUTTON.ICON_ID = "rbxassetid://1234567890" -- icono de ajustes
+MiningConfig.MONEY_PANEL.ICON_ID = "rbxassetid://1234567890"     -- icono de la moneda
+```
+
+Para conseguir ese numero: en Studio, `View` > `Asset Manager` > `Images` > boton de
+importar, eliges el PNG, y cuando se apruebe haces clic derecho sobre el > copiar el id.
+Vale pegar solo el numero (`"1234567890"`), el codigo le anade el prefijo solo.
 
 | Opcion | Que hace |
 | --- | --- |

@@ -55,32 +55,29 @@ screenGui.Parent = playerGui
 local anchor = Vector2.new(buttonCfg.ANCHOR.X, 1) -- misma columna, pegado por abajo
 local _, body = UiTheme.framedBox(screenGui, cfg.SIZE, moneyPosition(), anchor)
 
-local iconId = UiTheme.assetId(cfg.ICON_ID)
-local hasIcon = iconId ~= ""
+-- Icono a la derecha, cuadrado, con el alto del cartel
+local iconSide = math.floor(cfg.SIZE.Y.Offset * cfg.ICON_SIZE)
 
--- Con icono: imagen arriba y cantidad debajo. Sin icono: solo la cantidad, mas grande.
-if hasIcon then
-	local icon = Instance.new("ImageLabel")
-	icon.Name = "Icon"
-	icon.BackgroundTransparency = 1
-	icon.AnchorPoint = Vector2.new(0.5, 0)
-	icon.Position = UDim2.fromScale(0.5, 0.06)
-	icon.Size = UDim2.fromScale(0.62, 0.42)
-	icon.ScaleType = Enum.ScaleType.Fit
-	icon.Image = iconId
-	icon.Parent = body
-end
+local icon = Instance.new("ImageLabel")
+icon.Name = "Icon"
+icon.BackgroundTransparency = 1
+icon.AnchorPoint = Vector2.new(1, 0.5)
+icon.Position = UDim2.new(1, -cfg.PADDING, 0.5, 0)
+icon.Size = UDim2.fromOffset(iconSide, iconSide)
+icon.ScaleType = Enum.ScaleType.Fit
+icon.Image = UiTheme.assetId(cfg.ICON_ID)
+icon.Parent = body
 
+-- La cantidad ocupa el resto, a la izquierda del icono
 local amountLabel = UiTheme.text(
 	body,
 	"0",
-	UDim2.new(1, -10, hasIcon and 0.26 or 0.44, 0),
-	UDim2.new(0, 5, hasIcon and 0.48 or 0.16, 0)
+	UDim2.new(1, -(iconSide + cfg.PADDING * 3), 0.62, 0),
+	UDim2.new(0, cfg.PADDING, 0.5, 0)
 )
 amountLabel.Name = "Amount"
-
-local nameLabel = UiTheme.text(body, cfg.LABEL, UDim2.fromScale(1, 0.28), UDim2.fromScale(0, 0.68))
-nameLabel.Name = "Label"
+amountLabel.AnchorPoint = Vector2.new(0, 0.5)
+amountLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 --------------------------------------------------------------------------------
 -- Actualizacion

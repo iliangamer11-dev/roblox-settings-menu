@@ -48,19 +48,29 @@ buttonGui.Parent = playerGui
 
 local _, buttonBody = makeFramedBox(buttonGui, buttonCfg.SIZE, buttonCfg.POSITION, buttonCfg.ANCHOR)
 
--- ImageButton para que se pueda pulsar el propio icono
+-- ImageButton para que se pueda pulsar el propio icono. Ocupa todo el cuadro,
+-- porque el texto ahora va por fuera, debajo.
 local icon = Instance.new("ImageButton")
 icon.Name = "Icon"
 icon.BackgroundTransparency = 1
-icon.AnchorPoint = Vector2.new(0.5, 0)
-icon.Position = UDim2.fromScale(0.5, 0.05)
-icon.Size = UDim2.fromScale(0.8, 0.6)
+icon.AnchorPoint = Vector2.new(0.5, 0.5)
+icon.Position = UDim2.fromScale(0.5, 0.5)
+icon.Size = UDim2.fromScale(0.82, 0.82)
 icon.ScaleType = Enum.ScaleType.Fit
 icon.Image = normalizeAssetId(buttonCfg.ICON_ID)
 icon.Parent = buttonBody
 
-local buttonLabel = makeText(buttonBody, buttonCfg.LABEL, UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0.66))
+-- "SETTINGS" debajo del cuadro, fuera de la caja
+local labelY = buttonCfg.POSITION.Y.Offset + buttonCfg.SIZE.Y.Offset * (1 - buttonCfg.ANCHOR.Y) + 2
+
+local buttonLabel = makeText(
+	buttonGui,
+	buttonCfg.LABEL,
+	UDim2.new(0, buttonCfg.SIZE.X.Offset + 40, 0, buttonCfg.LABEL_HEIGHT),
+	UDim2.new(buttonCfg.POSITION.X.Scale, buttonCfg.POSITION.X.Offset + 20, buttonCfg.POSITION.Y.Scale, labelY)
+)
 buttonLabel.Name = "Label"
+buttonLabel.AnchorPoint = Vector2.new(buttonCfg.ANCHOR.X, 0)
 
 --------------------------------------------------------------------------------
 -- Panel
