@@ -82,14 +82,27 @@ MiningConfig.UI_THEME = {
 }
 
 MiningConfig.SETTINGS_BUTTON = {
-	SIZE = UDim2.fromOffset(88, 88),
-	POSITION = UDim2.new(0, 20, 0, 20), -- arriba a la izquierda
-	ANCHOR = Vector2.new(0, 0),
+	SIZE = UDim2.fromOffset(92, 92),
+	-- Centrado en la pantalla: el 0.5 del Y con ANCHOR 0.5 lo deja justo en el medio.
+	-- El cartel de dinero se coloca encima solo, calculado desde aqui.
+	POSITION = UDim2.new(0.5, 0, 0.5, 0),
+	ANCHOR = Vector2.new(0.5, 0.5),
 
 	-- Aqui pones tu imagen: "rbxassetid://1234567890" (o solo el numero).
 	-- Vacio = se ve el cuadro sin icono.
 	ICON_ID = "",
 	LABEL = "Settings", -- texto debajo del icono
+}
+
+-- Cartel del dinero, con el mismo estilo, justo ENCIMA del boton de ajustes
+MiningConfig.MONEY_PANEL = {
+	ENABLED = true,
+	SIZE = UDim2.fromOffset(92, 92),
+	GAP = 14, -- separacion con el boton de ajustes
+
+	ICON_ID = "", -- icono opcional de la moneda
+	LABEL = "Money", -- texto de abajo
+	PREFIX = "$", -- delante de la cantidad
 }
 
 MiningConfig.SETTINGS_PANEL = {

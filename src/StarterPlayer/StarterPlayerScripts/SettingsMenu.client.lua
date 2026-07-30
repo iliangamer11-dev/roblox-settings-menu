@@ -20,6 +20,7 @@ local SoundService = game:GetService("SoundService")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local Settings = require(ReplicatedStorage:WaitForChild("ClientSettings"))
+local UiTheme = require(ReplicatedStorage:WaitForChild("UiTheme"))
 
 local theme = Config.UI_THEME
 local buttonCfg = Config.SETTINGS_BUTTON
@@ -28,105 +29,12 @@ local panelCfg = Config.SETTINGS_PANEL
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---------------------------------------------------------------------------------
--- Utilidades de estilo
---------------------------------------------------------------------------------
-
-local function normalizeAssetId(value: string): string
-	if typeof(value) ~= "string" or value == "" then
-		return ""
-	end
-
-	local digits = string.match(value, "^%s*(%d+)%s*$")
-	return digits and ("rbxassetid://" .. digits) or value
-end
-
-local function addCorner(parent: Instance, radius: number)
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = parent
-	return corner
-end
-
-local function addStroke(parent: Instance, color: Color3, thickness: number)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = color
-	stroke.Thickness = thickness
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Parent = parent
-	return stroke
-end
-
-local function addTextOutline(label: Instance)
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = theme.TEXT_OUTLINE
-	stroke.Thickness = theme.TEXT_OUTLINE_THICKNESS
-	stroke.LineJoinMode = Enum.LineJoinMode.Round
-	stroke.Parent = label
-	return stroke
-end
-
--- Cuadro con doble contorno: negro por fuera y blanco fino por dentro.
--- Hacen falta dos Frames porque un objeto solo admite un UIStroke.
-local function makeFramedBox(parent: Instance, size: UDim2, position: UDim2, anchor: Vector2): (Frame, Frame)
-	local outer = Instance.new("Frame")
-	outer.Name = "Outline"
-	outer.BackgroundTransparency = 1
-	outer.Size = size
-	outer.Position = position
-	outer.AnchorPoint = anchor
-	outer.Parent = parent
-	addCorner(outer, theme.CORNER_RADIUS + 2)
-	addStroke(outer, theme.OUTER_OUTLINE, theme.OUTER_THICKNESS)
-
-	local inner = Instance.new("Frame")
-	inner.Name = "Body"
-	inner.AnchorPoint = Vector2.new(0.5, 0.5)
-	inner.Position = UDim2.fromScale(0.5, 0.5)
-	inner.Size = UDim2.new(1, -theme.OUTER_THICKNESS, 1, -theme.OUTER_THICKNESS)
-	inner.BackgroundColor3 = theme.BACKGROUND
-	inner.BackgroundTransparency = theme.BACKGROUND_TRANSPARENCY
-	inner.BorderSizePixel = 0
-	inner.Parent = outer
-	addCorner(inner, theme.CORNER_RADIUS)
-	addStroke(inner, theme.INNER_OUTLINE, theme.INNER_THICKNESS)
-
-	return outer, inner
-end
-
-local function makeText(parent: Instance, text: string, size: UDim2, position: UDim2): TextLabel
-	local label = Instance.new("TextLabel")
-	label.BackgroundTransparency = 1
-	label.Size = size
-	label.Position = position
-	label.Font = theme.FONT
-	label.TextScaled = true
-	label.Text = text
-	label.TextColor3 = theme.TEXT_COLOR
-	label.Parent = parent
-	addTextOutline(label)
-	return label
-end
-
-local function makeButton(parent: Instance, text: string, size: UDim2, position: UDim2, anchor: Vector2): TextButton
-	local button = Instance.new("TextButton")
-	button.Size = size
-	button.Position = position
-	button.AnchorPoint = anchor
-	button.BackgroundColor3 = theme.BUTTON_COLOR
-	button.BackgroundTransparency = 0.1
-	button.BorderSizePixel = 0
-	button.AutoButtonColor = true
-	button.Font = theme.FONT
-	button.TextScaled = true
-	button.Text = text
-	button.TextColor3 = theme.TEXT_COLOR
-	button.Parent = parent
-	addCorner(button, theme.CORNER_RADIUS - 3)
-	addStroke(button, theme.OUTER_OUTLINE, 2)
-	addTextOutline(button)
-	return button
-end
+-- El estilo (doble contorno, textos, botones) esta en UiTheme, compartido con el
+-- cartel de dinero para que los dos se vean exactamente igual.
+local normalizeAssetId = UiTheme.assetId
+local makeFramedBox = UiTheme.framedBox
+local makeText = UiTheme.text
+local makeButton = UiTheme.button
 
 --------------------------------------------------------------------------------
 -- Boton de ajustes

@@ -93,6 +93,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
 | `src/ReplicatedStorage/Format.lua` | ReplicatedStorage | ModuleScript `Format` |
 | `src/ReplicatedStorage/ClientSettings.lua` | ReplicatedStorage | ModuleScript `ClientSettings` |
+| `src/ReplicatedStorage/UiTheme.lua` | ReplicatedStorage | ModuleScript `UiTheme` |
 | `src/ServerScriptService/PickaxeTool.lua` | ServerScriptService | ModuleScript `PickaxeTool` |
 | `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
 | `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
@@ -106,6 +107,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/WallShopClient.client.lua` | StarterPlayerScripts | LocalScript `WallShopClient` |
 | `src/StarterPlayer/StarterPlayerScripts/LevelBar.client.lua` | StarterPlayerScripts | LocalScript `LevelBar` |
 | `src/StarterPlayer/StarterPlayerScripts/SettingsMenu.client.lua` | StarterPlayerScripts | LocalScript `SettingsMenu` |
+| `src/StarterPlayer/StarterPlayerScripts/MoneyHud.client.lua` | StarterPlayerScripts | LocalScript `MoneyHud` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -193,9 +195,26 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
 
 ## Menu de ajustes
 
-Boton arriba a la izquierda con un `ImageLabel` (tu icono) y `Settings` debajo. Al pulsarlo
-abre el panel. Mismo estilo en todo (`MiningConfig.UI_THEME`): gris con opacidad, contorno
-blanco muy fino por dentro, contorno negro por fuera y esquinas redondeadas.
+Boton **en el centro de la pantalla** con un icono y `Settings` debajo, y justo **encima el
+cartel del dinero**. Al pulsar el icono se abre el panel. Mismo estilo en todo
+(`MiningConfig.UI_THEME`, montado con `UiTheme`): gris con opacidad, contorno blanco muy
+fino por dentro, contorno negro por fuera y esquinas redondeadas.
+
+```
+   ┌────────┐
+   │  $1.250│   <- MoneyHud (MONEY_PANEL)
+   │  Money │
+   └────────┘
+   ┌────────┐
+   │  icono │   <- SettingsMenu (SETTINGS_BUTTON), centrado en la pantalla
+   │Settings│
+   └────────┘
+```
+
+El cartel del dinero calcula su posicion desde la del boton de ajustes, asi que si mueves
+`SETTINGS_BUTTON.POSITION` el dinero lo sigue solo. La cantidad se lee del atributo `money`
+y se actualiza en cada picazo y en cada compra. Se ajusta en `MiningConfig.MONEY_PANEL`
+(tamano, separacion, `ICON_ID` para la imagen de la moneda, `LABEL` y `PREFIX`).
 
 | Opcion | Que hace |
 | --- | --- |
