@@ -24,28 +24,38 @@ end
 -- las vuelve a enviar (respawn o streaming)
 local unlocked = {}
 
-local function hideInstance(instance: Instance)
-	if instance:IsA("BasePart") then
-		instance.Transparency = 1
-		instance.CanCollide = false
-		instance.CanQuery = false
-		instance.CanTouch = false
+-- Oculta una pieza de la pared en ESTE cliente. Hay que tratar cada clase por separado
+-- porque no comparten la misma propiedad:
+--   BasePart      -> Transparency y sin colision
+--   SurfaceGui /
+--   BillboardGui  -> Enabled (asi desaparecen los TextLabel de dentro, el precio y demas)
+--   Decal/Texture -> Transparency (NO tienen Enabled)
+--   ProximityPrompt -> Enabled
+local function hidePiece(piece: Instance)
+	if piece:IsA("BasePart") then
+		piece.Transparency = 1
+		piece.CanCollide = false
+		piece.CanQuery = false
+		piece.CanTouch = false
+	elseif piece:IsA("SurfaceGui") or piece:IsA("BillboardGui") then
+		piece.Enabled = false
+	elseif piece:IsA("Decal") or piece:IsA("Texture") then
+		piece.Transparency = 1
+	elseif piece:IsA("ProximityPrompt") then
+		piece.Enabled = false
+	elseif piece:IsA("GuiObject") then
+		-- Por si el texto cuelga directamente y no de un SurfaceGui/BillboardGui
+		piece.Visible = false
+	elseif piece:IsA("Light") or piece:IsA("ParticleEmitter") or piece:IsA("Beam") then
+		piece.Enabled = false
 	end
+end
+
+local function hideInstance(instance: Instance)
+	hidePiece(instance)
 
 	for _, descendant in instance:GetDescendants() do
-		if descendant:IsA("BasePart") then
-			descendant.Transparency = 1
-			descendant.CanCollide = false
-			descendant.CanQuery = false
-			descendant.CanTouch = false
-		elseif descendant:IsA("ProximityPrompt") or descendant:IsA("Decal") or descendant:IsA("Texture") then
-			descendant.Enabled = false
-		end
-	end
-
-	local prompt = instance:FindFirstChildWhichIsA("ProximityPrompt", true)
-	if prompt then
-		prompt.Enabled = false
+		hidePiece(descendant)
 	end
 end
 

@@ -65,8 +65,12 @@ en ingles y se cambian en `MiningConfig.WALL_PROMPT`; los precios y los titulos,
 `MiningConfig.WALLS`.
 
 Como funciona por dentro: el servidor (`WallShop`) cobra y guarda quien ha comprado que
-pared, y avisa solo a ese jugador; su cliente (`WallShopClient`) pone esas partes
-invisibles y sin colision. La compra dura la sesion: al salir y volver a entrar hay que
+pared, y avisa solo a ese jugador; su cliente (`WallShopClient`) esconde la pared entera:
+partes invisibles y sin colision, y ademas apaga los `SurfaceGui` y `BillboardGui` (con lo
+que desaparecen los `TextLabel` de dentro, como el cartel del precio), los `Decal`/`Texture`,
+las luces y las particulas. Cada clase se trata aparte porque no comparten la misma
+propiedad: las partes usan `Transparency`, los GUI `Enabled` y los decals `Transparency`
+(no tienen `Enabled`). La compra dura la sesion: al salir y volver a entrar hay que
 comprarla otra vez (haria falta DataStore para guardarla).
 
 ### Opcion A: un solo script (copiar y pegar)
