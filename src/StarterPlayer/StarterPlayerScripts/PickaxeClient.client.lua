@@ -10,11 +10,25 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local swingRemote = ReplicatedStorage:WaitForChild(Config.REMOTE_NAME)
 
 local player = Players.LocalPlayer
+
+-- El pico esta siempre equipado, asi que la mochila/hotbar de Roblox no hace falta.
+-- Se reintenta unas veces porque otros scripts pueden volver a activarla.
+if Config.HIDE_BACKPACK_GUI then
+	task.spawn(function()
+		for _ = 1, 8 do
+			pcall(function()
+				StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+			end)
+			task.wait(1)
+		end
+	end)
+end
 
 local lastSwing = 0
 

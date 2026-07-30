@@ -17,6 +17,7 @@ local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local PickaxeTool = require(script.Parent:WaitForChild("PickaxeTool"))
 local MoneyPopup = require(script.Parent:WaitForChild("MoneyPopup"))
 local Minerals = require(script.Parent:WaitForChild("Minerals"))
+local LevelService = require(script.Parent:WaitForChild("LevelService"))
 
 --------------------------------------------------------------------------------
 -- Remote
@@ -419,6 +420,10 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 
 	addMoney(player, reward)
 
+	-- La experiencia se gana al picar (no depende del dinero que tengas), asi gastar
+	-- en las paredes no baja el nivel.
+	LevelService.addXp(player, Config.LEVEL.XP_FROM_BASE_VALUE and mineral.MONEY or reward)
+
 	if Config.DEBUG then
 		print(
 			string.format(
@@ -454,36 +459,70 @@ end)
 -- Jugadores
 --------------------------------------------------------------------------------
 
-local function givePickaxe(player: Player)
-	local backpack = player:FindFirstChildOfClass("Backpack")
-	if not backpack then
-		backpack = player:WaitForChild("Backpack", 10)
-	end
-	if not backpack then
+-- El pico se queda pegado a la mano: si algo lo desequipa, se vuelve a equipar.
+local function keepEquipped(tool: Tool, player: Player)
+	if not Config.ALWAYS_EQUIPPED or tool:GetAttribute("AlwaysEquipped") then
 		return
 	end
+	tool:SetAttribute("AlwaysEquipped", true)
 
+	tool.Unequipped:Connect(function()
+		-- defer para dejar que Roblox termine de moverlo a la mochila
+		task.defer(function()
+			local character = player.Character
+			if not character or not tool.Parent then
+				return
+			end
+
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if humanoid and humanoid.Health > 0 and tool.Parent ~= character then
+				tool.Parent = character
+			end
+		end)
+	end)
+end
+
+local function equipPickaxe(player: Player)
 	local character = player.Character
-	if backpack:FindFirstChild(Config.TOOL_NAME) then
-		return
-	end
-	if character and character:FindFirstChild(Config.TOOL_NAME) then
+	if not character then
 		return
 	end
 
-	local tool = pickaxeTemplate:Clone()
-	tool.Parent = backpack
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 then
+		return
+	end
+
+	-- Ya lo tiene en la mano
+	local tool = character:FindFirstChild(Config.TOOL_NAME)
+	if tool and tool:IsA("Tool") then
+		keepEquipped(tool, player)
+		return
+	end
+
+	-- Reutiliza el que tenga en la mochila, si es que hay
+	local backpack = player:FindFirstChildOfClass("Backpack") or player:WaitForChild("Backpack", 10)
+	local existing = backpack and backpack:FindFirstChild(Config.TOOL_NAME)
+
+	local newTool = (existing and existing:IsA("Tool")) and existing or pickaxeTemplate:Clone()
+
+	keepEquipped(newTool, player)
+
+	-- Parentarlo al personaje es lo que lo equipa
+	newTool.Parent = character
 end
 
 local function onPlayerAdded(player: Player)
 	setupMoney(player)
+	LevelService.setup(player)
 
 	player.CharacterAdded:Connect(function()
-		task.defer(givePickaxe, player)
+		-- se espera un momento a que el rig este listo antes de equipar
+		task.delay(0.3, equipPickaxe, player)
 	end)
 
 	if player.Character then
-		task.defer(givePickaxe, player)
+		task.delay(0.3, equipPickaxe, player)
 	end
 end
 
@@ -496,4 +535,5 @@ Players.PlayerRemoving:Connect(function(player)
 	money[player] = nil
 	lastSwing[player] = nil
 	hitsSinceMineral[player] = nil
+	LevelService.clear(player)
 end)

@@ -9,6 +9,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
+local Format = require(ReplicatedStorage:WaitForChild("Format"))
 
 local Minerals = {}
 
@@ -46,16 +47,9 @@ function Minerals.getReward(mineral, zoneName: string): number
 	return math.floor(mineral.MONEY * multiplier)
 end
 
--- "1000000" -> "1.000.000"
+-- "1000000" -> "1.000.000" (mismo formato que usa la barra de nivel)
 function Minerals.format(value: number): string
-	local text = tostring(math.floor(value))
-	local replacements
-
-	repeat
-		text, replacements = string.gsub(text, "^(-?%d+)(%d%d%d)", "%1.%2")
-	until replacements == 0
-
-	return text
+	return Format.number(value)
 end
 
 return Minerals

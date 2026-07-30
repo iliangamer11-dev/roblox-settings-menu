@@ -91,18 +91,21 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | Archivo | Destino en Studio | Tipo |
 | --- | --- | --- |
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
+| `src/ReplicatedStorage/Format.lua` | ReplicatedStorage | ModuleScript `Format` |
 | `src/ServerScriptService/PickaxeTool.lua` | ServerScriptService | ModuleScript `PickaxeTool` |
 | `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
 | `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
+| `src/ServerScriptService/LevelService.lua` | ServerScriptService | ModuleScript `LevelService` |
 | `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
 | `src/StarterPlayer/StarterPlayerScripts/HoleClient.client.lua` | StarterPlayerScripts | LocalScript `HoleClient` |
 | `src/StarterPlayer/StarterPlayerScripts/WallShopClient.client.lua` | StarterPlayerScripts | LocalScript `WallShopClient` |
+| `src/StarterPlayer/StarterPlayerScripts/LevelBar.client.lua` | StarterPlayerScripts | LocalScript `LevelBar` |
 
-`MiningService`, `PickaxeTool`, `MoneyPopup` y `Minerals` deben quedar hermanos dentro de
-`ServerScriptService`.
+`MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
+quedar hermanos dentro de `ServerScriptService`.
 
 ### Como funciona
 
@@ -159,11 +162,33 @@ Causas mas comunes:
 - Falta el prefijo. Los scripts ya lo agregan si pones solo numeros, pero el formato
   correcto es `"rbxassetid://123456789"`.
 
+## Barra de nivel
+
+Barra en la parte de arriba de la pantalla: el progreso en **verde**, lo que falta en
+**blanco**, `Level X` dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha.
+Texto y cuadro con contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.
+
+- Los puntos se ganan al picar y no se gastan, asi que comprar paredes no baja el nivel.
+- Por defecto (`XP_FROM_BASE_VALUE = true`) los puntos salen del valor **base** del mineral,
+  sin el multiplicador de zona. Si se contase el dinero final, en Dulces (x50) se subiria
+  de nivel 50 veces mas rapido que en Naturaleza. Con esto se sube igual en todas las
+  zonas: unos 182 puntos/min picando sin parar (nivel 10 en ~9 min, nivel 15 en ~26 min).
+- Cada nivel pide `BASE_XP * GROWTH^(nivel-1)`: con los valores por defecto, 100 puntos
+  para el nivel 2 y un 15 % mas en cada nivel. `MAX_LEVEL = 0` es sin limite.
+- `LevelService` publica `level`, `xp` y `xpNeeded` como atributos del jugador, que se
+  replican solos: la barra no necesita RemoteEvents. Desde otros scripts se leen con
+  `player:GetAttribute("level")`.
+- El aspecto se ajusta en `MiningConfig.LEVEL_BAR` (tamano, posicion, colores, fuente,
+  grosor de los contornos, formato de los textos).
+
+## El pico va siempre en la mano
+
+`ALWAYS_EQUIPPED = true`: el pico se equipa al aparecer y, si algo lo desequipa (la tecla
+del hotbar, backspace, otro script), el servidor lo vuelve a poner en la mano al instante.
+`HIDE_BACKPACK_GUI = true` oculta la mochila de Roblox, ya que no hay nada que elegir.
+
 ### Scripts extra
 
-- [`standalone/PickaxeBackpackFix.client.lua`](standalone/PickaxeBackpackFix.client.lua):
-  LocalScript que reactiva la mochila de Roblox, por si algun script del juego la desactiva
-  y por eso no se ve el pico.
 - [`standalone/SetHojas1Morado.server.lua`](standalone/SetHojas1Morado.server.lua):
   pinta de morado todo lo que se llame `Hojas1`.
 - [`standalone/Hojas1CambiaColor.server.lua`](standalone/Hojas1CambiaColor.server.lua):

@@ -9,12 +9,61 @@ local MiningConfig = {}
 -- true = escribe en Output el mineral y el dinero de cada picazo
 MiningConfig.DEBUG = false
 
+--------------------------------------------------------------------------------
+-- NIVELES
+--------------------------------------------------------------------------------
+
+MiningConfig.LEVEL = {
+	ENABLED = true,
+
+	-- true = la experiencia sale del valor BASE del mineral, sin el multiplicador de zona.
+	-- Importante: con false, en Dulces (x50) se subiria de nivel 50 veces mas rapido que
+	-- en Naturaleza y la barra perderia sentido.
+	XP_FROM_BASE_VALUE = true,
+
+	XP_PER_MONEY = 1, -- cuanta experiencia da cada punto de valor del mineral
+	BASE_XP = 100, -- lo que cuesta pasar del nivel 1 al 2
+	GROWTH = 1.15, -- cada nivel pide un 15% mas que el anterior
+	MAX_LEVEL = 0, -- 0 = sin limite
+}
+
+-- Barra de nivel: verde lo conseguido, blanco lo que falta, "Level X" a la izquierda
+-- y los puntos a la derecha, todo con contorno negro.
+MiningConfig.LEVEL_BAR = {
+	SIZE = UDim2.new(0, 440, 0, 46),
+	POSITION = UDim2.new(0.5, 0, 0, 18),
+	ANCHOR = Vector2.new(0.5, 0),
+
+	FILL_COLOR = Color3.fromRGB(60, 220, 45), -- progreso (verde)
+	BACKGROUND_COLOR = Color3.fromRGB(238, 238, 238), -- lo que falta (blanco)
+	OUTLINE_COLOR = Color3.fromRGB(0, 0, 0),
+	OUTLINE_THICKNESS = 3, -- contorno del cuadro entero
+	CORNER_RADIUS = 6,
+
+	FONT = Enum.Font.FredokaOne,
+	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
+	TEXT_OUTLINE_COLOR = Color3.fromRGB(0, 0, 0),
+	TEXT_OUTLINE_THICKNESS = 2.5, -- contorno del texto
+	PADDING = 12,
+
+	LEVEL_FORMAT = "Level %d",
+	PROGRESS_FORMAT = "%s / %s", -- puntos actuales / puntos del nivel
+	TWEEN_TIME = 0.35, -- lo que tarda la barra en moverse
+}
+
 -- Nombre de la variable de dinero (aparece en leaderstats como "money")
 MiningConfig.MONEY_NAME = "money"
 MiningConfig.STARTING_MONEY = 0
 
 -- Nombre de la herramienta
 MiningConfig.TOOL_NAME = "Pickaxe"
+
+-- El pico va siempre en la mano: se equipa al aparecer y si el jugador lo desequipa
+-- (tecla, backspace, otro script...) se le vuelve a poner al instante.
+MiningConfig.ALWAYS_EQUIPPED = true
+
+-- Oculta la mochila/hotbar de Roblox, ya que el pico esta siempre equipado
+MiningConfig.HIDE_BACKPACK_GUI = true
 
 -- Nombres de los RemoteEvent que crea el servidor en ReplicatedStorage
 MiningConfig.REMOTE_NAME = "PickaxeSwing" -- click del pico
