@@ -600,8 +600,12 @@ MiningConfig.PICKAXE = {
 	HEAD_START_ANGLE = 10, -- inclinacion del primer trozo
 	HEAD_CURVE = 18, -- grados que se cierra hacia atras cada trozo siguiente
 
-	-- Pieza que une las dos puntas con el mango, para que la cabeza se vea de una pieza
-	COLLAR_SIZE = Vector3.new(0.5, 0.55, 0.62),
+	-- Pieza que une las dos puntas con el mango, para que la cabeza se vea de una pieza.
+	-- Tiene que ser mas gorda que el mango en X e Y para taparlo por completo.
+	COLLAR_SIZE = Vector3.new(0.52, 0.58, 0.62),
+	-- Cuanto sobresale el collar por delante de la punta del mango. Si es 0, las caras
+	-- quedan al ras y se ve la madera asomando; con 0.16 la madera queda tapada.
+	COLLAR_OVERHANG = 0.16,
 
 	-- Donde agarra la mano el mango (offset dentro del propio mango, en studs).
 	-- Z positivo = mas atras en el mango.

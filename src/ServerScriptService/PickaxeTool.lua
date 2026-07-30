@@ -60,9 +60,10 @@ function PickaxeTool.build(): Tool
 		return part
 	end
 
-	-- Collar: va en el extremo delantero del mango (-Z) y lo tapa, de forma que las dos
-	-- puntas salen de una pieza solida en vez de flotar pegadas al palo
-	local collarZ = -(settings.HANDLE_SIZE.Z / 2 - settings.COLLAR_SIZE.Z / 2)
+	-- Collar: tapa el extremo delantero del mango (-Z) y sobresale COLLAR_OVERHANG, asi
+	-- la madera no asoma por delante ni por arriba de la cabeza. Las dos puntas salen de
+	-- esta pieza, no del palo.
+	local collarZ = -(settings.HANDLE_SIZE.Z / 2 + settings.COLLAR_OVERHANG - settings.COLLAR_SIZE.Z / 2)
 	makeMetalPart("HeadCollar", settings.COLLAR_SIZE, handle.CFrame * CFrame.new(0, 0, collarZ))
 
 	-- side = 1 -> punta de arriba, side = -1 -> punta de abajo (la que golpea el suelo).
