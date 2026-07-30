@@ -226,12 +226,14 @@ cartel grande, el separador `Gamepasses` y la cuadricula (3 por fila, tiles de 2
 Como todo el contenido va dentro del scroll, se pueden anadir todos los gamepasses que
 quieras: los que no entren se ven bajando.
 
-Cada gamepass muestra su precio en Robux (`GetProductInfo`) o `OWNED` si ya lo tiene
-(`UserOwnsGamePassAsync`), y al pulsarlo abre la compra de Roblox
-(`PromptGamePassPurchase`). Al terminar la compra el boton pasa a `OWNED` solo.
+Cada gamepass lleva su icono, el nombre, **que hace en ingles** (`DESC`) y abajo un **boton
+verde con el precio**. El precio se pinta al momento con el de la config y se corrige con el
+real de Roblox (`GetProductInfo`); si ya lo tiene, el boton pasa a `OWNED` en gris
+(`UserOwnsGamePassAsync`). Al pulsarlo se abre la compra (`PromptGamePassPurchase`) y al
+terminar el boton se marca solo.
 
 Con `ID = 0` el boton sale desactivado, para poder ver el diseno antes de tener los
-gamepasses creados.
+gamepasses creados. `EXTRA_SCROLL` deja hueco de sobra al final para poder seguir bajando.
 
 Importante: la tienda **solo abre la compra**. Dar el beneficio (x2 dinero, auto swing...)
 es logica de servidor que hay que anadir en `MiningService`, comprobando

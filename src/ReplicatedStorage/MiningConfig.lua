@@ -154,13 +154,13 @@ MiningConfig.SHOP_PANEL = {
 	TITLE = "Shop",
 	TITLE_ICON_ID = "", -- iconito de la cabecera (opcional)
 
-	-- Cartel grande de arriba. Sin textos: es un hueco para tu imagen.
-	-- Ponlo en ENABLED = false si no lo quieres.
+	-- Cartel grande de arriba, desactivado (era el rectangulo azul).
+	-- Si algun dia quieres poner una imagen promocional, ENABLED = true.
 	BANNER = {
-		ENABLED = true,
+		ENABLED = false,
 		TITLE = "", -- vacio = no se dibuja
 		SUBTITLE = "", -- vacio = no se dibuja
-		IMAGE_ID = "", -- imagen del cartel
+		IMAGE_ID = "",
 		COLOR = Color3.fromRGB(60, 150, 225),
 		HEIGHT = 150,
 	},
@@ -168,24 +168,68 @@ MiningConfig.SHOP_PANEL = {
 	SECTION_LABEL = "Gamepasses",
 	OWNED_TEXT = "OWNED",
 	LOADING_TEXT = "...",
-	ROBUX_FORMAT = "%s R$", -- %s = precio
+	PRICE_FORMAT = "%s R$", -- %s = precio en robux
 
-	-- >>> AQUI PONES TUS GAMEPASSES <<<
-	-- ID = el numero del gamepass (el de la url del gamepass en la web de Roblox).
-	-- Con ID = 0 el boton sale desactivado, para que puedas ver el diseno sin tener
-	-- todavia los gamepasses creados.
+	-- Cuanto se puede seguir bajando el scroll despues del ultimo gamepass
+	EXTRA_SCROLL = 70,
+
+	-- >>> AQUI ESTAN TUS GAMEPASSES <<<
+	-- ID    = numero del gamepass (el de la url: roblox.com/game-pass/ID/nombre)
+	-- DESC  = que hace, en ingles, se lee dentro del cuadro
+	-- PRICE = precio que se muestra al momento. Si Roblox devuelve otro, se corrige solo.
+	-- ICON_ID = imagen del gamepass (opcional)
 	GAMEPASSES = {
-		{ ID = 0, NAME = "2x Money", ICON_ID = "" },
-		{ ID = 0, NAME = "Auto Swing", ICON_ID = "" },
-		{ ID = 0, NAME = "Lucky Ores", ICON_ID = "" },
-		{ ID = 0, NAME = "VIP", ICON_ID = "" },
-		{ ID = 0, NAME = "Fast Pickaxe", ICON_ID = "" },
-		{ ID = 0, NAME = "All Zones", ICON_ID = "" },
+		{
+			ID = 1928876737,
+			NAME = "X2 Money",
+			DESC = "Doubles the money from every ore you mine",
+			PRICE = 50,
+			ICON_ID = "",
+		},
+		{
+			ID = 1932616657,
+			NAME = "Fast Pickaxe",
+			DESC = "Shorter cooldown, so you mine much faster",
+			PRICE = 70,
+			ICON_ID = "",
+		},
+		{
+			ID = 1930986994,
+			NAME = "Lucky Ores",
+			DESC = "Doubles your chance of finding rare ores",
+			PRICE = 200,
+			ICON_ID = "",
+		},
+		{
+			ID = 1931716716,
+			NAME = "Auto Swing",
+			DESC = "Mines by itself while you stand on a zone",
+			PRICE = 250,
+			ICON_ID = "",
+		},
+		{
+			ID = 1932592656,
+			NAME = "All Zones",
+			DESC = "Unlocks every zone wall instantly",
+			PRICE = 199,
+			ICON_ID = "",
+		},
+		{
+			ID = 1927580748,
+			NAME = "VIP",
+			DESC = "X2 Money and Fast Pickaxe plus a VIP tag",
+			PRICE = 350,
+			ICON_ID = "",
+		},
 	},
 
 	-- Gamepasses grandes. Si no caben todos se baja con el scroll, no pasa nada.
-	TILE_SIZE = UDim2.fromOffset(210, 170),
+	TILE_SIZE = UDim2.fromOffset(230, 216),
 	TILE_PADDING = 14,
+
+	-- Boton verde de comprar, dentro de cada gamepass
+	BUY_COLOR = Color3.fromRGB(50, 195, 65),
+	OWNED_COLOR = Color3.fromRGB(90, 90, 95),
 }
 
 --------------------------------------------------------------------------------

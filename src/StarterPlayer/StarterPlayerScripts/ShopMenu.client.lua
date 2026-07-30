@@ -148,6 +148,11 @@ contentLayout.Padding = UDim.new(0, 10)
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 contentLayout.Parent = scroll
 
+-- Hueco de sobra al final, para poder seguir bajando un poco tras el ultimo gamepass
+local contentPadding = Instance.new("UIPadding")
+contentPadding.PaddingBottom = UDim.new(0, panelCfg.EXTRA_SCROLL)
+contentPadding.Parent = scroll
+
 -- Cartel grande (hueco para tu imagen). Los textos solo se crean si los rellenas.
 if panelCfg.BANNER.ENABLED then
 	local banner = Instance.new("ImageLabel")
@@ -199,15 +204,14 @@ grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 grid.SortOrder = Enum.SortOrder.LayoutOrder
 grid.Parent = tiles
 
+-- Cada gamepass: icono, nombre, que hace (en ingles) y boton verde con el precio
 local function makeTile(pass, order: number)
-	local tile = Instance.new("TextButton")
+	local tile = Instance.new("Frame")
 	tile.Name = pass.NAME
 	tile.LayoutOrder = order
 	tile.BackgroundColor3 = theme.BUTTON_COLOR
 	tile.BackgroundTransparency = 0.1
 	tile.BorderSizePixel = 0
-	tile.AutoButtonColor = true
-	tile.Text = ""
 	tile.Parent = tiles
 	UiTheme.corner(tile, theme.CORNER_RADIUS)
 	UiTheme.stroke(tile, theme.OUTER_OUTLINE, 2)
@@ -216,58 +220,76 @@ local function makeTile(pass, order: number)
 	passIcon.Name = "Icon"
 	passIcon.BackgroundTransparency = 1
 	passIcon.AnchorPoint = Vector2.new(0.5, 0)
-	passIcon.Position = UDim2.fromScale(0.5, 0.06)
-	passIcon.Size = UDim2.fromScale(0.5, 0.44)
+	passIcon.Position = UDim2.fromScale(0.5, 0.05)
+	passIcon.Size = UDim2.fromScale(0.42, 0.32)
 	passIcon.ScaleType = Enum.ScaleType.Fit
 	passIcon.Image = UiTheme.assetId(pass.ICON_ID)
 	passIcon.Parent = tile
 
-	local nameLabel = UiTheme.text(tile, pass.NAME, UDim2.fromScale(1, 0.22), UDim2.fromScale(0, 0.52))
+	local nameLabel = UiTheme.text(tile, pass.NAME, UDim2.fromScale(1, 0.15), UDim2.fromScale(0, 0.38))
 	nameLabel.Name = "PassName"
 
-	local priceLabel = UiTheme.text(tile, panelCfg.LOADING_TEXT, UDim2.fromScale(1, 0.22), UDim2.fromScale(0, 0.74))
-	priceLabel.Name = "Price"
+	-- Descripcion: varias lineas, sin TextScaled para que no se haga gigante
+	local descLabel = UiTheme.text(tile, pass.DESC or "", UDim2.new(1, -18, 0.24, 0), UDim2.new(0, 9, 0.53, 0))
+	descLabel.Name = "Description"
+	descLabel.TextScaled = false
+	descLabel.TextSize = 15
+	descLabel.TextWrapped = true
+	descLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+	-- Boton verde de comprar, abajo
+	local buyButton = UiTheme.button(
+		tile,
+		string.format(panelCfg.PRICE_FORMAT, tostring(pass.PRICE or "?")),
+		UDim2.new(1, -18, 0.19, 0),
+		UDim2.new(0.5, 0, 0.97, 0),
+		Vector2.new(0.5, 1)
+	)
+	buyButton.Name = "Buy"
+	buyButton.BackgroundColor3 = panelCfg.BUY_COLOR
+
+	local function markOwned()
+		buyButton.Text = panelCfg.OWNED_TEXT
+		buyButton.BackgroundColor3 = panelCfg.OWNED_COLOR
+		buyButton.AutoButtonColor = false
+	end
 
 	-- Sin id configurado: se ve el diseno pero no se puede comprar
 	if pass.ID == nil or pass.ID == 0 then
-		tile.AutoButtonColor = false
-		tile.BackgroundTransparency = 0.5
-		priceLabel.Text = "-"
+		buyButton.Text = "-"
+		buyButton.BackgroundColor3 = panelCfg.OWNED_COLOR
+		buyButton.AutoButtonColor = false
 		return tile
 	end
 
-	-- Precio y si ya lo tiene: son llamadas web, van en su propio hilo y con pcall
+	buyButton.MouseButton1Click:Connect(function()
+		pcall(function()
+			MarketplaceService:PromptGamePassPurchase(player, pass.ID)
+		end)
+	end)
+
+	-- Consultas web: en su propio hilo para no congelar la interfaz, y con pcall para
+	-- que un fallo de Roblox no rompa la tienda
 	task.spawn(function()
-		local owned = false
-		local okOwned, resultOwned = pcall(function()
+		local okOwned, owned = pcall(function()
 			return MarketplaceService:UserOwnsGamePassAsync(player.UserId, pass.ID)
 		end)
-		if okOwned then
-			owned = resultOwned
-		end
 
-		if owned then
-			priceLabel.Text = panelCfg.OWNED_TEXT
-			priceLabel.TextColor3 = theme.ON_COLOR
+		if okOwned and owned then
+			markOwned()
 			return
 		end
 
+		-- El precio real de Roblox manda sobre el escrito en la config
 		local okInfo, info = pcall(function()
 			return MarketplaceService:GetProductInfo(pass.ID, Enum.InfoType.GamePass)
 		end)
 
 		if okInfo and typeof(info) == "table" and info.PriceInRobux then
-			priceLabel.Text = string.format(panelCfg.ROBUX_FORMAT, tostring(info.PriceInRobux))
+			buyButton.Text = string.format(panelCfg.PRICE_FORMAT, tostring(info.PriceInRobux))
 		else
-			priceLabel.Text = "-"
-			warn(string.format("[ShopMenu] No se pudo leer el gamepass %d (%s)", pass.ID, pass.NAME))
+			warn(string.format("[ShopMenu] No se pudo leer el precio del gamepass %d (%s)", pass.ID, pass.NAME))
 		end
-	end)
-
-	tile.MouseButton1Click:Connect(function()
-		pcall(function()
-			MarketplaceService:PromptGamePassPurchase(player, pass.ID)
-		end)
 	end)
 
 	return tile
@@ -286,10 +308,11 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(_, passId, wa
 	for _, pass in panelCfg.GAMEPASSES do
 		if pass.ID == passId then
 			local tile = tiles:FindFirstChild(pass.NAME)
-			local priceLabel = tile and tile:FindFirstChild("Price")
-			if priceLabel and priceLabel:IsA("TextLabel") then
-				priceLabel.Text = panelCfg.OWNED_TEXT
-				priceLabel.TextColor3 = theme.ON_COLOR
+			local buyButton = tile and tile:FindFirstChild("Buy")
+			if buyButton and buyButton:IsA("TextButton") then
+				buyButton.Text = panelCfg.OWNED_TEXT
+				buyButton.BackgroundColor3 = panelCfg.OWNED_COLOR
+				buyButton.AutoButtonColor = false
 			end
 		end
 	end
