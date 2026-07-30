@@ -91,7 +91,10 @@ panelGui.Parent = playerGui
 
 local panelRoot = UiTheme.root(panelGui)
 
-local _, panel = makeFramedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+local panelOuter, panel = makeFramedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+
+-- Abre y cierra con animacion, y cierra los demas paneles
+local panelWindow = UiTheme.panel(panelGui, panelOuter)
 
 local title = makeText(panel, panelCfg.TITLE, UDim2.new(1, -80, 0, 44), UDim2.new(0, 20, 0, 12))
 title.Name = "Title"
@@ -268,13 +271,8 @@ end)
 -- Abrir y cerrar
 --------------------------------------------------------------------------------
 
-icon.MouseButton1Click:Connect(function()
-	panelGui.Enabled = not panelGui.Enabled
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-	panelGui.Enabled = false
-end)
+icon.MouseButton1Click:Connect(panelWindow.toggle)
+closeButton.MouseButton1Click:Connect(panelWindow.close)
 
 -- Estado inicial
 refreshMusic()

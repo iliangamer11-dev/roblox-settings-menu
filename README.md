@@ -251,6 +251,22 @@ aplica `IMAGE_DARKEN` para que el texto siga legible.
 Resto de ajustes en `MiningConfig.LOADING_SCREEN`: `TITLE`, `SUBTITLE`, `TIPS`, colores y
 tamano de la barra.
 
+## Paneles: animacion y uno solo a la vez
+
+Todos los paneles (ajustes, tienda, tags, skins) y los avisos se registran en
+`UiTheme.panel`, que da tres cosas:
+
+- **Animacion**: al abrir crecen desde el 70 % con easing `Back` (el rebotito tipico) en
+  0.22 s, y al cerrar se encogen en 0.16 s y se apagan al terminar. Se ajusta en
+  `UI_THEME.ANIMATION`.
+- **Solo uno abierto**: al abrir uno se cierran los demas. Si estas en la tienda y pulsas
+  ajustes, la tienda se cierra sola.
+- **Avisos aparte**: los mensajes de tag/skin nuevos se registran con `exclusive = false`,
+  asi que no cierran los paneles ni desaparecen si abres uno.
+
+La animacion usa un `UIScale` en el panel, no en el contenedor de `UiTheme.root`: un objeto
+solo admite un `UIScale` y el del contenedor ya se usa para el escalado por dispositivo.
+
 ## Menu de ajustes
 
 Boton **en el centro de la pantalla** con un icono y `Settings` debajo, y justo **encima el

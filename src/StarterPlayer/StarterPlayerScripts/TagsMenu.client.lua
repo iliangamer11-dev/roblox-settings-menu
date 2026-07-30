@@ -67,7 +67,10 @@ panelGui.Parent = playerGui
 
 local panelRoot = UiTheme.root(panelGui)
 
-local _, panel = UiTheme.framedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+local panelOuter, panel = UiTheme.framedBox(panelRoot, panelCfg.SIZE, UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+
+-- Abre y cierra con animacion, y cierra los demas paneles
+local panelWindow = UiTheme.panel(panelGui, panelOuter)
 
 local header = Instance.new("Frame")
 header.Name = "Header"
@@ -225,8 +228,11 @@ noticeGui.Parent = playerGui
 
 local noticeRoot = UiTheme.root(noticeGui)
 
-local _, noticeBody =
+local noticeOuter, noticeBody =
 	UiTheme.framedBox(noticeRoot, panelCfg.UNLOCK_SIZE, panelCfg.UNLOCK_POSITION, Vector2.new(0.5, 0))
+
+-- exclusive = false: el aviso no cierra los paneles ni se cierra cuando abres uno
+local noticeWindow = UiTheme.panel(noticeGui, noticeOuter, { exclusive = false })
 
 local noticeTitle = UiTheme.text(noticeBody, "", UDim2.new(1, -16, 0.5, 0), UDim2.new(0, 8, 0, 6))
 noticeTitle.Name = "Message"
@@ -241,7 +247,7 @@ local noticeToken = 0
 local function showUnlockNotice(tag)
 	noticeTitle.Text = string.format(panelCfg.UNLOCK_MESSAGE, tag.LABEL)
 	UiTheme.gradient(noticeTitle, tag.TOP, tag.BOTTOM)
-	noticeGui.Enabled = true
+	noticeWindow.open()
 
 	noticeToken += 1
 	local token = noticeToken
@@ -249,7 +255,7 @@ local function showUnlockNotice(tag)
 	task.delay(panelCfg.UNLOCK_DURATION, function()
 		-- Si mientras tanto ha salido otro aviso, este ya no lo apaga
 		if token == noticeToken then
-			noticeGui.Enabled = false
+			noticeWindow.close()
 		end
 	end)
 end
@@ -288,13 +294,8 @@ player:GetAttributeChangedSignal("tagsUnlocked"):Connect(function()
 	checkNewTags()
 end)
 
-icon.MouseButton1Click:Connect(function()
-	panelGui.Enabled = not panelGui.Enabled
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-	panelGui.Enabled = false
-end)
+icon.MouseButton1Click:Connect(panelWindow.toggle)
+closeButton.MouseButton1Click:Connect(panelWindow.close)
 
 refresh()
 checkNewTags()

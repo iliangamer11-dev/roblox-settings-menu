@@ -130,6 +130,13 @@ MiningConfig.UI_THEME = {
 	OFF_COLOR = Color3.fromRGB(200, 70, 70), -- interruptor desactivado
 	BUTTON_COLOR = Color3.fromRGB(95, 95, 100), -- botones normales (+, -, X)
 
+	-- Animacion de los paneles al abrir y cerrar
+	ANIMATION = {
+		OPEN_TIME = 0.22,
+		CLOSE_TIME = 0.16,
+		START_SCALE = 0.7, -- de que tamano sale antes de crecer
+	},
+
 	-- Escalado automatico de TODA la interfaz segun el tamano de la pantalla.
 	-- Los tamanos estan pensados para REFERENCE (un monitor normal); en pantallas mas
 	-- pequenas (movil) se encoge y en 4K se agranda, siempre entre MIN y MAX.

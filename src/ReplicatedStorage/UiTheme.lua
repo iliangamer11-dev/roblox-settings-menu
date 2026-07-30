@@ -10,6 +10,7 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 
@@ -143,6 +144,95 @@ function UiTheme.root(gui: ScreenGui): Frame
 	update()
 
 	return root
+end
+
+--[[
+	Paneles: animacion al abrir/cerrar y solo uno abierto a la vez.
+
+	Todos los paneles se registran aqui, asi que al abrir uno se cierran los demas: si
+	estas en la tienda y pulsas ajustes, la tienda se cierra sola.
+
+	La animacion es un UIScale en el propio panel (el contenedor de UiTheme.root ya tiene
+	el suyo para el escalado por dispositivo, y un objeto solo admite un UIScale).
+
+	options.exclusive = false para avisos que no deben cerrar los paneles ni cerrarse
+	cuando se abre uno.
+]]
+local registeredPanels = {}
+
+function UiTheme.panel(gui: ScreenGui, frame: GuiObject, options: { exclusive: boolean? }?)
+	local animation = theme.ANIMATION
+	local exclusive = not (options and options.exclusive == false)
+
+	local scale = frame:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	scale.Parent = frame
+	scale.Scale = animation.START_SCALE
+
+	gui.Enabled = false
+
+	local handle = { exclusive = exclusive }
+	local currentTween: Tween? = nil
+
+	function handle.isOpen(): boolean
+		return gui.Enabled
+	end
+
+	function handle.close()
+		if not gui.Enabled then
+			return
+		end
+
+		if currentTween then
+			currentTween:Cancel()
+		end
+
+		local info = TweenInfo.new(animation.CLOSE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		local tween = TweenService:Create(scale, info, { Scale = animation.START_SCALE })
+		currentTween = tween
+		tween:Play()
+
+		-- Se apaga al terminar, y solo si no se ha vuelto a abrir mientras tanto
+		task.delay(animation.CLOSE_TIME, function()
+			if currentTween == tween then
+				gui.Enabled = false
+			end
+		end)
+	end
+
+	function handle.open()
+		if exclusive then
+			for _, other in registeredPanels do
+				if other ~= handle and other.exclusive then
+					other.close()
+				end
+			end
+		end
+
+		if currentTween then
+			currentTween:Cancel()
+		end
+
+		gui.Enabled = true
+		scale.Scale = animation.START_SCALE
+
+		-- Back: hace el tipico rebotito al aparecer
+		local info = TweenInfo.new(animation.OPEN_TIME, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		local tween = TweenService:Create(scale, info, { Scale = 1 })
+		currentTween = tween
+		tween:Play()
+	end
+
+	function handle.toggle()
+		if gui.Enabled then
+			handle.close()
+		else
+			handle.open()
+		end
+	end
+
+	table.insert(registeredPanels, handle)
+
+	return handle
 end
 
 -- Degradado vertical (de TOP arriba a BOTTOM abajo) sobre un texto
