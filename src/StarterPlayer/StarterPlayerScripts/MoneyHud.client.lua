@@ -80,7 +80,9 @@ local amountLabel = UiTheme.text(
 )
 amountLabel.Name = "Amount"
 amountLabel.AnchorPoint = Vector2.new(1, 0.5)
-amountLabel.TextXAlignment = Enum.TextXAlignment.Right
+-- Centrado dentro del hueco que queda a la derecha del icono
+amountLabel.TextXAlignment = Enum.TextXAlignment.Center
+amountLabel.TextYAlignment = Enum.TextYAlignment.Center
 
 --------------------------------------------------------------------------------
 -- Actualizacion
