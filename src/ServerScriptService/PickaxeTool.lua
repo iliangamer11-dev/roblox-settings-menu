@@ -44,36 +44,49 @@ function PickaxeTool.build(): Tool
 	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	-- Las puntas nacen en el extremo delantero del mango (-Z)
-	local headZ = -(settings.HANDLE_SIZE.Z / 2 - settings.HEAD_SIZE.X / 2)
+	local function makeMetalPart(name: string, size: Vector3, cframe: CFrame): Part
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Size = size
+		part.Color = settings.HEAD_COLOR
+		part.Material = Enum.Material.Metal
+		part.TopSurface = Enum.SurfaceType.Smooth
+		part.BottomSurface = Enum.SurfaceType.Smooth
+		part.CanCollide = false
+		part.Massless = true
+		part.CFrame = cframe
+		part.Parent = tool
+		weld(handle, part)
+		return part
+	end
+
+	-- Collar: va en el extremo delantero del mango (-Z) y lo tapa, de forma que las dos
+	-- puntas salen de una pieza solida en vez de flotar pegadas al palo
+	local collarZ = -(settings.HANDLE_SIZE.Z / 2 - settings.COLLAR_SIZE.Z / 2)
+	makeMetalPart("HeadCollar", settings.COLLAR_SIZE, handle.CFrame * CFrame.new(0, 0, collarZ))
 
 	-- side = 1 -> punta de arriba, side = -1 -> punta de abajo (la que golpea el suelo).
-	-- Cada trozo se encadena al final del anterior, girado un poco mas hacia atras (+Z)
-	-- y escalado por HEAD_TAPER, de forma que la punta se afila.
+	-- Cada trozo arranca DENTRO del anterior (HEAD_OVERLAP), asi el giro de la union no
+	-- deja hueco: el punto de giro queda por dentro de la pieza previa.
 	local function makeSpike(name: string, side: number)
-		local frame = handle.CFrame * CFrame.new(0, 0, headZ)
+		-- Se empieza en el centro del collar, asi el primer trozo tambien queda metido
+		local joint = handle.CFrame * CFrame.new(0, 0, collarZ)
 		local size = settings.HEAD_SIZE
 		local angle = settings.HEAD_START_ANGLE
 
 		for index = 1, settings.HEAD_SEGMENTS do
-			frame = frame * CFrame.fromEulerAnglesXYZ(math.rad(angle * side), 0, 0)
+			joint = joint * CFrame.fromEulerAnglesXYZ(math.rad(angle * side), 0, 0)
 
-			local segment = Instance.new("Part")
-			segment.Name = string.format("%s%d", name, index)
-			segment.Size = size
-			segment.Color = settings.HEAD_COLOR
-			segment.Material = Enum.Material.Metal
-			segment.TopSurface = Enum.SurfaceType.Smooth
-			segment.BottomSurface = Enum.SurfaceType.Smooth
-			segment.CanCollide = false
-			segment.Massless = true
-			segment.CFrame = frame * CFrame.new(0, side * size.Y / 2, 0)
-			segment.Parent = tool
-			weld(handle, segment)
+			makeMetalPart(string.format("%s%d", name, index), size, joint * CFrame.new(0, side * size.Y / 2, 0))
 
-			-- Siguiente trozo: se parte del final de este, mas pequeno y mas girado
-			frame = frame * CFrame.new(0, side * size.Y, 0)
-			size = size * settings.HEAD_TAPER
+			-- El siguiente arranca antes del final de este: de ahi el solape
+			joint = joint * CFrame.new(0, side * size.Y * (1 - settings.HEAD_OVERLAP), 0)
+
+			size = Vector3.new(
+				size.X * settings.HEAD_THICKNESS_TAPER,
+				size.Y * settings.HEAD_TAPER,
+				size.Z * settings.HEAD_THICKNESS_TAPER
+			)
 			angle = settings.HEAD_CURVE
 		end
 	end

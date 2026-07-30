@@ -587,11 +587,21 @@ MiningConfig.PICKAXE = {
 	-- cada trozo se gira un poco mas y es mas pequeno que el anterior, asi la punta
 	-- queda curvada y afilada como un pico de verdad (y no recta como un martillo).
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_SIZE = Vector3.new(0.42, 0.5, 0.55), -- (grosor X, largo de cada trozo Y, grosor Z)
+	HEAD_SIZE = Vector3.new(0.44, 0.55, 0.6), -- (grosor X, largo de cada trozo Y, grosor Z)
 	HEAD_SEGMENTS = 3, -- trozos por punta: mas trozos = curva mas suave
-	HEAD_TAPER = 0.72, -- cuanto se encoge cada trozo respecto al anterior (afila la punta)
-	HEAD_START_ANGLE = 12, -- inclinacion del primer trozo
-	HEAD_CURVE = 20, -- grados que se cierra hacia atras cada trozo siguiente
+	HEAD_TAPER = 0.86, -- cuanto se acorta cada trozo respecto al anterior
+	HEAD_THICKNESS_TAPER = 0.82, -- cuanto se afina cada trozo (la punta acaba fina)
+
+	-- Clave para que no queden huecos: cada trozo se mete este porcentaje dentro del
+	-- anterior. Al girar en la union se abre un hueco de (grosor/2 * tan(angulo)) y el
+	-- solape tiene que ser mayor que eso.
+	HEAD_OVERLAP = 0.28,
+
+	HEAD_START_ANGLE = 10, -- inclinacion del primer trozo
+	HEAD_CURVE = 18, -- grados que se cierra hacia atras cada trozo siguiente
+
+	-- Pieza que une las dos puntas con el mango, para que la cabeza se vea de una pieza
+	COLLAR_SIZE = Vector3.new(0.5, 0.55, 0.62),
 
 	-- Donde agarra la mano el mango (offset dentro del propio mango, en studs).
 	-- Z positivo = mas atras en el mango.

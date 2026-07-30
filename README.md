@@ -417,8 +417,10 @@ real de las probabilidades, asi que no hay que recalcular nada para que sigan cu
 | `HEAD_SIZE` | Tamano de cada trozo de punta: `(grosor X, largo Y, grosor Z)` |
 | `HEAD_COLOR` | Color de la cabeza |
 | `HEAD_SEGMENTS` | Trozos por punta. Mas trozos = curva mas suave |
-| `HEAD_TAPER` | Cuanto se encoge cada trozo respecto al anterior (afila la punta) |
+| `HEAD_TAPER`, `HEAD_THICKNESS_TAPER` | Cuanto se acorta y se afina cada trozo |
+| `HEAD_OVERLAP` | Cuanto se mete cada trozo en el anterior, para que no queden huecos |
 | `HEAD_START_ANGLE`, `HEAD_CURVE` | Inclinacion inicial y curvatura hacia atras |
+| `COLLAR_SIZE` | Pieza de metal que une las dos puntas con el mango |
 | `GRIP_OFFSET` | Donde agarra la mano el mango (Z positivo = mas atras) |
 | `GRIP_ROTATION` | Rotacion del agarre en grados, si queda raro en la mano |
 | `REST_ANGLE` | Inclinacion en reposo. `0` = pico recto, mango horizontal |
