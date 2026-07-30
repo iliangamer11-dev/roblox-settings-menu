@@ -32,7 +32,7 @@ MiningConfig.LEVEL = {
 MiningConfig.LEVEL_BAR = {
 	-- Ancho relativo a la pantalla (0.62 = 62%) para que sea grande en cualquier
 	-- resolucion, y alto fijo en pixeles.
-	SIZE = UDim2.new(0.62, 0, 0, 80),
+	SIZE = UDim2.new(0.46, 0, 0, 80),
 	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
 	-- y el -28 la separa un poco.
 	POSITION = UDim2.new(0.5, 0, 1, -28),
@@ -65,7 +65,7 @@ MiningConfig.NAMEPLATE = {
 	HIDE_DEFAULT_NAME = true,
 
 	SIZE = UDim2.new(0, 260, 0, 76), -- tamano del cartel
-	OFFSET = Vector3.new(0, 2.8, 0), -- altura sobre la cabeza, en studs
+	OFFSET = Vector3.new(0, 1.9, 0), -- altura sobre la cabeza, en studs (mas bajo = mas cerca)
 	MAX_DISTANCE = 140, -- desde cuan lejos se ve
 	ALWAYS_ON_TOP = false, -- true = se ve a traves de las paredes
 
