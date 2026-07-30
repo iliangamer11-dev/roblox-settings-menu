@@ -55,29 +55,29 @@ screenGui.Parent = playerGui
 local anchor = Vector2.new(buttonCfg.ANCHOR.X, 1) -- misma columna, pegado por abajo
 local _, body = UiTheme.framedBox(screenGui, cfg.SIZE, moneyPosition(), anchor)
 
--- Icono a la derecha, cuadrado, con el alto del cartel
+-- Icono a la IZQUIERDA, cuadrado, con el alto del cartel
 local iconSide = math.floor(cfg.SIZE.Y.Offset * cfg.ICON_SIZE)
 
 local icon = Instance.new("ImageLabel")
 icon.Name = "Icon"
 icon.BackgroundTransparency = 1
-icon.AnchorPoint = Vector2.new(1, 0.5)
-icon.Position = UDim2.new(1, -cfg.PADDING, 0.5, 0)
+icon.AnchorPoint = Vector2.new(0, 0.5)
+icon.Position = UDim2.new(0, cfg.PADDING, 0.5, 0)
 icon.Size = UDim2.fromOffset(iconSide, iconSide)
 icon.ScaleType = Enum.ScaleType.Fit
 icon.Image = UiTheme.assetId(cfg.ICON_ID)
 icon.Parent = body
 
--- La cantidad ocupa el resto, a la izquierda del icono
+-- La cantidad ocupa el resto, a la DERECHA del icono
 local amountLabel = UiTheme.text(
 	body,
 	"0",
 	UDim2.new(1, -(iconSide + cfg.PADDING * 3), 0.62, 0),
-	UDim2.new(0, cfg.PADDING, 0.5, 0)
+	UDim2.new(1, -cfg.PADDING, 0.5, 0)
 )
 amountLabel.Name = "Amount"
-amountLabel.AnchorPoint = Vector2.new(0, 0.5)
-amountLabel.TextXAlignment = Enum.TextXAlignment.Left
+amountLabel.AnchorPoint = Vector2.new(1, 0.5)
+amountLabel.TextXAlignment = Enum.TextXAlignment.Right
 
 --------------------------------------------------------------------------------
 -- Actualizacion

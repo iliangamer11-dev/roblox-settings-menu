@@ -108,6 +108,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/LevelBar.client.lua` | StarterPlayerScripts | LocalScript `LevelBar` |
 | `src/StarterPlayer/StarterPlayerScripts/SettingsMenu.client.lua` | StarterPlayerScripts | LocalScript `SettingsMenu` |
 | `src/StarterPlayer/StarterPlayerScripts/MoneyHud.client.lua` | StarterPlayerScripts | LocalScript `MoneyHud` |
+| `src/StarterPlayer/StarterPlayerScripts/ShopMenu.client.lua` | StarterPlayerScripts | LocalScript `ShopMenu` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -200,22 +201,39 @@ cartel del dinero**. Al pulsar el icono se abre el panel. Mismo estilo en todo
 (`MiningConfig.UI_THEME`, montado con `UiTheme`): gris con opacidad, contorno blanco muy
 fino por dentro, contorno negro por fuera y esquinas redondeadas.
 
-Los dos van **a la derecha de la pantalla**, centrados en vertical:
+Todo va **a la izquierda de la pantalla**, centrado en vertical:
 
 ```
-        ┌──────────────────────┐
-        │ $1.250        [icono]│   <- MoneyHud, ancho
-        └──────────────────────┘
-        ┌──────┐
-        │icono │                   <- SettingsMenu (se pulsa aqui)
-        └──────┘
-        SETTINGS                   <- texto debajo del cuadro
+   ┌──────────────────────┐
+   │ [icono]       $1.250 │   <- MoneyHud, ancho
+   └──────────────────────┘
+   ┌──────┐  ┌──────┐
+   │icono │  │icono │          <- SettingsMenu y ShopMenu
+   └──────┘  └──────┘
+   SETTINGS    SHOP             <- textos debajo de los cuadros
 ```
 
 El cartel del dinero calcula su posicion desde la del boton de ajustes, asi que si mueves
 `SETTINGS_BUTTON.POSITION` el dinero lo sigue solo. La cantidad se lee del atributo `money`
 y se actualiza en cada picazo y en cada compra. Se ajusta en `MiningConfig.MONEY_PANEL`
 (tamano, separacion, `ICON_ID` de la moneda, `ICON_SIZE` y `PREFIX`).
+
+## Tienda
+
+Boton `SHOP` al lado del de ajustes. Abre un panel con el mismo estilo: cabecera con icono,
+titulo y boton rojo de cerrar, un cartel grande arriba, el separador `Gamepasses` y una
+cuadricula de gamepasses con scroll.
+
+Cada gamepass muestra su precio en Robux (`GetProductInfo`) o `OWNED` si ya lo tiene
+(`UserOwnsGamePassAsync`), y al pulsarlo abre la compra de Roblox
+(`PromptGamePassPurchase`). Al terminar la compra el boton pasa a `OWNED` solo.
+
+Con `ID = 0` el boton sale desactivado, para poder ver el diseno antes de tener los
+gamepasses creados.
+
+Importante: la tienda **solo abre la compra**. Dar el beneficio (x2 dinero, auto swing...)
+es logica de servidor que hay que anadir en `MiningService`, comprobando
+`MarketplaceService:UserOwnsGamePassAsync` al entrar el jugador.
 
 ### Poner tus imagenes
 

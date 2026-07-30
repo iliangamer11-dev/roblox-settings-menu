@@ -83,10 +83,10 @@ MiningConfig.UI_THEME = {
 
 MiningConfig.SETTINGS_BUTTON = {
 	SIZE = UDim2.fromOffset(84, 84), -- cuadrado pequeno
-	-- A la derecha y centrado en vertical. El cartel de dinero se coloca encima solo,
-	-- calculado desde esta posicion.
-	POSITION = UDim2.new(1, -24, 0.5, 0),
-	ANCHOR = Vector2.new(1, 0.5),
+	-- A la izquierda y centrado en vertical. El boton de la tienda se coloca al lado y
+	-- el cartel de dinero encima, los dos calculados desde esta posicion.
+	POSITION = UDim2.new(0, 24, 0.5, 0),
+	ANCHOR = Vector2.new(0, 0.5),
 
 	-- >>> AQUI PONES TU IMAGEN DEL BOTON DE AJUSTES <<<
 	-- Ej: ICON_ID = "rbxassetid://1234567890" (tambien vale solo el numero)
@@ -97,8 +97,19 @@ MiningConfig.SETTINGS_BUTTON = {
 	LABEL_HEIGHT = 26,
 }
 
+-- Boton de la tienda, al lado del de ajustes
+MiningConfig.SHOP_BUTTON = {
+	ENABLED = true,
+	GAP_X = 12, -- separacion con el boton de ajustes
+
+	-- >>> AQUI PONES TU IMAGEN DEL BOTON DE LA TIENDA <<<
+	ICON_ID = "",
+
+	LABEL = "SHOP", -- texto, va DEBAJO del cuadro
+}
+
 -- Cartel del dinero: ancho, justo ENCIMA del boton de ajustes.
--- Solo lleva la cantidad y, al lado, tu imagen de la moneda.
+-- Imagen a la izquierda y la cantidad a la derecha.
 MiningConfig.MONEY_PANEL = {
 	ENABLED = true,
 	SIZE = UDim2.fromOffset(260, 68), -- ancho
@@ -132,6 +143,47 @@ MiningConfig.SETTINGS_PANEL = {
 	},
 	ON_TEXT = "ON",
 	OFF_TEXT = "OFF",
+}
+
+--------------------------------------------------------------------------------
+-- TIENDA
+--------------------------------------------------------------------------------
+
+MiningConfig.SHOP_PANEL = {
+	-- 520 de alto para que se vean dos filas de gamepasses sin tener que hacer scroll
+	SIZE = UDim2.fromOffset(600, 520),
+	TITLE = "Exclusive Shop",
+	TITLE_ICON_ID = "", -- iconito de la cabecera (opcional)
+
+	-- Cartel grande de arriba
+	BANNER = {
+		TITLE = "Best value!",
+		SUBTITLE = "Get more money per swing",
+		IMAGE_ID = "", -- imagen de fondo del cartel (opcional)
+		COLOR = Color3.fromRGB(60, 150, 225),
+		HEIGHT = 118,
+	},
+
+	SECTION_LABEL = "Gamepasses",
+	OWNED_TEXT = "OWNED",
+	LOADING_TEXT = "...",
+	ROBUX_FORMAT = "%s R$", -- %s = precio
+
+	-- >>> AQUI PONES TUS GAMEPASSES <<<
+	-- ID = el numero del gamepass (el de la url del gamepass en la web de Roblox).
+	-- Con ID = 0 el boton sale desactivado, para que puedas ver el diseno sin tener
+	-- todavia los gamepasses creados.
+	GAMEPASSES = {
+		{ ID = 0, NAME = "2x Money", ICON_ID = "" },
+		{ ID = 0, NAME = "Auto Swing", ICON_ID = "" },
+		{ ID = 0, NAME = "Lucky Ores", ICON_ID = "" },
+		{ ID = 0, NAME = "VIP", ICON_ID = "" },
+		{ ID = 0, NAME = "Fast Pickaxe", ICON_ID = "" },
+		{ ID = 0, NAME = "All Zones", ICON_ID = "" },
+	},
+
+	TILE_SIZE = UDim2.fromOffset(160, 120),
+	TILE_PADDING = 12,
 }
 
 --------------------------------------------------------------------------------
