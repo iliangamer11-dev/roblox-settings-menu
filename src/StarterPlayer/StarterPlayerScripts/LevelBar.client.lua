@@ -122,6 +122,39 @@ progressLabel.Position = UDim2.new(1, -cfg.PADDING, 0.5, 0)
 progressLabel.Size = UDim2.new(0.45, -cfg.PADDING, 0.62, 0)
 
 --------------------------------------------------------------------------------
+-- Multiplicador que da el nivel, encima de la barra
+--------------------------------------------------------------------------------
+
+local multiplierLabel = Instance.new("TextLabel")
+multiplierLabel.Name = "LevelMultiplier"
+multiplierLabel.BackgroundTransparency = 1
+multiplierLabel.AnchorPoint = Vector2.new(0.5, 1)
+-- Justo encima de la barra: su borde de arriba menos la separacion
+multiplierLabel.Position = UDim2.new(
+	bar.Position.X.Scale,
+	bar.Position.X.Offset,
+	bar.Position.Y.Scale,
+	bar.Position.Y.Offset - bar.Size.Y.Offset - cfg.MULTIPLIER_OFFSET
+)
+multiplierLabel.Size = UDim2.new(cfg.SIZE.X.Scale, cfg.SIZE.X.Offset, 0, cfg.MULTIPLIER_HEIGHT)
+multiplierLabel.Font = cfg.FONT
+multiplierLabel.TextScaled = true
+multiplierLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- el color real lo pone el degradado
+multiplierLabel.Text = ""
+multiplierLabel.Parent = root
+addOutline(multiplierLabel, cfg.TEXT_OUTLINE_THICKNESS, cfg.TEXT_OUTLINE_COLOR).LineJoinMode =
+	Enum.LineJoinMode.Round
+
+-- Degradado verde claro (arriba) a verde oscuro (abajo)
+local multiplierGradient = Instance.new("UIGradient")
+multiplierGradient.Rotation = 90
+multiplierGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, cfg.MULTIPLIER_GRADIENT_TOP),
+	ColorSequenceKeypoint.new(1, cfg.MULTIPLIER_GRADIENT_BOTTOM),
+})
+multiplierGradient.Parent = multiplierLabel
+
+--------------------------------------------------------------------------------
 -- Aviso de subida de nivel
 --------------------------------------------------------------------------------
 
@@ -147,8 +180,11 @@ levelUpStroke.Transparency = 1
 
 -- Posicion de reposo: pegada encima de la barra
 local function restingPosition(): UDim2
+	-- Por encima de la barra Y del texto del multiplicador, para no solaparse con el
 	local barTop = bar.Position.Y.Offset - bar.Size.Y.Offset
-	return UDim2.new(bar.Position.X.Scale, bar.Position.X.Offset, bar.Position.Y.Scale, barTop - upCfg.OFFSET)
+	local aboveMultiplier = barTop - cfg.MULTIPLIER_OFFSET - cfg.MULTIPLIER_HEIGHT
+
+	return UDim2.new(bar.Position.X.Scale, bar.Position.X.Offset, bar.Position.Y.Scale, aboveMultiplier - upCfg.OFFSET)
 end
 
 -- Sonido en el cliente: lo oye solo este jugador, no todo el servidor
@@ -213,6 +249,9 @@ local function update()
 	levelLabel.Text = string.format(cfg.LEVEL_FORMAT, level)
 	progressLabel.Text = string.format(cfg.PROGRESS_FORMAT, Format.number(xp), Format.number(needed))
 
+	local levelMultiplier = player:GetAttribute("levelMultiplier") or 1
+	multiplierLabel.Text = string.format(cfg.MULTIPLIER_FORMAT, tostring(levelMultiplier))
+
 	local alpha = needed > 0 and math.clamp(xp / needed, 0, 1) or 0
 	TweenService:Create(fill, tweenInfo, { Size = UDim2.fromScale(alpha, 1) }):Play()
 end
@@ -231,6 +270,7 @@ end)
 
 player:GetAttributeChangedSignal("xp"):Connect(update)
 player:GetAttributeChangedSignal("xpNeeded"):Connect(update)
+player:GetAttributeChangedSignal("levelMultiplier"):Connect(update)
 
 -- El jugador puede ocultar la barra desde el menu de ajustes
 screenGui.Enabled = Settings.get("showLevelBar")

@@ -31,6 +31,19 @@ local function xpNeededFor(level: number): number
 	return math.max(1, math.floor(cfg.BASE_XP * cfg.GROWTH ^ (level - 1)))
 end
 
+-- Multiplicador de dinero que da el nivel actual
+local function multiplierFor(level: number): number
+	local cfg = Config.LEVEL
+	local multiplier = 1 + (level - 1) * cfg.MULTIPLIER_PER_LEVEL
+
+	if cfg.MAX_MULTIPLIER > 0 then
+		multiplier = math.min(multiplier, cfg.MAX_MULTIPLIER)
+	end
+
+	-- Se redondea a dos decimales para que el texto de la barra quede limpio
+	return math.floor(multiplier * 100 + 0.5) / 100
+end
+
 local function publish(player: Player)
 	local entry = data[player]
 	if not entry then
@@ -40,6 +53,8 @@ local function publish(player: Player)
 	player:SetAttribute("level", entry.level)
 	player:SetAttribute("xp", math.floor(entry.xp))
 	player:SetAttribute("xpNeeded", xpNeededFor(entry.level))
+	-- Lo lee MiningService para el dinero y la barra de nivel para el texto verde
+	player:SetAttribute("levelMultiplier", multiplierFor(entry.level))
 end
 
 function LevelService.setup(player: Player)

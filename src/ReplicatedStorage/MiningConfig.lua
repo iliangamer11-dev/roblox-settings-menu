@@ -25,6 +25,11 @@ MiningConfig.LEVEL = {
 	BASE_XP = 100, -- lo que cuesta pasar del nivel 1 al 2
 	GROWTH = 1.15, -- cada nivel pide un 15% mas que el anterior
 	MAX_LEVEL = 0, -- 0 = sin limite
+
+	-- Cada nivel da mas dinero: multiplicador = 1 + (nivel - 1) * MULTIPLIER_PER_LEVEL
+	-- Con 0.02: nivel 10 = x1.18, nivel 25 = x1.48, nivel 50 = x1.98
+	MULTIPLIER_PER_LEVEL = 0.02,
+	MAX_MULTIPLIER = 0, -- 0 = sin tope
 }
 
 -- Barra de nivel: verde lo conseguido, blanco lo que falta, "Level X" a la izquierda
@@ -53,6 +58,14 @@ MiningConfig.LEVEL_BAR = {
 	LEVEL_FORMAT = "Level %d",
 	PROGRESS_FORMAT = "%s / %s", -- puntos actuales / puntos del nivel
 	TWEEN_TIME = 0.35, -- lo que tarda la barra en moverse
+
+	-- Texto encima de la barra con el multiplicador que da el nivel,
+	-- en degradado de verde claro a verde oscuro
+	MULTIPLIER_FORMAT = "x%s money from level",
+	MULTIPLIER_HEIGHT = 30, -- alto del texto en pixeles
+	MULTIPLIER_OFFSET = 6, -- separacion sobre la barra
+	MULTIPLIER_GRADIENT_TOP = Color3.fromRGB(150, 255, 120), -- verde claro
+	MULTIPLIER_GRADIENT_BOTTOM = Color3.fromRGB(20, 120, 30), -- verde oscuro
 }
 
 --------------------------------------------------------------------------------
@@ -225,6 +238,7 @@ MiningConfig.TAGS = {
 		KEY = "NOOB",
 		LABEL = "Noob",
 		DEFAULT = true,
+		MULTIPLIER = 1, -- multiplica el dinero de cada mineral
 		TOP = Color3.fromRGB(190, 145, 95), -- marron claro
 		BOTTOM = Color3.fromRGB(85, 55, 25), -- marron oscuro
 	},
@@ -232,6 +246,7 @@ MiningConfig.TAGS = {
 		KEY = "PRINCIPIANTE",
 		LABEL = "Beginner",
 		WALL = "Pared2",
+		MULTIPLIER = 1.1,
 		TOP = Color3.fromRGB(130, 205, 255), -- azul claro
 		BOTTOM = Color3.fromRGB(18, 62, 175), -- azul oscuro
 	},
@@ -239,6 +254,7 @@ MiningConfig.TAGS = {
 		KEY = "PRO",
 		LABEL = "Pro",
 		WALL = "Pared4",
+		MULTIPLIER = 1.3,
 		TOP = Color3.fromRGB(255, 155, 30), -- naranja
 		BOTTOM = Color3.fromRGB(190, 25, 25), -- rojo
 	},
@@ -246,6 +262,7 @@ MiningConfig.TAGS = {
 		KEY = "VIP",
 		LABEL = "VIP",
 		PASS = "VIP",
+		MULTIPLIER = 1.5,
 		TOP = Color3.fromRGB(255, 140, 20), -- naranja
 		BOTTOM = Color3.fromRGB(255, 240, 90), -- amarillo
 	},
@@ -361,6 +378,7 @@ MiningConfig.TAG_PANEL = {
 	EQUIP_TEXT = "EQUIP",
 	EQUIPPED_TEXT = "EQUIPPED",
 	LOCKED_TEXT = "LOCKED",
+	MULTIPLIER_FORMAT = "x%s money", -- %s = multiplicador del tag
 
 	-- Aviso al desbloquear uno nuevo. No se equipa solo: hay que ir al menu.
 	UNLOCK_MESSAGE = "New tag unlocked: %s", -- %s = nombre del tag

@@ -155,14 +155,27 @@ for index, tag in Config.TAGS do
 	UiTheme.stroke(row, theme.OUTER_OUTLINE, 2)
 
 	-- El nombre del tag, con su degradado
-	local nameLabel = UiTheme.text(row, tag.LABEL, UDim2.new(0.5, 0, 0.5, 0), UDim2.new(0, 14, 0.12, 0))
+	local nameLabel = UiTheme.text(row, tag.LABEL, UDim2.new(0.45, 0, 0.44, 0), UDim2.new(0, 14, 0.1, 0))
 	nameLabel.Name = "TagName"
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	UiTheme.gradient(nameLabel, tag.TOP, tag.BOTTOM)
 
-	local requirement = UiTheme.text(row, requirementText(tag), UDim2.new(0.5, 0, 0.28, 0), UDim2.new(0, 14, 0.6, 0))
+	-- Cuanto dinero extra da este tag
+	local multiplierLabel = UiTheme.text(
+		row,
+		string.format(panelCfg.MULTIPLIER_FORMAT, tostring(tag.MULTIPLIER or 1)),
+		UDim2.new(0.4, 0, 0.3, 0),
+		UDim2.new(0, 14, 0.56, 0)
+	)
+	multiplierLabel.Name = "Multiplier"
+	multiplierLabel.TextXAlignment = Enum.TextXAlignment.Left
+	multiplierLabel.TextColor3 = theme.ON_COLOR
+
+	local requirement =
+		UiTheme.text(row, requirementText(tag), UDim2.new(0.32, 0, 0.28, 0), UDim2.new(1, -178, 0.6, 0))
 	requirement.Name = "Requirement"
-	requirement.TextXAlignment = Enum.TextXAlignment.Left
+	requirement.AnchorPoint = Vector2.new(1, 0)
+	requirement.TextXAlignment = Enum.TextXAlignment.Right
 	requirement.TextScaled = false
 	requirement.TextSize = 14
 

@@ -197,6 +197,15 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
   zonas: unos 182 puntos/min picando sin parar (nivel 10 en ~9 min, nivel 15 en ~26 min).
 - Cada nivel pide `BASE_XP * GROWTH^(nivel-1)`: con los valores por defecto, 100 puntos
   para el nivel 2 y un 15 % mas en cada nivel. `MAX_LEVEL = 0` es sin limite.
+- **El nivel da dinero**: `1 + (nivel - 1) * MULTIPLIER_PER_LEVEL` (0.02), asi que nivel 10
+  es x1.18, nivel 25 x1.48 y nivel 50 x1.98. Encima de la barra sale ese multiplicador en un
+  texto con degradado de **verde claro a verde oscuro** (`MULTIPLIER_GRADIENT_TOP` /
+  `BOTTOM`), y el aviso `LEVEL UP!` se coloca por encima para no solaparse.
+
+**Todos los multiplicadores se acumulan**: zona x gamepass x skin x tag x nivel. Cada
+sistema publica el suyo en un atributo (`skinMultiplier`, `tagMultiplier`,
+`levelMultiplier`) y `MiningService` los multiplica, asi que ningun script depende de otro.
+Ejemplo: nivel 25 + tag Pro + skin Golden + X2 Money = **x5.19**.
 - `LevelService` publica `level`, `xp` y `xpNeeded` como atributos del jugador, que se
   replican solos: la barra no necesita RemoteEvents. Desde otros scripts se leen con
   `player:GetAttribute("level")`.
@@ -381,12 +390,12 @@ Los ajustes **no se guardan al salir** (harian falta DataStore o atributos guard
 
 Etiqueta sobre el personaje, con degradado propio, que se desbloquea con el progreso:
 
-| Tag | Como se consigue | Degradado |
-| --- | --- | --- |
-| Noob | lo tiene todo el mundo | marron claro -> marron oscuro |
-| Beginner | comprar `Pared2` | azul claro -> azul oscuro |
-| Pro | comprar `Pared4` | naranja -> rojo |
-| VIP | gamepass VIP | naranja -> amarillo |
+| Tag | Como se consigue | Multiplicador | Degradado |
+| --- | --- | --- | --- |
+| Noob | lo tiene todo el mundo | x1 | marron claro -> marron oscuro |
+| Beginner | comprar `Pared2` | **x1.1** | azul claro -> azul oscuro |
+| Pro | comprar `Pared4` | **x1.3** | naranja -> rojo |
+| VIP | gamepass VIP | **x1.5** | naranja -> amarillo |
 
 Boton **TAGS** en la fila del HUD: abre un panel con todos, el equipado marcado como
 `EQUIPPED`, los que faltan como `LOCKED` con su requisito (`Buy Mine Zone`), y se equipa el

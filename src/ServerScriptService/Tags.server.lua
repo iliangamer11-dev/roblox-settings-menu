@@ -90,6 +90,13 @@ local function refreshLeaderstat(player: Player)
 	entry.Value = tag and ("[" .. tag.LABEL .. "]") or ""
 end
 
+-- El multiplicador del tag equipado se publica como atributo, igual que el de las skins,
+-- para que MiningService lo aplique sin depender de este script
+local function publishMultiplier(player: Player)
+	local tag = tagByKey[player:GetAttribute("tag")]
+	player:SetAttribute("tagMultiplier", (tag and tag.MULTIPLIER) or 1)
+end
+
 local function publish(player: Player)
 	local keys = unlockedKeys(player)
 	player:SetAttribute("tagsUnlocked", table.concat(keys, ","))
@@ -103,6 +110,7 @@ local function publish(player: Player)
 	end
 
 	refreshLeaderstat(player)
+	publishMultiplier(player)
 end
 
 -- Al desbloquear uno nuevo NO se equipa: solo se anade a la lista.
@@ -174,4 +182,5 @@ tagRemote.OnServerEvent:Connect(function(player: Player, key: any)
 
 	player:SetAttribute("tag", key)
 	refreshLeaderstat(player)
+	publishMultiplier(player)
 end)
