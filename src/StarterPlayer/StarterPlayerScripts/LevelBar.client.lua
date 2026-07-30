@@ -126,7 +126,8 @@ local levelUpLabel = Instance.new("TextLabel")
 levelUpLabel.Name = "LevelUp"
 levelUpLabel.BackgroundTransparency = 1
 levelUpLabel.AnchorPoint = Vector2.new(0.5, 1)
-levelUpLabel.Size = UDim2.new(0, cfg.SIZE.X.Offset, 0, upCfg.TEXT_SIZE)
+-- Mismo ancho que la barra, respetando su parte relativa y su parte en pixeles
+levelUpLabel.Size = UDim2.new(cfg.SIZE.X.Scale, cfg.SIZE.X.Offset, 0, upCfg.TEXT_SIZE)
 levelUpLabel.Font = cfg.FONT
 levelUpLabel.TextScaled = true
 levelUpLabel.TextColor3 = upCfg.TEXT_COLOR

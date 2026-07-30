@@ -97,6 +97,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
 | `src/ServerScriptService/LevelService.lua` | ServerScriptService | ModuleScript `LevelService` |
+| `src/ServerScriptService/Nameplate.server.lua` | ServerScriptService | Script `Nameplate` |
 | `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
@@ -164,9 +165,11 @@ Causas mas comunes:
 
 ## Barra de nivel
 
-Barra en la parte **de abajo** de la pantalla: el progreso en **verde**, lo que falta en
-**blanco**, `Level X` dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha.
-Texto y cuadro con contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.
+Barra grande en la parte **de abajo, centrada**: ocupa el 62 % del ancho de la pantalla y
+80 px de alto (`LEVEL_BAR.SIZE`, con el ancho en escala para que se vea igual de grande en
+cualquier resolucion). El progreso en **verde**, lo que falta en **blanco**, `Level X`
+dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha. Texto y cuadro con
+contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.
 
 Al subir de nivel aparece **`LEVEL UP!`** encima de la barra (sube y se desvanece) y suena
 el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_FORMAT`
@@ -185,6 +188,20 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
   `player:GetAttribute("level")`.
 - El aspecto se ajusta en `MiningConfig.LEVEL_BAR` (tamano, posicion, colores, fuente,
   grosor de los contornos, formato de los textos).
+
+## Placa sobre el personaje
+
+Sobre la cabeza de cada jugador: el **nombre en blanco con contorno negro** y debajo su
+**`Level X` con degradado de azul claro a azul oscuro** (`UIGradient` girado 90 grados) y
+contorno negro.
+
+- La crea el servidor, asi que todos los jugadores ven la placa de todos.
+- El nivel se actualiza solo, leyendo el atributo `level` que publica `LevelService`.
+- `HIDE_DEFAULT_NAME = true` apaga el nombre que dibuja Roblox
+  (`HumanoidDisplayDistanceType.None`) para que no salga duplicado.
+- Ajustes en `MiningConfig.NAMEPLATE`: tamano, altura sobre la cabeza (`OFFSET`), distancia
+  a la que se ve, fuente, colores del degradado, grosor del contorno y `USE_DISPLAY_NAME`
+  (nombre para mostrar o nombre de usuario).
 
 ## El pico va siempre en la mano
 

@@ -30,27 +30,59 @@ MiningConfig.LEVEL = {
 -- Barra de nivel: verde lo conseguido, blanco lo que falta, "Level X" a la izquierda
 -- y los puntos a la derecha, todo con contorno negro.
 MiningConfig.LEVEL_BAR = {
-	SIZE = UDim2.new(0, 440, 0, 46),
+	-- Ancho relativo a la pantalla (0.62 = 62%) para que sea grande en cualquier
+	-- resolucion, y alto fijo en pixeles.
+	SIZE = UDim2.new(0.62, 0, 0, 80),
 	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
-	-- y el -18 la separa un poco.
-	POSITION = UDim2.new(0.5, 0, 1, -18),
+	-- y el -28 la separa un poco.
+	POSITION = UDim2.new(0.5, 0, 1, -28),
 	ANCHOR = Vector2.new(0.5, 1),
 
 	FILL_COLOR = Color3.fromRGB(60, 220, 45), -- progreso (verde)
 	BACKGROUND_COLOR = Color3.fromRGB(238, 238, 238), -- lo que falta (blanco)
 	OUTLINE_COLOR = Color3.fromRGB(0, 0, 0),
-	OUTLINE_THICKNESS = 3, -- contorno del cuadro entero
-	CORNER_RADIUS = 6,
+	OUTLINE_THICKNESS = 4, -- contorno del cuadro entero
+	CORNER_RADIUS = 8,
 
 	FONT = Enum.Font.FredokaOne,
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
 	TEXT_OUTLINE_COLOR = Color3.fromRGB(0, 0, 0),
-	TEXT_OUTLINE_THICKNESS = 2.5, -- contorno del texto
-	PADDING = 12,
+	TEXT_OUTLINE_THICKNESS = 3, -- contorno del texto
+	PADDING = 20,
 
 	LEVEL_FORMAT = "Level %d",
 	PROGRESS_FORMAT = "%s / %s", -- puntos actuales / puntos del nivel
 	TWEEN_TIME = 0.35, -- lo que tarda la barra en moverse
+}
+
+--------------------------------------------------------------------------------
+-- PLACA SOBRE EL PERSONAJE (nombre + nivel)
+--------------------------------------------------------------------------------
+
+MiningConfig.NAMEPLATE = {
+	ENABLED = true,
+	-- Quita el nombre que dibuja Roblox por defecto, para que no salga duplicado
+	HIDE_DEFAULT_NAME = true,
+
+	SIZE = UDim2.new(0, 260, 0, 76), -- tamano del cartel
+	OFFSET = Vector3.new(0, 2.8, 0), -- altura sobre la cabeza, en studs
+	MAX_DISTANCE = 140, -- desde cuan lejos se ve
+	ALWAYS_ON_TOP = false, -- true = se ve a traves de las paredes
+
+	FONT = Enum.Font.FredokaOne,
+	NAME_HEIGHT = 0.56, -- parte del cartel que ocupa el nombre (el resto, el nivel)
+
+	-- Nombre: blanco con contorno negro
+	NAME_COLOR = Color3.fromRGB(255, 255, 255),
+	USE_DISPLAY_NAME = true, -- true = DisplayName, false = nombre de usuario
+
+	-- Nivel: degradado de azul claro (arriba) a azul oscuro (abajo), contorno negro
+	LEVEL_FORMAT = "Level %d",
+	LEVEL_GRADIENT_TOP = Color3.fromRGB(130, 205, 255),
+	LEVEL_GRADIENT_BOTTOM = Color3.fromRGB(18, 62, 175),
+
+	OUTLINE_COLOR = Color3.fromRGB(0, 0, 0),
+	OUTLINE_THICKNESS = 2.5,
 }
 
 -- Aviso de subida de nivel: texto en ingles encima de la barra + sonido
@@ -61,8 +93,8 @@ MiningConfig.LEVEL_UP = {
 	-- Ej: "LEVEL UP!  Level %d"
 	TEXT_FORMAT = "LEVEL UP!",
 	TEXT_COLOR = Color3.fromRGB(255, 232, 120),
-	TEXT_SIZE = 46, -- alto del texto en pixeles
-	OFFSET = 18, -- separacion sobre la barra
+	TEXT_SIZE = 64, -- alto del texto en pixeles
+	OFFSET = 22, -- separacion sobre la barra
 
 	SOUND_ID = "rbxassetid://112485797063762",
 	SOUND_VOLUME = 0.7,
