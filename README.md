@@ -12,18 +12,18 @@ dinero = dinero base del mineral x multiplicador de la zona
 
 **Minerales** (`MiningConfig.MINERALS`):
 
-| Mineral | En el cartel | Probabilidad | Base | Color |
-| --- | --- | --- | --- | --- |
-| Piedra | Stone | 55 % | 1 | gris |
-| Carbon | Coal | 20 % | 3 | negro |
-| Cobre | Copper | 10 % | 8 | marron |
-| Hierro | Iron | 7 % | 15 | gris claro |
-| Oro | Gold | 4 % | 40 | dorado |
-| Zafiro | Sapphire | 2 % | 80 | azul |
-| Amatista | Amethyst | 1 % | 150 | morado |
-| Diamante | Diamond | 0,8 % | 400 | cian |
-| Esmeralda | Emerald | 0,15 % | 1.000 | verde |
-| Legendario | Legendary | 0,05 % | 10.000 | arcoiris (cambia de color) |
+| Mineral | En el cartel | Probabilidad | 1 cada N golpes | Base | Color |
+| --- | --- | --- | --- | --- | --- |
+| Piedra | Stone | 70 % | 1 | 1 | gris |
+| Carbon | Coal | 18 % | 6 | 2 | negro |
+| Cobre | Copper | 7 % | 14 | 4 | marron |
+| Hierro | Iron | 3 % | 33 | 8 | gris claro |
+| Oro | Gold | 1,4 % | 71 | 20 | dorado |
+| Zafiro | Sapphire | 0,4 % | 250 | 40 | azul |
+| Amatista | Amethyst | 0,15 % | 667 | 75 | morado |
+| Diamante | Diamond | 0,04 % | 2.500 | 150 | cian |
+| Esmeralda | Emerald | 0,008 % | 12.500 | 400 | verde |
+| Legendario | Legendary | 0,002 % | 50.000 | 2.500 | arcoiris (cambia de color) |
 
 El color se usa en el agujero que queda en el suelo y en el nombre del mineral del cartel.
 
@@ -37,8 +37,12 @@ El color se usa en el agujero que queda en el suelo y en el nombre del mineral d
 | Luna | x25 |
 | Dulces | x50 |
 
-Ejemplos: Piedra en Naturaleza = 1, Piedra en Dulces = 50, Diamante en Dulces = 20.000,
-Legendario en Dulces = 500.000.
+Ejemplos: Piedra en Naturaleza = 1, Piedra en Dulces = 50, Diamante en Dulces = 7.500,
+Legendario en Dulces = 125.000.
+
+Con `SWING_COOLDOWN = 0.75` (80 golpes/min) la ganancia media es de unos 182/min en
+Naturaleza y 9.098/min en Dulces. Para subir o bajar todo de golpe, lo mas limpio es
+tocar los `ZONE_MULTIPLIERS` o el cooldown.
 
 Las zonas pueden ser una `Part` sola o un `Model`/`Folder` con ese nombre (el script
 sube por la jerarquia buscando el nombre), y pueden estar en cualquier parte de Workspace.
