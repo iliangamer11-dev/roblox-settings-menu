@@ -387,94 +387,97 @@ local function performSwing(player: Player)
 	-- Siempre se ve el picazo, aunque no haya zona valida
 	playSwing(tool, character)
 
-	-- 1) Donde cae el pico: delante del personaje
-	local zoneName, effectHost, effectPosition, effectNormal
-
-	local strikeHost, strikePosition, strikeNormal = findStrikePoint(character)
-	if strikeHost then
-		zoneName = findZone(strikeHost)
-		if zoneName then
-			effectHost, effectPosition, effectNormal = strikeHost, strikePosition, strikeNormal
-		end
-	end
-
-	-- 2) Si delante no hay zona (borde, rampa, un objeto encima...), se usa la que pisa,
-	-- pero el efecto se deja igual en el punto donde cayo el pico
-	if not zoneName then
-		local standHost, standPosition, standNormal
-		zoneName, _, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
-		if zoneName then
-			effectHost = strikeHost or standHost
-			effectPosition = strikePosition or standPosition
-			effectNormal = strikeNormal or standNormal
-		end
-	end
-
-	if not zoneName then
-		return
-	end
-
-	-- Hacen falta varios picazos por mineral: los golpes intermedios solo hacen
-	-- chispas y agujero, sin dinero ni cartel.
-	local needed = math.max(1, Config.HITS_PER_MINERAL)
-	hitsSinceMineral[player] = (hitsSinceMineral[player] or 0) + 1
-
-	if hitsSinceMineral[player] < needed then
-		task.delay(impactDelay(), function()
-			if effectHost and effectHost.Parent and effectPosition then
-				playHitEffect(effectHost, effectPosition, nil)
-				sendHole(player, effectPosition, effectNormal or Vector3.yAxis, nil)
-			end
-		end)
-		return
-	end
-
-	hitsSinceMineral[player] = 0
-
-	-- Que mineral ha salido (Lucky Ores sube la suerte) y cuanto vale en esta zona
-	local mineral = Minerals.roll(Passes.luck(player))
-	local reward = Minerals.getReward(mineral, zoneName)
-
-	-- X2 Money (y VIP, que lo incluye)
-	local multiplier = Passes.moneyMultiplier(player)
-	if multiplier ~= 1 then
-		reward = math.floor(reward * multiplier)
-	end
-
-	addMoney(player, reward)
-
-	-- La experiencia se gana al picar (no depende del dinero que tengas), asi gastar
-	-- en las paredes no baja el nivel.
-	LevelService.addXp(player, Config.LEVEL.XP_FROM_BASE_VALUE and mineral.MONEY or reward)
-
-	if Config.DEBUG then
-		print(
-			string.format(
-				"[Mining] %s pico %s en %s (x%d) => +%s",
-				player.Name,
-				mineral.NAME,
-				zoneName,
-				Config.ZONE_MULTIPLIERS[zoneName] or 1,
-				Minerals.format(reward)
-			)
-		)
-	end
-
-	-- Los efectos salen en el instante en que la punta toca el suelo, no al hacer click.
-	-- El retardo se calcula solo con las duraciones de la animacion, asi que si cambias
-	-- RAISE_TIME o STRIKE_TIME sigue quedando sincronizado.
+	-- TODO el golpe se resuelve en el instante del impacto, no al hacer click.
+	-- Antes se calculaba aqui y se dibujaba 0.2 s despues: si el jugador andaba, el
+	-- agujero salia donde estaba al pulsar, no donde cae el pico.
 	task.delay(impactDelay(), function()
 		if not character.Parent or humanoid.Health <= 0 then
 			return
 		end
 
+		-- El pico tiene que seguir equipado al impactar
+		if character:FindFirstChild(Config.TOOL_NAME) == nil then
+			return
+		end
+
+		-- 1) Donde cae el pico: delante del personaje, en su posicion de AHORA
+		local zoneName, effectHost, effectPosition, effectNormal
+
+		local strikeHost, strikePosition, strikeNormal = findStrikePoint(character)
+		if strikeHost then
+			zoneName = findZone(strikeHost)
+			if zoneName then
+				effectHost, effectPosition, effectNormal = strikeHost, strikePosition, strikeNormal
+			end
+		end
+
+		-- 2) Si delante no hay zona (borde, rampa, un objeto encima...), se usa la que
+		-- pisa, pero el efecto se queda en el punto donde cayo el pico
+		if not zoneName then
+			local standHost, standPosition, standNormal
+			zoneName, _, standHost, standPosition, standNormal = findZoneUnderCharacter(character)
+			if zoneName then
+				effectHost = strikeHost or standHost
+				effectPosition = strikePosition or standPosition
+				effectNormal = strikeNormal or standNormal
+			end
+		end
+
+		if not zoneName then
+			return
+		end
+
+		local function playImpact(mineral: any?)
+			if effectHost and effectHost.Parent and effectPosition then
+				playHitEffect(effectHost, effectPosition, mineral)
+				sendHole(player, effectPosition, effectNormal or Vector3.yAxis, mineral)
+			end
+		end
+
+		-- Hacen falta varios picazos por mineral: los golpes intermedios solo hacen
+		-- chispas y agujero, sin dinero ni cartel.
+		local needed = math.max(1, Config.HITS_PER_MINERAL)
+		hitsSinceMineral[player] = (hitsSinceMineral[player] or 0) + 1
+
+		if hitsSinceMineral[player] < needed then
+			playImpact(nil)
+			return
+		end
+
+		hitsSinceMineral[player] = 0
+
+		-- Que mineral ha salido (Lucky Ores sube la suerte) y cuanto vale en esta zona
+		local mineral = Minerals.roll(Passes.luck(player))
+		local reward = Minerals.getReward(mineral, zoneName)
+
+		-- X2 Money (y VIP, que lo incluye)
+		local multiplier = Passes.moneyMultiplier(player)
+		if multiplier ~= 1 then
+			reward = math.floor(reward * multiplier)
+		end
+
+		addMoney(player, reward)
+
+		-- La experiencia se gana al picar (no depende del dinero que tengas), asi gastar
+		-- en las paredes no baja el nivel.
+		LevelService.addXp(player, Config.LEVEL.XP_FROM_BASE_VALUE and mineral.MONEY or reward)
+
+		if Config.DEBUG then
+			print(
+				string.format(
+					"[Mining] %s pico %s en %s (x%d) => +%s",
+					player.Name,
+					mineral.NAME,
+					zoneName,
+					Config.ZONE_MULTIPLIERS[zoneName] or 1,
+					Minerals.format(reward)
+				)
+			)
+		end
+
 		-- Cartel flotante con el color del mineral, en un punto random alrededor del jugador
 		MoneyPopup.show(character, reward, mineral)
-
-		if effectHost and effectHost.Parent and effectPosition then
-			playHitEffect(effectHost, effectPosition, mineral)
-			sendHole(player, effectPosition, effectNormal or Vector3.yAxis, mineral)
-		end
+		playImpact(mineral)
 	end)
 end
 
