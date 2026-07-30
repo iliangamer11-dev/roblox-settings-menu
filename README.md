@@ -161,9 +161,11 @@ real de las probabilidades, asi que no hay que recalcular nada para que sigan cu
 | Campo | Para que sirve |
 | --- | --- |
 | `HANDLE_SIZE` | Tamano del mango. El largo va en Z |
-| `HEAD_SIZE` | Las dos puntas van sobre el eje Y: `(grosor X, largo Y, grosor Z)` |
+| `HEAD_SIZE` | Tamano de cada trozo de punta: `(grosor X, largo Y, grosor Z)` |
 | `HEAD_COLOR` | Color de la cabeza |
-| `HEAD_ANGLE` | `0` = cabeza recta en T. Mas alto = puntas echadas hacia atras |
+| `HEAD_SEGMENTS` | Trozos por punta. Mas trozos = curva mas suave |
+| `HEAD_TAPER` | Cuanto se encoge cada trozo respecto al anterior (afila la punta) |
+| `HEAD_START_ANGLE`, `HEAD_CURVE` | Inclinacion inicial y curvatura hacia atras |
 | `GRIP_OFFSET` | Donde agarra la mano el mango (Z positivo = mas atras) |
 | `GRIP_ROTATION` | Rotacion del agarre en grados, si queda raro en la mano |
 | `REST_ANGLE` | Inclinacion en reposo. `0` = pico recto, mango horizontal |
@@ -179,12 +181,13 @@ real de las probabilidades, asi que no hay que recalcular nada para que sigan cu
 | `AXIS_SIGN` | Ponlo en `-1` si el pico gira al lado contrario |
 | `HIT_OFFSET` | Studs delante del jugador donde cae la punta (chispas y agujero) |
 
-**El agujero** (`HOLE`): marca que queda donde se pico y desaparece a los `LIFETIME`
-segundos (2 por defecto). **Se pinta del color del mineral que ha salido**, asi se
-identifica mirando el suelo; con el legendario cicla colores (`RAINBOW_SPEED`). Se ajusta
-con `SIZE` (diametro), `DEPTH`, `DARKEN` (cuanto se oscurece el color del mineral) y
-`USE_MINERAL_COLOR` (ponlo en `false` para que siempre sea `COLOR`). Se crea con
-`CanQuery = false` para que no interfiera con los raycast de las zonas.
+**El agujero** (`HOLE`): marca que queda donde se pico, dura `LIFETIME` segundos (3) y se
+va **desvaneciendo poco a poco** durante `FADE_TIME` (3) en vez de desaparecer de golpe.
+**Se pinta del color del mineral que ha salido**, asi se identifica mirando el suelo; con
+el legendario cicla colores (`RAINBOW_SPEED`). Se ajusta con `SIZE` (diametro), `DEPTH`,
+`DARKEN` (cuanto se oscurece el color del mineral) y `USE_MINERAL_COLOR` (ponlo en `false`
+para que siempre sea `COLOR`). Se crea con `CanQuery = false` para que no interfiera con
+los raycast de las zonas.
 
 **El popup** (`POPUP`):
 

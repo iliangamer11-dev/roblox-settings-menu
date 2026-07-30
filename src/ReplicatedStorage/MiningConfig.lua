@@ -70,7 +70,10 @@ MiningConfig.HOLE = {
 	DEPTH = 0.15, -- grosor del disco
 	COLOR = Color3.fromRGB(38, 32, 28),
 	MATERIAL = Enum.Material.Slate,
-	LIFETIME = 2, -- segundos que tarda en desaparecer
+	LIFETIME = 3, -- segundos que dura el agujero
+	-- Segundos que tarda en desvanecerse. Si es igual a LIFETIME se va apagando poco a
+	-- poco desde el principio; si es menor, se queda opaco un rato y luego se desvanece.
+	FADE_TIME = 3,
 
 	-- El agujero se pinta del color del mineral que ha salido: asi se identifica
 	-- mirando el suelo. DARKEN es cuanto se oscurece ese color (0 = tal cual).
@@ -102,13 +105,15 @@ MiningConfig.PICKAXE = {
 	HANDLE_SIZE = Vector3.new(0.32, 0.32, 3),
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
 
-	-- La cabeza son dos barras a lo largo del eje Y (una punta arriba y otra abajo),
-	-- o sea en el mismo plano en el que baja el picazo.
-	HEAD_SIZE = Vector3.new(0.4, 0.85, 0.5), -- (grosor X, largo de la punta Y, grosor Z)
+	-- La cabeza son dos puntas (arriba y abajo) hechas de varios trozos encadenados:
+	-- cada trozo se gira un poco mas y es mas pequeno que el anterior, asi la punta
+	-- queda curvada y afilada como un pico de verdad (y no recta como un martillo).
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	-- 0 = cabeza recta, perpendicular al mango (en T). Sube el valor si quieres las
-	-- puntas echadas hacia atras (curva de pico clasico).
-	HEAD_ANGLE = 0,
+	HEAD_SIZE = Vector3.new(0.42, 0.5, 0.55), -- (grosor X, largo de cada trozo Y, grosor Z)
+	HEAD_SEGMENTS = 3, -- trozos por punta: mas trozos = curva mas suave
+	HEAD_TAPER = 0.72, -- cuanto se encoge cada trozo respecto al anterior (afila la punta)
+	HEAD_START_ANGLE = 12, -- inclinacion del primer trozo
+	HEAD_CURVE = 20, -- grados que se cierra hacia atras cada trozo siguiente
 
 	-- Donde agarra la mano el mango (offset dentro del propio mango, en studs).
 	-- Z positivo = mas atras en el mango.

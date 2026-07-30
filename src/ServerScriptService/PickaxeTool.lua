@@ -44,34 +44,42 @@ function PickaxeTool.build(): Tool
 	handle.CFrame = CFrame.new()
 	handle.Parent = tool
 
-	-- La cabeza se cruza en la punta delantera del mango (-Z)
+	-- Las puntas nacen en el extremo delantero del mango (-Z)
 	local headZ = -(settings.HANDLE_SIZE.Z / 2 - settings.HEAD_SIZE.X / 2)
-	local headAngle = math.rad(settings.HEAD_ANGLE)
-	local headLength = settings.HEAD_SIZE.Y
 
 	-- side = 1 -> punta de arriba, side = -1 -> punta de abajo (la que golpea el suelo).
-	-- Las dos barras van sobre el eje Y y se echan hacia atras (+Z) para dar la curva del pico.
-	local function makeHead(name: string, side: number)
-		local head = Instance.new("Part")
-		head.Name = name
-		head.Size = settings.HEAD_SIZE
-		head.Color = settings.HEAD_COLOR
-		head.Material = Enum.Material.Metal
-		head.TopSurface = Enum.SurfaceType.Smooth
-		head.BottomSurface = Enum.SurfaceType.Smooth
-		head.CanCollide = false
-		head.Massless = true
-		head.CFrame = handle.CFrame
-			* CFrame.new(0, 0, headZ)
-			* CFrame.fromEulerAnglesXYZ(headAngle * side, 0, 0)
-			* CFrame.new(0, side * headLength / 2, 0)
-		head.Parent = tool
-		weld(handle, head)
-		return head
+	-- Cada trozo se encadena al final del anterior, girado un poco mas hacia atras (+Z)
+	-- y escalado por HEAD_TAPER, de forma que la punta se afila.
+	local function makeSpike(name: string, side: number)
+		local frame = handle.CFrame * CFrame.new(0, 0, headZ)
+		local size = settings.HEAD_SIZE
+		local angle = settings.HEAD_START_ANGLE
+
+		for index = 1, settings.HEAD_SEGMENTS do
+			frame = frame * CFrame.fromEulerAnglesXYZ(math.rad(angle * side), 0, 0)
+
+			local segment = Instance.new("Part")
+			segment.Name = string.format("%s%d", name, index)
+			segment.Size = size
+			segment.Color = settings.HEAD_COLOR
+			segment.Material = Enum.Material.Metal
+			segment.TopSurface = Enum.SurfaceType.Smooth
+			segment.BottomSurface = Enum.SurfaceType.Smooth
+			segment.CanCollide = false
+			segment.Massless = true
+			segment.CFrame = frame * CFrame.new(0, side * size.Y / 2, 0)
+			segment.Parent = tool
+			weld(handle, segment)
+
+			-- Siguiente trozo: se parte del final de este, mas pequeno y mas girado
+			frame = frame * CFrame.new(0, side * size.Y, 0)
+			size = size * settings.HEAD_TAPER
+			angle = settings.HEAD_CURVE
+		end
 	end
 
-	makeHead("HeadUp", 1)
-	makeHead("HeadDown", -1)
+	makeSpike("HeadUp", 1)
+	makeSpike("HeadDown", -1)
 
 	-- Punto de agarre: la mano toma el mango por detras (Z positivo) y el pico queda
 	-- un poco levantado en reposo (REST_ANGLE).

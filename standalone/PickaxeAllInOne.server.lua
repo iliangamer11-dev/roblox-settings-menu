@@ -70,10 +70,14 @@ local DEBUG = true
 local PICKAXE = {
 	HANDLE_SIZE = Vector3.new(0.32, 0.32, 3),
 	HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
-	-- Dos barras sobre el eje Y (punta arriba y punta abajo), en el plano del picazo
-	HEAD_SIZE = Vector3.new(0.4, 0.85, 0.5),
+	-- Dos puntas (arriba y abajo) hechas de varios trozos: cada uno mas girado y mas
+	-- pequeno que el anterior, asi la punta queda curvada y afilada (pico, no martillo)
 	HEAD_COLOR = Color3.fromRGB(160, 160, 165),
-	HEAD_ANGLE = 0, -- 0 = cabeza recta en T. Sube el valor para echar las puntas atras
+	HEAD_SIZE = Vector3.new(0.42, 0.5, 0.55), -- grosor X, largo de cada trozo Y, grosor Z
+	HEAD_SEGMENTS = 3, -- trozos por punta
+	HEAD_TAPER = 0.72, -- cuanto se encoge cada trozo (afila la punta)
+	HEAD_START_ANGLE = 12, -- inclinacion del primer trozo
+	HEAD_CURVE = 20, -- grados que se cierra cada trozo siguiente
 	GRIP_OFFSET = Vector3.new(0, 0, 1.3),
 	GRIP_ROTATION = Vector3.new(0, 0, 0),
 	-- -90 = mango vertical con la cabeza arriba. Si apunta al suelo, ponlo en 90
@@ -102,7 +106,8 @@ local HOLE = {
 	DEPTH = 0.15, -- grosor del disco
 	COLOR = Color3.fromRGB(38, 32, 28),
 	MATERIAL = Enum.Material.Slate,
-	LIFETIME = 2, -- segundos hasta que desaparece
+	LIFETIME = 3, -- segundos que dura el agujero
+	FADE_TIME = 3, -- segundos que tarda en desvanecerse (igual a LIFETIME = se apaga desde ya)
 	USE_MINERAL_COLOR = true, -- el agujero se pinta del color del mineral
 	DARKEN = 0.25, -- cuanto se oscurece ese color (0 = tal cual)
 	RAINBOW_SPEED = 1.2, -- con el legendario el agujero cicla colores
@@ -178,29 +183,37 @@ local function buildPickaxe()
 	handle.Parent = tool
 
 	local headZ = -(PICKAXE.HANDLE_SIZE.Z / 2 - PICKAXE.HEAD_SIZE.X / 2)
-	local headAngle = math.rad(PICKAXE.HEAD_ANGLE)
-	local headLength = PICKAXE.HEAD_SIZE.Y
 
-	local function makeHead(name, side)
-		local head = Instance.new("Part")
-		head.Name = name
-		head.Size = PICKAXE.HEAD_SIZE
-		head.Color = PICKAXE.HEAD_COLOR
-		head.Material = Enum.Material.Metal
-		head.TopSurface = Enum.SurfaceType.Smooth
-		head.BottomSurface = Enum.SurfaceType.Smooth
-		head.CanCollide = false
-		head.Massless = true
-		head.CFrame = handle.CFrame
-			* CFrame.new(0, 0, headZ)
-			* CFrame.fromEulerAnglesXYZ(headAngle * side, 0, 0)
-			* CFrame.new(0, side * headLength / 2, 0)
-		head.Parent = tool
-		weld(handle, head)
+	-- side = 1 -> punta de arriba, side = -1 -> punta de abajo (la que golpea)
+	local function makeSpike(name, side)
+		local frame = handle.CFrame * CFrame.new(0, 0, headZ)
+		local size = PICKAXE.HEAD_SIZE
+		local angle = PICKAXE.HEAD_START_ANGLE
+
+		for index = 1, PICKAXE.HEAD_SEGMENTS do
+			frame = frame * CFrame.fromEulerAnglesXYZ(math.rad(angle * side), 0, 0)
+
+			local segment = Instance.new("Part")
+			segment.Name = string.format("%s%d", name, index)
+			segment.Size = size
+			segment.Color = PICKAXE.HEAD_COLOR
+			segment.Material = Enum.Material.Metal
+			segment.TopSurface = Enum.SurfaceType.Smooth
+			segment.BottomSurface = Enum.SurfaceType.Smooth
+			segment.CanCollide = false
+			segment.Massless = true
+			segment.CFrame = frame * CFrame.new(0, side * size.Y / 2, 0)
+			segment.Parent = tool
+			weld(handle, segment)
+
+			frame = frame * CFrame.new(0, side * size.Y, 0)
+			size = size * PICKAXE.HEAD_TAPER
+			angle = PICKAXE.HEAD_CURVE
+		end
 	end
 
-	makeHead("HeadUp", 1)
-	makeHead("HeadDown", -1)
+	makeSpike("HeadUp", 1)
+	makeSpike("HeadDown", -1)
 
 	local rotation = PICKAXE.GRIP_ROTATION
 	tool.Grip = CFrame.new(PICKAXE.GRIP_OFFSET)
@@ -529,6 +542,20 @@ local function spawnHole(position, normal, mineral)
 	hole.CFrame = CFrame.lookAt(position + normal * (HOLE.DEPTH * 0.4), position + normal)
 		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
 	hole.Parent = workspace
+
+	-- Se desvanece poco a poco en vez de desaparecer de golpe
+	local fadeTime = math.clamp(HOLE.FADE_TIME, 0, HOLE.LIFETIME)
+	if fadeTime > 0 then
+		local fadeInfo = TweenInfo.new(
+			fadeTime,
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out,
+			0,
+			false,
+			HOLE.LIFETIME - fadeTime
+		)
+		TweenService:Create(hole, fadeInfo, { Transparency = 1 }):Play()
+	end
 
 	-- Mineral legendario: el agujero cicla colores mientras dura
 	if mineral and mineral.RAINBOW then

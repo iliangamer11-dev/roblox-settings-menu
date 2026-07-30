@@ -11,6 +11,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
@@ -290,6 +291,20 @@ local function spawnHole(position: Vector3, normal: Vector3, mineral: any)
 	hole.CFrame = CFrame.lookAt(position + normal * (cfg.DEPTH * 0.4), position + normal)
 		* CFrame.fromEulerAnglesXYZ(0, math.rad(90), 0)
 	hole.Parent = workspace
+
+	-- Se desvanece poco a poco en vez de desaparecer de golpe
+	local fadeTime = math.clamp(cfg.FADE_TIME, 0, cfg.LIFETIME)
+	if fadeTime > 0 then
+		local fadeInfo = TweenInfo.new(
+			fadeTime,
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out,
+			0,
+			false,
+			cfg.LIFETIME - fadeTime -- espera antes de empezar a desvanecerse
+		)
+		TweenService:Create(hole, fadeInfo, { Transparency = 1 }):Play()
+	end
 
 	-- Mineral legendario: el agujero cicla colores mientras dura
 	if mineral and mineral.RAINBOW then
