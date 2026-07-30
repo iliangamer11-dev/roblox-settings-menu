@@ -25,13 +25,32 @@ if totalChance <= 0 then
 	error("[Minerals] Las probabilidades de MiningConfig.MINERALS suman 0")
 end
 
+-- luck multiplica el peso de los minerales marcados como RARE (gamepass Lucky Ores).
+-- Los comunes mantienen su peso, asi que su porcentaje baja solo al crecer el total.
+local function weightOf(mineral, luck: number): number
+	if luck > 1 and mineral.RARE then
+		return mineral.CHANCE * luck
+	end
+	return mineral.CHANCE
+end
+
 -- Devuelve la entrada de MiningConfig.MINERALS que ha salido
-function Minerals.roll()
-	local roll = random:NextNumber(0, totalChance)
+function Minerals.roll(luck: number?)
+	local luckMultiplier = luck or 1
+
+	local total = totalChance
+	if luckMultiplier > 1 then
+		total = 0
+		for _, mineral in Config.MINERALS do
+			total += weightOf(mineral, luckMultiplier)
+		end
+	end
+
+	local roll = random:NextNumber(0, total)
 	local accumulated = 0
 
 	for _, mineral in Config.MINERALS do
-		accumulated += mineral.CHANCE
+		accumulated += weightOf(mineral, luckMultiplier)
 		if roll <= accumulated then
 			return mineral
 		end

@@ -100,6 +100,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ServerScriptService/MiningService.server.lua` | ServerScriptService | Script `MiningService` |
 | `src/ServerScriptService/LevelService.lua` | ServerScriptService | ModuleScript `LevelService` |
 | `src/ServerScriptService/Nameplate.server.lua` | ServerScriptService | Script `Nameplate` |
+| `src/ServerScriptService/Passes.lua` | ServerScriptService | ModuleScript `Passes` |
 | `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
@@ -236,9 +237,29 @@ terminar el boton se marca solo.
 Con `ID = 0` el boton sale desactivado, para poder ver el diseno antes de tener los
 gamepasses creados. `EXTRA_SCROLL` deja hueco de sobra al final para poder seguir bajando.
 
-Importante: la tienda **solo abre la compra**. Dar el beneficio (x2 dinero, auto swing...)
-es logica de servidor que hay que anadir en `MiningService`, comprobando
-`MarketplaceService:UserOwnsGamePassAsync` al entrar el jugador.
+### Que hace cada gamepass
+
+Los efectos estan implementados en el servidor (`Passes`), que comprueba
+`UserOwnsGamePassAsync` al entrar y tambien escucha las compras para aplicarlas al momento,
+sin reconectar. Los ids viven en `MiningConfig.PASSES` y los valores en `PASS_EFFECTS`.
+
+| Pase | Efecto real |
+| --- | --- |
+| X2 Money | `MONEY_MULTIPLIER = 2`: el doble de dinero por mineral |
+| Fast Pickaxe | `COOLDOWN_MULTIPLIER = 0.6`: cooldown de 0.75 s a 0.45 s |
+| Lucky Ores | `LUCK_MULTIPLIER = 2`: dobla el peso de los minerales `RARE` (Gold y mejores) |
+| Auto Swing | Pica solo mientras estas sobre una zona, al ritmo del cooldown |
+| All Zones | Abre las 4 paredes sin pagarlas |
+| VIP | Incluye X2 Money y Fast Pickaxe (`VIP_INCLUDES`) y anade la etiqueta VIP dorada sobre el personaje |
+
+Notas de como esta hecho:
+
+- El cooldown real se publica en el atributo `swingCooldown`, porque el cliente tambien
+  frena los clics y con Fast Pickaxe tenia que saber el nuevo ritmo.
+- El Auto Swing llama a la **misma** funcion que el clic (`performSwing`), que ya valida
+  pico equipado, cooldown y zona: asi no puede dar mas dinero que picando a mano.
+- Lucky Ores multiplica el peso de los raros y deja los comunes igual, asi que los
+  porcentajes se recalculan solos sin tener que reescribir la tabla.
 
 ### Poner tus imagenes
 

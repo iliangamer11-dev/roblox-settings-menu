@@ -88,17 +88,32 @@ local function buildNameplate(player: Player, character: Model)
 	})
 	gradient.Parent = levelLabel
 
+	-- Etiqueta VIP encima del nombre, si tiene el gamepass
+	local vipLabel = Instance.new("TextLabel")
+	vipLabel.Name = "VipTag"
+	vipLabel.BackgroundTransparency = 1
+	vipLabel.Size = UDim2.fromScale(1, cfg.NAME_HEIGHT * 0.62)
+	vipLabel.Position = UDim2.fromScale(0, -cfg.NAME_HEIGHT * 0.62)
+	vipLabel.Font = cfg.FONT
+	vipLabel.TextScaled = true
+	vipLabel.Text = Config.PASS_EFFECTS.VIP_TAG
+	vipLabel.TextColor3 = Config.PASS_EFFECTS.VIP_TAG_COLOR
+	vipLabel.Visible = player:GetAttribute("vip") == true
+	vipLabel.Parent = billboard
+	addOutline(vipLabel)
+
 	-- El nombre por defecto de Roblox se quita para que no salga duplicado
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if humanoid and cfg.HIDE_DEFAULT_NAME then
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	end
 
-	return levelLabel
+	return levelLabel, vipLabel
 end
 
 local function onPlayerAdded(player: Player)
 	local levelLabel: TextLabel? = nil
+	local vipLabel: TextLabel? = nil
 
 	local function refresh()
 		if levelLabel and levelLabel.Parent then
@@ -106,10 +121,17 @@ local function onPlayerAdded(player: Player)
 		end
 	end
 
+	local function refreshVip()
+		if vipLabel and vipLabel.Parent then
+			vipLabel.Visible = player:GetAttribute("vip") == true
+		end
+	end
+
 	player:GetAttributeChangedSignal("level"):Connect(refresh)
+	player:GetAttributeChangedSignal("vip"):Connect(refreshVip)
 
 	local function onCharacterAdded(character: Model)
-		levelLabel = buildNameplate(player, character)
+		levelLabel, vipLabel = buildNameplate(player, character)
 	end
 
 	player.CharacterAdded:Connect(onCharacterAdded)

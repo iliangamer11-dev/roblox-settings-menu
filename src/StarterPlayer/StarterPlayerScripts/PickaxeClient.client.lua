@@ -33,8 +33,12 @@ end
 local lastSwing = 0
 
 local function requestSwing()
+	-- El servidor publica el cooldown real en un atributo, que ya lleva aplicado el
+	-- gamepass Fast Pickaxe. Si no se usara, el cliente frenaria los golpes rapidos.
+	local cooldown = player:GetAttribute("swingCooldown") or Config.SWING_COOLDOWN
+
 	local now = os.clock()
-	if now - lastSwing < Config.SWING_COOLDOWN then
+	if now - lastSwing < cooldown then
 		return
 	end
 	lastSwing = now

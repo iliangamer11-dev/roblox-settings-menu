@@ -18,6 +18,7 @@ local PickaxeTool = require(script.Parent:WaitForChild("PickaxeTool"))
 local MoneyPopup = require(script.Parent:WaitForChild("MoneyPopup"))
 local Minerals = require(script.Parent:WaitForChild("Minerals"))
 local LevelService = require(script.Parent:WaitForChild("LevelService"))
+local Passes = require(script.Parent:WaitForChild("Passes"))
 
 --------------------------------------------------------------------------------
 -- Remote
@@ -343,7 +344,8 @@ local function findStrikePoint(character: Model)
 	return result.Instance, result.Position, result.Normal
 end
 
-swingRemote.OnServerEvent:Connect(function(player: Player)
+-- Un picazo completo. La usan el click del jugador y el gamepass Auto Swing.
+local function performSwing(player: Player)
 	local character = player.Character
 	if not character then
 		return
@@ -360,9 +362,9 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 		return
 	end
 
-	-- Cooldown del lado servidor (el cliente no manda)
+	-- Cooldown del lado servidor (el cliente no manda). Fast Pickaxe lo acorta.
 	local now = os.clock()
-	if lastSwing[player] and now - lastSwing[player] < Config.SWING_COOLDOWN then
+	if lastSwing[player] and now - lastSwing[player] < Passes.cooldown(player) then
 		return
 	end
 	lastSwing[player] = now
@@ -414,9 +416,15 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 
 	hitsSinceMineral[player] = 0
 
-	-- Que mineral ha salido y cuanto vale en esta zona
-	local mineral = Minerals.roll()
+	-- Que mineral ha salido (Lucky Ores sube la suerte) y cuanto vale en esta zona
+	local mineral = Minerals.roll(Passes.luck(player))
 	local reward = Minerals.getReward(mineral, zoneName)
+
+	-- X2 Money (y VIP, que lo incluye)
+	local multiplier = Passes.moneyMultiplier(player)
+	if multiplier ~= 1 then
+		reward = math.floor(reward * multiplier)
+	end
 
 	addMoney(player, reward)
 
@@ -453,6 +461,39 @@ swingRemote.OnServerEvent:Connect(function(player: Player)
 			sendHole(player, effectPosition, effectNormal or Vector3.yAxis, mineral)
 		end
 	end)
+end
+
+swingRemote.OnServerEvent:Connect(performSwing)
+
+--------------------------------------------------------------------------------
+-- Auto Swing (gamepass)
+--------------------------------------------------------------------------------
+
+local autoLoops = {} -- autoLoops[player] = true si ya tiene el bucle corriendo
+
+local function startAutoSwing(player: Player)
+	if autoLoops[player] then
+		return
+	end
+	autoLoops[player] = true
+
+	task.spawn(function()
+		while player.Parent and Passes.autoSwing(player) do
+			-- performSwing ya comprueba personaje, pico equipado, cooldown y zona,
+			-- asi que el auto swing no puede dar mas dinero que picando a mano
+			performSwing(player)
+			task.wait(Passes.cooldown(player))
+		end
+
+		autoLoops[player] = nil
+	end)
+end
+
+-- Al entrar y al comprar el pase
+Passes.Changed.Event:Connect(function(player: Player)
+	if Passes.autoSwing(player) then
+		startAutoSwing(player)
+	end
 end)
 
 --------------------------------------------------------------------------------
@@ -515,6 +556,7 @@ end
 local function onPlayerAdded(player: Player)
 	setupMoney(player)
 	LevelService.setup(player)
+	Passes.setup(player) -- comprueba los gamepasses que tiene
 
 	player.CharacterAdded:Connect(function()
 		-- se espera un momento a que el rig este listo antes de equipar
@@ -536,4 +578,5 @@ Players.PlayerRemoving:Connect(function(player)
 	lastSwing[player] = nil
 	hitsSinceMineral[player] = nil
 	LevelService.clear(player)
+	Passes.clear(player)
 end)

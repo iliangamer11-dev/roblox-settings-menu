@@ -16,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local Minerals = require(script.Parent:WaitForChild("Minerals"))
+local Passes = require(script.Parent:WaitForChild("Passes"))
 
 --------------------------------------------------------------------------------
 -- Remote
@@ -52,6 +53,23 @@ end
 -- Compra
 --------------------------------------------------------------------------------
 
+-- Gamepass All Zones: se le abren todas sin cobrar nada
+local function unlockAll(player: Player)
+	local playerWalls = owned[player]
+	if not playerWalls then
+		return
+	end
+
+	for wallName in wallByName do
+		playerWalls[wallName] = true
+		wallRemote:FireClient(player, "unlocked", wallName)
+	end
+
+	if Config.DEBUG then
+		print(string.format("[WallShop] %s tiene All Zones: paredes abiertas", player.Name))
+	end
+end
+
 local function attemptPurchase(player: Player, wallName: string)
 	local wall = wallByName[wallName]
 	if not wall then
@@ -60,6 +78,12 @@ local function attemptPurchase(player: Player, wallName: string)
 
 	local playerWalls = owned[player]
 	if not playerWalls then
+		return
+	end
+
+	-- Con el gamepass All Zones no se cobra
+	if Passes.has(player, "ALL_ZONES") then
+		unlockAll(player)
 		return
 	end
 
@@ -178,6 +202,13 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 for _, player in Players:GetPlayers() do
 	onPlayerAdded(player)
 end
+
+-- Cuando se sabe (o se compra) que tiene All Zones, se le abren todas
+Passes.Changed.Event:Connect(function(player: Player)
+	if Passes.has(player, "ALL_ZONES") then
+		unlockAll(player)
+	end
+end)
 
 Players.PlayerRemoving:Connect(function(player)
 	owned[player] = nil

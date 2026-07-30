@@ -146,6 +146,40 @@ MiningConfig.SETTINGS_PANEL = {
 }
 
 --------------------------------------------------------------------------------
+-- GAMEPASSES: IDS Y EFECTOS
+--------------------------------------------------------------------------------
+
+-- >>> AQUI ESTAN LOS IDS <<< (la tienda y los efectos leen de aqui, no hay que
+-- escribirlos dos veces). ID = 0 desactiva ese pase.
+MiningConfig.PASSES = {
+	X2_MONEY = 1928876737,
+	FAST_PICKAXE = 1932616657,
+	LUCKY_ORES = 1930986994,
+	AUTO_SWING = 1931716716,
+	ALL_ZONES = 1932592656,
+	VIP = 1927580748,
+}
+
+MiningConfig.PASS_EFFECTS = {
+	-- X2 Money: multiplica el dinero de cada mineral
+	MONEY_MULTIPLIER = 2,
+
+	-- Fast Pickaxe: multiplica el cooldown (0.6 => de 0.75s a 0.45s)
+	COOLDOWN_MULTIPLIER = 0.6,
+
+	-- Lucky Ores: multiplica la probabilidad de los minerales marcados como RARE
+	LUCK_MULTIPLIER = 2,
+
+	-- Auto Swing: pica solo mientras estas sobre una zona
+	AUTO_SWING = true,
+
+	-- VIP: incluye estos pases, ademas de la placa VIP sobre el personaje
+	VIP_INCLUDES = { "X2_MONEY", "FAST_PICKAXE" },
+	VIP_TAG = "VIP",
+	VIP_TAG_COLOR = Color3.fromRGB(255, 205, 60),
+}
+
+--------------------------------------------------------------------------------
 -- TIENDA
 --------------------------------------------------------------------------------
 
@@ -180,42 +214,48 @@ MiningConfig.SHOP_PANEL = {
 	-- ICON_ID = imagen del gamepass (opcional)
 	GAMEPASSES = {
 		{
-			ID = 1928876737,
+			KEY = "X2_MONEY",
+			ID = MiningConfig.PASSES.X2_MONEY,
 			NAME = "X2 Money",
 			DESC = "Doubles the money from every ore you mine",
 			PRICE = 50,
 			ICON_ID = "",
 		},
 		{
-			ID = 1932616657,
+			KEY = "FAST_PICKAXE",
+			ID = MiningConfig.PASSES.FAST_PICKAXE,
 			NAME = "Fast Pickaxe",
 			DESC = "Shorter cooldown, so you mine much faster",
 			PRICE = 70,
 			ICON_ID = "",
 		},
 		{
-			ID = 1930986994,
+			KEY = "LUCKY_ORES",
+			ID = MiningConfig.PASSES.LUCKY_ORES,
 			NAME = "Lucky Ores",
 			DESC = "Doubles your chance of finding rare ores",
 			PRICE = 200,
 			ICON_ID = "",
 		},
 		{
-			ID = 1931716716,
+			KEY = "AUTO_SWING",
+			ID = MiningConfig.PASSES.AUTO_SWING,
 			NAME = "Auto Swing",
 			DESC = "Mines by itself while you stand on a zone",
 			PRICE = 250,
 			ICON_ID = "",
 		},
 		{
-			ID = 1932592656,
+			KEY = "ALL_ZONES",
+			ID = MiningConfig.PASSES.ALL_ZONES,
 			NAME = "All Zones",
 			DESC = "Unlocks every zone wall instantly",
 			PRICE = 199,
 			ICON_ID = "",
 		},
 		{
-			ID = 1927580748,
+			KEY = "VIP",
+			ID = MiningConfig.PASSES.VIP,
 			NAME = "VIP",
 			DESC = "X2 Money and Fast Pickaxe plus a VIP tag",
 			PRICE = 350,
@@ -345,17 +385,40 @@ MiningConfig.MINERALS = {
 	{ NAME = "Carbon", NAME_EN = "Coal", CHANCE = 18, MONEY = 2, COLOR = Color3.fromRGB(28, 28, 30) },
 	{ NAME = "Cobre", NAME_EN = "Copper", CHANCE = 7, MONEY = 4, COLOR = Color3.fromRGB(178, 102, 52) },
 	{ NAME = "Hierro", NAME_EN = "Iron", CHANCE = 3, MONEY = 8, COLOR = Color3.fromRGB(214, 216, 222) },
-	{ NAME = "Oro", NAME_EN = "Gold", CHANCE = 1.4, MONEY = 20, COLOR = Color3.fromRGB(255, 199, 44) },
-	{ NAME = "Zafiro", NAME_EN = "Sapphire", CHANCE = 0.4, MONEY = 40, COLOR = Color3.fromRGB(40, 98, 255) },
-	{ NAME = "Amatista", NAME_EN = "Amethyst", CHANCE = 0.15, MONEY = 75, COLOR = Color3.fromRGB(158, 60, 220) },
-	{ NAME = "Diamante", NAME_EN = "Diamond", CHANCE = 0.04, MONEY = 150, COLOR = Color3.fromRGB(80, 238, 255) },
-	{ NAME = "Esmeralda", NAME_EN = "Emerald", CHANCE = 0.008, MONEY = 400, COLOR = Color3.fromRGB(42, 220, 92) },
+	-- RARE = true: son los que el gamepass Lucky Ores hace mas probables
+	{ NAME = "Oro", NAME_EN = "Gold", CHANCE = 1.4, MONEY = 20, RARE = true, COLOR = Color3.fromRGB(255, 199, 44) },
+	{ NAME = "Zafiro", NAME_EN = "Sapphire", CHANCE = 0.4, MONEY = 40, RARE = true, COLOR = Color3.fromRGB(40, 98, 255) },
+	{
+		NAME = "Amatista",
+		NAME_EN = "Amethyst",
+		CHANCE = 0.15,
+		MONEY = 75,
+		RARE = true,
+		COLOR = Color3.fromRGB(158, 60, 220),
+	},
+	{
+		NAME = "Diamante",
+		NAME_EN = "Diamond",
+		CHANCE = 0.04,
+		MONEY = 150,
+		RARE = true,
+		COLOR = Color3.fromRGB(80, 238, 255),
+	},
+	{
+		NAME = "Esmeralda",
+		NAME_EN = "Emerald",
+		CHANCE = 0.008,
+		MONEY = 400,
+		RARE = true,
+		COLOR = Color3.fromRGB(42, 220, 92),
+	},
 	-- RAINBOW = el color va cambiando (efecto arcoiris) y suelta mas chispas
 	{
 		NAME = "Legendario",
 		NAME_EN = "Legendary",
 		CHANCE = 0.002,
 		MONEY = 2500,
+		RARE = true,
 		COLOR = Color3.fromRGB(255, 255, 255),
 		RAINBOW = true,
 	},
