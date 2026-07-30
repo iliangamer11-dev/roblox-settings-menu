@@ -19,8 +19,17 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+-- OJO: en ReplicatedFirst el script arranca tan pronto que LocalPlayer puede ser nil
+-- todavia. Si se indexa directamente, el script muere y no se ve la pantalla.
 local player = Players.LocalPlayer
+while not player do
+	Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+	player = Players.LocalPlayer
+end
+
 local playerGui = player:WaitForChild("PlayerGui")
+
+print("[LoadingScreen] mostrando la pantalla de carga")
 
 --------------------------------------------------------------------------------
 -- Fondo inmediato
@@ -286,3 +295,5 @@ end
 
 task.wait(cfg.FADE_TIME + 0.1)
 screenGui:Destroy()
+
+print(string.format("[LoadingScreen] fin (%.1f s en pantalla)", os.clock() - startClock))
