@@ -56,6 +56,48 @@ MiningConfig.LEVEL_BAR = {
 }
 
 --------------------------------------------------------------------------------
+-- PANTALLA DE CARGA
+--------------------------------------------------------------------------------
+
+MiningConfig.LOADING_SCREEN = {
+	ENABLED = true,
+
+	-- >>> AQUI PONES TU IMAGEN DE FONDO (la del pico y el diamante) <<<
+	-- Ej: IMAGE_ID = "rbxassetid://1234567890" (tambien vale solo el numero)
+	IMAGE_ID = "",
+	-- Color de fondo mientras la imagen carga, o si la dejas vacia
+	BACKGROUND_COLOR = Color3.fromRGB(18, 22, 34),
+	-- Oscurece la imagen para que se lea bien el texto (0 = imagen tal cual)
+	IMAGE_DARKEN = 0.25,
+
+	TITLE = "Mine Millions",
+	SUBTITLE = "Loading...",
+
+	-- Duracion: nunca menos de MIN_TIME y nunca mas de MAX_TIME, aunque el juego
+	-- tarde mas en cargar
+	MIN_TIME = 5,
+	MAX_TIME = 10,
+	FADE_TIME = 0.8, -- lo que tarda en desaparecer al acabar
+
+	-- Frases que van rotando abajo
+	TIPS = {
+		"Mine ores to earn money",
+		"Better zones multiply every ore you find",
+		"Buy the walls to unlock new zones",
+		"Unlock tags and pickaxe skins as you progress",
+		"Legendary ore is worth 2.500 per hit",
+	},
+	TIP_INTERVAL = 2.5, -- cada cuanto cambia la frase
+
+	-- Barra de progreso, con el mismo estilo que la de nivel
+	BAR_SIZE = UDim2.fromOffset(520, 40),
+	BAR_POSITION = UDim2.new(0.5, 0, 0.78, 0),
+	BAR_FILL_COLOR = Color3.fromRGB(60, 220, 45),
+	BAR_BACKGROUND_COLOR = Color3.fromRGB(238, 238, 238),
+	PROGRESS_FORMAT = "%d%%",
+}
+
+--------------------------------------------------------------------------------
 -- INTERFAZ: TEMA COMUN, BOTON DE AJUSTES Y PANEL
 --------------------------------------------------------------------------------
 

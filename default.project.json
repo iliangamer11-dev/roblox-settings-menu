@@ -1,7 +1,11 @@
 {
-  "name": "pickaxe-money",
+  "name": "mine-millions",
   "tree": {
     "$className": "DataModel",
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$path": "src/ReplicatedFirst"
+    },
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "$path": "src/ReplicatedStorage"

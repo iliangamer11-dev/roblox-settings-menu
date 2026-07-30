@@ -90,6 +90,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 
 | Archivo | Destino en Studio | Tipo |
 | --- | --- | --- |
+| `src/ReplicatedFirst/LoadingScreen.client.lua` | ReplicatedFirst | LocalScript `LoadingScreen` |
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
 | `src/ReplicatedStorage/Format.lua` | ReplicatedStorage | ModuleScript `Format` |
 | `src/ReplicatedStorage/ClientSettings.lua` | ReplicatedStorage | ModuleScript `ClientSettings` |
@@ -226,6 +227,25 @@ Por eso los tamanos y posiciones de la config van en pixeles, pensados para
 
 La proporcion entre el tamano de los botones y el hueco que los separa es la misma en todas
 las resoluciones: la interfaz se ve igual, solo mas grande o mas pequena.
+
+## Pantalla de carga
+
+`Mine Millions` con imagen de fondo, barra de progreso verde y frases que van rotando.
+Va en **ReplicatedFirst**, que es lo unico que se replica antes que el resto del juego: ahi
+la pantalla aparece de inmediato y tapa la carga (desde `StarterPlayerScripts` seria tarde).
+
+- Dura entre `MIN_TIME` (5 s) y `MAX_TIME` (10 s): nunca menos del minimo aunque el juego
+  cargue al instante, y nunca mas del maximo aunque tarde.
+- La barra avanza con el tiempo pero **se queda en el 90 % hasta que `game:IsLoaded()`**, y
+  solo entonces completa: asi no marca 100 % mientras sigue cargando.
+- Se dibuja primero un fondo liso y luego se rellena con la config, para que no haya ni un
+  instante de pantalla negra esperando a `ReplicatedStorage`.
+- Quita la pantalla de carga por defecto de Roblox (`RemoveDefaultLoadingScreen`).
+- Al acabar se desvanece con un tween (`FADE_TIME`) y se destruye sola.
+
+Ajustes en `MiningConfig.LOADING_SCREEN`: `IMAGE_ID` (tu imagen de fondo), `TITLE`,
+`SUBTITLE`, `TIPS`, `IMAGE_DARKEN` (oscurece la imagen para que se lea el texto), colores y
+tamano de la barra.
 
 ## Menu de ajustes
 
