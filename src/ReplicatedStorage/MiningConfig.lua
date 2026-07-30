@@ -264,6 +264,7 @@ MiningConfig.SKINS = {
 		KEY = "WOODEN",
 		LABEL = "Wooden",
 		DEFAULT = true,
+		MULTIPLIER = 1, -- multiplica el dinero de cada mineral
 		HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
 		HANDLE_MATERIAL = Enum.Material.Wood,
 		HEAD_COLOR = Color3.fromRGB(160, 160, 165),
@@ -273,6 +274,7 @@ MiningConfig.SKINS = {
 		KEY = "NATURE",
 		LABEL = "Nature",
 		WALL = "Pared1",
+		MULTIPLIER = 1.15,
 		HANDLE_COLOR = Color3.fromRGB(90, 60, 35),
 		HANDLE_MATERIAL = Enum.Material.Wood,
 		HEAD_COLOR = Color3.fromRGB(70, 190, 90),
@@ -282,6 +284,7 @@ MiningConfig.SKINS = {
 		KEY = "GOLDEN",
 		LABEL = "Golden",
 		WALL = "Pared2",
+		MULTIPLIER = 1.35,
 		HANDLE_COLOR = Color3.fromRGB(140, 105, 60),
 		HANDLE_MATERIAL = Enum.Material.Wood,
 		HEAD_COLOR = Color3.fromRGB(255, 205, 60),
@@ -291,6 +294,7 @@ MiningConfig.SKINS = {
 		KEY = "DIAMOND",
 		LABEL = "Diamond",
 		WALL = "Pared3",
+		MULTIPLIER = 1.6,
 		HANDLE_COLOR = Color3.fromRGB(90, 100, 115),
 		HANDLE_MATERIAL = Enum.Material.Metal,
 		HEAD_COLOR = Color3.fromRGB(90, 240, 255),
@@ -300,6 +304,7 @@ MiningConfig.SKINS = {
 		KEY = "COSMIC",
 		LABEL = "Cosmic",
 		WALL = "Pared4",
+		MULTIPLIER = 2,
 		HANDLE_COLOR = Color3.fromRGB(45, 30, 70),
 		HANDLE_MATERIAL = Enum.Material.Slate,
 		HEAD_COLOR = Color3.fromRGB(180, 90, 255),
@@ -326,6 +331,7 @@ MiningConfig.SKIN_PANEL = {
 	EQUIPPED_TEXT = "EQUIPPED",
 	LOCKED_TEXT = "LOCKED",
 	WALL_REQUIREMENT = "Buy %s", -- %s = titulo de la pared
+	MULTIPLIER_FORMAT = "x%s money", -- %s = multiplicador de la skin
 
 	-- Aviso al desbloquear una nueva. No se equipa sola.
 	UNLOCK_MESSAGE = "New skin unlocked: %s",

@@ -416,13 +416,18 @@ Como funciona por dentro:
 Boton **SKINS** en la fila del HUD. Cada skin cambia el color y el material del mango y de
 la cabeza, y se desbloquea comprando paredes:
 
-| Skin | Se desbloquea con | Mango | Cabeza |
-| --- | --- | --- | --- |
-| Wooden | por defecto | madera marron | metal gris |
-| Nature | `Pared1` | madera oscura | verde `Grass` |
-| Golden | `Pared2` | madera clara | dorado `Foil` |
-| Diamond | `Pared3` | metal | cian `Glass` |
-| Cosmic | `Pared4` | piedra oscura | morado `Neon` |
+| Skin | Se desbloquea con | Multiplicador | Mango | Cabeza |
+| --- | --- | --- | --- | --- |
+| Wooden | por defecto | x1 | madera marron | metal gris |
+| Nature | `Pared1` | **x1.15** | madera oscura | verde `Grass` |
+| Golden | `Pared2` | **x1.35** | madera clara | dorado `Foil` |
+| Diamond | `Pared3` | **x1.6** | metal | cian `Glass` |
+| Cosmic | `Pared4` | **x2** | piedra oscura | morado `Neon` |
+
+Cada skin **multiplica el dinero** de cada mineral (`MULTIPLIER`), y se multiplica con el
+resto: zona x gamepass x skin. El multiplicador se ve en su fila del menu, asi que se sabe
+antes de equipar. `Skins` lo publica en el atributo `skinMultiplier` y lo aplica
+`MiningService`, sin acoplar los dos scripts.
 
 En el panel cada fila lleva dos cuadraditos con los colores de esa skin, para verla sin
 equiparla, y el boton `EQUIP` / `EQUIPPED` / `LOCKED` con su requisito.

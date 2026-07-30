@@ -163,18 +163,30 @@ for index, skin in Config.SKINS do
 	makeSwatch(row, skin.HANDLE_COLOR, 14)
 	makeSwatch(row, skin.HEAD_COLOR, 50)
 
-	local nameLabel = UiTheme.text(row, skin.LABEL, UDim2.new(0.45, 0, 0.42, 0), UDim2.new(0, 92, 0.14, 0))
+	local nameLabel = UiTheme.text(row, skin.LABEL, UDim2.new(0.4, 0, 0.42, 0), UDim2.new(0, 92, 0.14, 0))
 	nameLabel.Name = "SkinName"
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+	-- Cuanto dinero extra da esta skin
+	local multiplierLabel = UiTheme.text(
+		row,
+		string.format(panelCfg.MULTIPLIER_FORMAT, tostring(skin.MULTIPLIER or 1)),
+		UDim2.new(0.4, 0, 0.3, 0),
+		UDim2.new(0, 92, 0.58, 0)
+	)
+	multiplierLabel.Name = "Multiplier"
+	multiplierLabel.TextXAlignment = Enum.TextXAlignment.Left
+	multiplierLabel.TextColor3 = theme.ON_COLOR
 
 	local requirement = UiTheme.text(
 		row,
 		skin.WALL and string.format(panelCfg.WALL_REQUIREMENT, wallTitles[skin.WALL] or skin.WALL) or "",
-		UDim2.new(0.45, 0, 0.28, 0),
-		UDim2.new(0, 92, 0.6, 0)
+		UDim2.new(0.32, 0, 0.28, 0),
+		UDim2.new(1, -178, 0.6, 0)
 	)
 	requirement.Name = "Requirement"
-	requirement.TextXAlignment = Enum.TextXAlignment.Left
+	requirement.AnchorPoint = Vector2.new(1, 0)
+	requirement.TextXAlignment = Enum.TextXAlignment.Right
 	requirement.TextScaled = false
 	requirement.TextSize = 14
 

@@ -450,8 +450,9 @@ local function performSwing(player: Player)
 		local mineral = Minerals.roll(Passes.luck(player))
 		local reward = Minerals.getReward(mineral, zoneName)
 
-		-- X2 Money (y VIP, que lo incluye)
-		local multiplier = Passes.moneyMultiplier(player)
+		-- X2 Money (y VIP, que lo incluye) y el multiplicador de la skin equipada,
+		-- que publica Skins en el atributo "skinMultiplier"
+		local multiplier = Passes.moneyMultiplier(player) * (player:GetAttribute("skinMultiplier") or 1)
 		if multiplier ~= 1 then
 			reward = math.floor(reward * multiplier)
 		end

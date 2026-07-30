@@ -106,6 +106,13 @@ end
 -- Estado
 --------------------------------------------------------------------------------
 
+-- El multiplicador de la skin equipada se publica como atributo, asi MiningService lo
+-- aplica sin depender de este script
+local function publishMultiplier(player: Player)
+	local skin = skinByKey[player:GetAttribute("skin")] or skinByKey[defaultKey]
+	player:SetAttribute("skinMultiplier", (skin and skin.MULTIPLIER) or 1)
+end
+
 local function publish(player: Player)
 	local keys = {}
 	for _, skin in Config.SKINS do
@@ -123,6 +130,8 @@ local function publish(player: Player)
 	if not skin or not isUnlocked(player, skin) then
 		player:SetAttribute("skin", defaultKey)
 	end
+
+	publishMultiplier(player)
 end
 
 local function onPlayerAdded(player: Player)
@@ -145,6 +154,7 @@ local function onPlayerAdded(player: Player)
 
 	player:GetAttributeChangedSignal("skin"):Connect(function()
 		applySkin(player)
+		publishMultiplier(player)
 	end)
 
 	-- Al reaparecer, el pico es nuevo y hay que volver a pintarlo
