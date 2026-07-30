@@ -71,16 +71,28 @@ local function normalizeAssetId(value: any): string
 	return digits and ("rbxassetid://" .. digits) or value
 end
 
-background.Image = normalizeAssetId(cfg.IMAGE_ID)
+local imageId = normalizeAssetId(cfg.IMAGE_ID)
+background.Image = imageId
 
--- Capa oscura encima de la imagen, para que el texto se lea
+-- Sin imagen: degradado de azul a casi negro, asi el fondo no queda plano.
+-- Con imagen: una capa oscura encima para que se lea el texto.
 local shade = Instance.new("Frame")
 shade.Name = "Shade"
 shade.BackgroundColor3 = Color3.new(0, 0, 0)
-shade.BackgroundTransparency = 1 - cfg.IMAGE_DARKEN
+shade.BackgroundTransparency = imageId == "" and 1 or (1 - cfg.IMAGE_DARKEN)
 shade.BorderSizePixel = 0
 shade.Size = UDim2.fromScale(1, 1)
 shade.Parent = background
+
+if imageId == "" then
+	local gradient = Instance.new("UIGradient")
+	gradient.Rotation = 90
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, cfg.GRADIENT_TOP),
+		ColorSequenceKeypoint.new(1, cfg.GRADIENT_BOTTOM),
+	})
+	gradient.Parent = background
+end
 
 local function addTextOutline(label: Instance, thickness: number)
 	local stroke = Instance.new("UIStroke")
@@ -184,6 +196,24 @@ addTextOutline(tip, 2.5)
 --------------------------------------------------------------------------------
 
 local startClock = os.clock()
+
+-- Latido del titulo: sin imagen de fondo la pantalla queda muy quieta y da la
+-- sensacion de que el juego se ha colgado
+if cfg.TITLE_PULSE > 0 then
+	local titleScale = Instance.new("UIScale")
+	titleScale.Parent = title
+
+	task.spawn(function()
+		local pulseInfo = TweenInfo.new(
+			cfg.TITLE_PULSE_TIME,
+			Enum.EasingStyle.Sine,
+			Enum.EasingDirection.InOut,
+			-1, -- repite para siempre
+			true -- y vuelve
+		)
+		TweenService:Create(titleScale, pulseInfo, { Scale = 1 + cfg.TITLE_PULSE }):Play()
+	end)
+end
 
 -- Las frases van cambiando mientras carga
 task.spawn(function()

@@ -62,13 +62,21 @@ MiningConfig.LEVEL_BAR = {
 MiningConfig.LOADING_SCREEN = {
 	ENABLED = true,
 
-	-- >>> AQUI PONES TU IMAGEN DE FONDO (la del pico y el diamante) <<<
-	-- Ej: IMAGE_ID = "rbxassetid://1234567890" (tambien vale solo el numero)
+	-- Imagen de fondo OPCIONAL. Vacio = fondo con degradado, que ya se ve bien.
+	-- Si algun dia quieres ponerla: IMAGE_ID = "rbxassetid://1234567890"
 	IMAGE_ID = "",
-	-- Color de fondo mientras la imagen carga, o si la dejas vacia
+
+	-- Fondo sin imagen: degradado de arriba a abajo
 	BACKGROUND_COLOR = Color3.fromRGB(18, 22, 34),
-	-- Oscurece la imagen para que se lea bien el texto (0 = imagen tal cual)
+	GRADIENT_TOP = Color3.fromRGB(32, 60, 110), -- azul
+	GRADIENT_BOTTOM = Color3.fromRGB(12, 14, 24), -- casi negro
+
+	-- Oscurece la imagen para que se lea el texto. Solo se aplica si hay imagen.
 	IMAGE_DARKEN = 0.25,
+
+	-- Latido del titulo, para que la pantalla no parezca congelada
+	TITLE_PULSE = 0.04, -- cuanto crece y decrece (0 = quieto)
+	TITLE_PULSE_TIME = 1.1,
 
 	TITLE = "Mine Millions",
 	SUBTITLE = "Loading...",

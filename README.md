@@ -243,8 +243,12 @@ la pantalla aparece de inmediato y tapa la carga (desde `StarterPlayerScripts` s
 - Quita la pantalla de carga por defecto de Roblox (`RemoveDefaultLoadingScreen`).
 - Al acabar se desvanece con un tween (`FADE_TIME`) y se destruye sola.
 
-Ajustes en `MiningConfig.LOADING_SCREEN`: `IMAGE_ID` (tu imagen de fondo), `TITLE`,
-`SUBTITLE`, `TIPS`, `IMAGE_DARKEN` (oscurece la imagen para que se lea el texto), colores y
+**Funciona sin imagen**: con `IMAGE_ID` vacio el fondo es un degradado de azul a casi negro
+(`GRADIENT_TOP` / `GRADIENT_BOTTOM`) y el titulo late suavemente, para que no parezca que el
+juego se ha colgado. Si algun dia pones una imagen, el degradado se cambia por ella y se le
+aplica `IMAGE_DARKEN` para que el texto siga legible.
+
+Resto de ajustes en `MiningConfig.LOADING_SCREEN`: `TITLE`, `SUBTITLE`, `TIPS`, colores y
 tamano de la barra.
 
 ## Menu de ajustes
