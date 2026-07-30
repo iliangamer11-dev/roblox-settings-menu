@@ -102,6 +102,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/ServerScriptService/Nameplate.server.lua` | ServerScriptService | Script `Nameplate` |
 | `src/ServerScriptService/Passes.lua` | ServerScriptService | ModuleScript `Passes` |
 | `src/ServerScriptService/Tags.server.lua` | ServerScriptService | Script `Tags` |
+| `src/ServerScriptService/Skins.server.lua` | ServerScriptService | Script `Skins` |
 | `src/ServerScriptService/WallShop.server.lua` | ServerScriptService | Script `WallShop` |
 | `src/ServerScriptService/ZonesSetup.server.lua` | ServerScriptService | Script opcional (5 plataformas de prueba) |
 | `src/StarterPlayer/StarterPlayerScripts/PickaxeClient.client.lua` | StarterPlayerScripts | LocalScript `PickaxeClient` |
@@ -113,6 +114,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/ShopMenu.client.lua` | StarterPlayerScripts | LocalScript `ShopMenu` |
 | `src/StarterPlayer/StarterPlayerScripts/AutoSwingButton.client.lua` | StarterPlayerScripts | LocalScript `AutoSwingButton` |
 | `src/StarterPlayer/StarterPlayerScripts/TagsMenu.client.lua` | StarterPlayerScripts | LocalScript `TagsMenu` |
+| `src/StarterPlayer/StarterPlayerScripts/SkinsMenu.client.lua` | StarterPlayerScripts | LocalScript `SkinsMenu` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -366,6 +368,29 @@ Como funciona por dentro:
   asi el conjunto queda centrado sobre la cabeza.
 - Anadir un tag nuevo es meter una entrada en `MiningConfig.TAGS` con su `WALL` o `PASS`
   y sus dos colores: el menu y la placa se actualizan solos.
+
+## Skins del pico
+
+Boton **SKINS** en la fila del HUD. Cada skin cambia el color y el material del mango y de
+la cabeza, y se desbloquea comprando paredes:
+
+| Skin | Se desbloquea con | Mango | Cabeza |
+| --- | --- | --- | --- |
+| Wooden | por defecto | madera marron | metal gris |
+| Nature | `Pared1` | madera oscura | verde `Grass` |
+| Golden | `Pared2` | madera clara | dorado `Foil` |
+| Diamond | `Pared3` | metal | cian `Glass` |
+| Cosmic | `Pared4` | piedra oscura | morado `Neon` |
+
+En el panel cada fila lleva dos cuadraditos con los colores de esa skin, para verla sin
+equiparla, y el boton `EQUIP` / `EQUIPPED` / `LOCKED` con su requisito.
+
+Igual que con los tags, **al desbloquear una no se equipa sola**: sale el aviso
+`New skin unlocked: Golden` y la equipas desde el boton cuando quieras.
+
+El servidor (`Skins`) pinta el pico y valida los cambios, y lo repinta al reaparecer, que es
+cuando se crea un pico nuevo. Anadir una skin es meter una entrada en `MiningConfig.SKINS`
+con su `WALL` y sus colores.
 
 ## Placa sobre el personaje
 

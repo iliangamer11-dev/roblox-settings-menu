@@ -196,6 +196,92 @@ MiningConfig.TAGS = {
 
 MiningConfig.TAG_REMOTE_NAME = "TagSelect"
 
+--------------------------------------------------------------------------------
+-- SKINS DEL PICO
+--------------------------------------------------------------------------------
+
+-- Cada skin cambia el color y el material del mango y de la cabeza.
+-- Se desbloquean comprando paredes (WALL), igual que los tags.
+MiningConfig.SKINS = {
+	{
+		KEY = "WOODEN",
+		LABEL = "Wooden",
+		DEFAULT = true,
+		HANDLE_COLOR = Color3.fromRGB(110, 75, 45),
+		HANDLE_MATERIAL = Enum.Material.Wood,
+		HEAD_COLOR = Color3.fromRGB(160, 160, 165),
+		HEAD_MATERIAL = Enum.Material.Metal,
+	},
+	{
+		KEY = "NATURE",
+		LABEL = "Nature",
+		WALL = "Pared1",
+		HANDLE_COLOR = Color3.fromRGB(90, 60, 35),
+		HANDLE_MATERIAL = Enum.Material.Wood,
+		HEAD_COLOR = Color3.fromRGB(70, 190, 90),
+		HEAD_MATERIAL = Enum.Material.Grass,
+	},
+	{
+		KEY = "GOLDEN",
+		LABEL = "Golden",
+		WALL = "Pared2",
+		HANDLE_COLOR = Color3.fromRGB(140, 105, 60),
+		HANDLE_MATERIAL = Enum.Material.Wood,
+		HEAD_COLOR = Color3.fromRGB(255, 205, 60),
+		HEAD_MATERIAL = Enum.Material.Foil,
+	},
+	{
+		KEY = "DIAMOND",
+		LABEL = "Diamond",
+		WALL = "Pared3",
+		HANDLE_COLOR = Color3.fromRGB(90, 100, 115),
+		HANDLE_MATERIAL = Enum.Material.Metal,
+		HEAD_COLOR = Color3.fromRGB(90, 240, 255),
+		HEAD_MATERIAL = Enum.Material.Glass,
+	},
+	{
+		KEY = "COSMIC",
+		LABEL = "Cosmic",
+		WALL = "Pared4",
+		HANDLE_COLOR = Color3.fromRGB(45, 30, 70),
+		HANDLE_MATERIAL = Enum.Material.Slate,
+		HEAD_COLOR = Color3.fromRGB(180, 90, 255),
+		HEAD_MATERIAL = Enum.Material.Neon,
+	},
+}
+
+MiningConfig.SKIN_REMOTE_NAME = "SkinSelect"
+
+-- Boton de skins, al lado del de tags
+MiningConfig.SKIN_BUTTON = {
+	ENABLED = true,
+	SLOT = 3, -- 0 = ajustes, 1 = tienda, 2 = tags, 3 = skins
+	ICON_ID = "", -- >>> AQUI PONES TU IMAGEN DEL BOTON DE SKINS <<<
+	LABEL = "SKINS",
+}
+
+MiningConfig.SKIN_PANEL = {
+	SIZE = UDim2.fromOffset(560, 460),
+	TITLE = "Pickaxe Skins",
+	TITLE_ICON_ID = "",
+
+	EQUIP_TEXT = "EQUIP",
+	EQUIPPED_TEXT = "EQUIPPED",
+	LOCKED_TEXT = "LOCKED",
+	WALL_REQUIREMENT = "Buy %s", -- %s = titulo de la pared
+
+	-- Aviso al desbloquear una nueva. No se equipa sola.
+	UNLOCK_MESSAGE = "New skin unlocked: %s",
+	UNLOCK_HINT = "Open SKINS to equip it",
+	UNLOCK_DURATION = 4,
+	UNLOCK_POSITION = UDim2.new(0.5, 0, 0, 96),
+	UNLOCK_SIZE = UDim2.fromOffset(420, 74),
+
+	ROW_HEIGHT = 76,
+	ROW_PADDING = 10,
+	EXTRA_SCROLL = 40,
+}
+
 -- Boton para cambiar de tag, en la misma fila que ajustes y tienda
 MiningConfig.TAG_BUTTON = {
 	ENABLED = true,
