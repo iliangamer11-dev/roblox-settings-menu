@@ -62,14 +62,16 @@ icon.ScaleType = Enum.ScaleType.Fit
 icon.Image = UiTheme.assetId(buttonCfg.ICON_ID)
 icon.Parent = buttonBody
 
--- Texto debajo del cuadro, igual que en ajustes
+-- Texto debajo del cuadro, igual que en ajustes: centrado en su propio cuadro y solo un
+-- poco mas ancho que el, para que no toque la etiqueta de ajustes
 local labelY = settingsCfg.POSITION.Y.Offset + settingsCfg.SIZE.Y.Offset * (1 - settingsCfg.ANCHOR.Y) + 2
+local centerX = buttonX + settingsCfg.SIZE.X.Offset * (0.5 - settingsCfg.ANCHOR.X)
 
 local buttonLabel = UiTheme.text(
 	buttonGui,
 	buttonCfg.LABEL,
-	UDim2.new(0, settingsCfg.SIZE.X.Offset + 40, 0, settingsCfg.LABEL_HEIGHT),
-	UDim2.new(settingsCfg.POSITION.X.Scale, buttonX + (settingsCfg.SIZE.X.Offset / 2), settingsCfg.POSITION.Y.Scale, labelY)
+	UDim2.new(0, settingsCfg.SIZE.X.Offset + 8, 0, settingsCfg.LABEL_HEIGHT),
+	UDim2.new(settingsCfg.POSITION.X.Scale, centerX, settingsCfg.POSITION.Y.Scale, labelY)
 )
 buttonLabel.Name = "Label"
 buttonLabel.AnchorPoint = Vector2.new(0.5, 0)
@@ -119,17 +121,44 @@ local closeButton = UiTheme.button(header, "X", UDim2.fromOffset(38, 38), UDim2.
 closeButton.Name = "Close"
 closeButton.BackgroundColor3 = theme.OFF_COLOR
 
+--------------------------------------------------------------------------------
+-- Contenido con scroll (cartel + separador + gamepasses)
+--------------------------------------------------------------------------------
+
+-- Solo la cabecera se queda fija. Todo lo demas va dentro del ScrollingFrame, asi que
+-- se puede ver entero aunque se anadan muchos gamepasses o la pantalla sea pequena.
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "Content"
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.Position = UDim2.new(0, 12, 0, 74)
+scroll.Size = UDim2.new(1, -24, 1, -86)
+scroll.CanvasSize = UDim2.new() -- lo calcula AutomaticCanvasSize
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ScrollBarThickness = 8
+scroll.ScrollBarImageColor3 = theme.OUTER_OUTLINE
+scroll.ScrollBarImageTransparency = 0.3
+-- El contenido se estrecha para dejar sitio a la barra, en vez de quedar debajo
+scroll.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+scroll.Parent = panel
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.FillDirection = Enum.FillDirection.Vertical
+contentLayout.Padding = UDim.new(0, 10)
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.Parent = scroll
+
 -- Cartel grande
 local banner = Instance.new("ImageLabel")
 banner.Name = "Banner"
-banner.Size = UDim2.new(1, -24, 0, panelCfg.BANNER.HEIGHT)
-banner.Position = UDim2.new(0, 12, 0, 74)
+banner.LayoutOrder = 1
+banner.Size = UDim2.new(1, 0, 0, panelCfg.BANNER.HEIGHT)
 banner.BackgroundColor3 = panelCfg.BANNER.COLOR
 banner.BackgroundTransparency = 0.05
 banner.BorderSizePixel = 0
 banner.ScaleType = Enum.ScaleType.Crop
 banner.Image = UiTheme.assetId(panelCfg.BANNER.IMAGE_ID)
-banner.Parent = panel
+banner.Parent = scroll
 UiTheme.corner(banner, theme.CORNER_RADIUS)
 UiTheme.stroke(banner, theme.OUTER_OUTLINE, 2)
 
@@ -143,33 +172,25 @@ bannerSubtitle.Name = "BannerSubtitle"
 bannerSubtitle.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Separador "Gamepasses"
-local sectionLabel =
-	UiTheme.text(panel, panelCfg.SECTION_LABEL, UDim2.new(1, -24, 0, 28), UDim2.new(0, 12, 0, 74 + panelCfg.BANNER.HEIGHT + 8))
+local sectionLabel = UiTheme.text(scroll, panelCfg.SECTION_LABEL, UDim2.new(1, 0, 0, 30), UDim2.new())
 sectionLabel.Name = "Section"
+sectionLabel.LayoutOrder = 2
 
---------------------------------------------------------------------------------
--- Cuadricula de gamepasses
---------------------------------------------------------------------------------
-
-local gridTop = 74 + panelCfg.BANNER.HEIGHT + 42
-
-local scroll = Instance.new("ScrollingFrame")
-scroll.Name = "Gamepasses"
-scroll.BackgroundTransparency = 1
-scroll.BorderSizePixel = 0
-scroll.Position = UDim2.new(0, 12, 0, gridTop)
-scroll.Size = UDim2.new(1, -24, 1, -(gridTop + 12))
-scroll.CanvasSize = UDim2.new()
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarThickness = 6
-scroll.Parent = panel
+-- Cuadricula de gamepasses: crece sola hacia abajo segun cuantos haya
+local tiles = Instance.new("Frame")
+tiles.Name = "Gamepasses"
+tiles.LayoutOrder = 3
+tiles.BackgroundTransparency = 1
+tiles.Size = UDim2.new(1, 0, 0, 0)
+tiles.AutomaticSize = Enum.AutomaticSize.Y
+tiles.Parent = scroll
 
 local grid = Instance.new("UIGridLayout")
 grid.CellSize = panelCfg.TILE_SIZE
 grid.CellPadding = UDim2.fromOffset(panelCfg.TILE_PADDING, panelCfg.TILE_PADDING)
 grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 grid.SortOrder = Enum.SortOrder.LayoutOrder
-grid.Parent = scroll
+grid.Parent = tiles
 
 local function makeTile(pass, order: number)
 	local tile = Instance.new("TextButton")
@@ -180,7 +201,7 @@ local function makeTile(pass, order: number)
 	tile.BorderSizePixel = 0
 	tile.AutoButtonColor = true
 	tile.Text = ""
-	tile.Parent = scroll
+	tile.Parent = tiles
 	UiTheme.corner(tile, theme.CORNER_RADIUS)
 	UiTheme.stroke(tile, theme.OUTER_OUTLINE, 2)
 
@@ -257,7 +278,7 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(_, passId, wa
 
 	for _, pass in panelCfg.GAMEPASSES do
 		if pass.ID == passId then
-			local tile = scroll:FindFirstChild(pass.NAME)
+			local tile = tiles:FindFirstChild(pass.NAME)
 			local priceLabel = tile and tile:FindFirstChild("Price")
 			if priceLabel and priceLabel:IsA("TextLabel") then
 				priceLabel.Text = panelCfg.OWNED_TEXT

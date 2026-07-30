@@ -60,17 +60,20 @@ icon.ScaleType = Enum.ScaleType.Fit
 icon.Image = normalizeAssetId(buttonCfg.ICON_ID)
 icon.Parent = buttonBody
 
--- "SETTINGS" debajo del cuadro, fuera de la caja
+-- "SETTINGS" debajo del cuadro, fuera de la caja.
+-- La etiqueta se centra en su propio cuadro y solo mide un poco mas que el, para que
+-- no se toque con la del boton de al lado.
 local labelY = buttonCfg.POSITION.Y.Offset + buttonCfg.SIZE.Y.Offset * (1 - buttonCfg.ANCHOR.Y) + 2
+local centerX = buttonCfg.POSITION.X.Offset + buttonCfg.SIZE.X.Offset * (0.5 - buttonCfg.ANCHOR.X)
 
 local buttonLabel = makeText(
 	buttonGui,
 	buttonCfg.LABEL,
-	UDim2.new(0, buttonCfg.SIZE.X.Offset + 40, 0, buttonCfg.LABEL_HEIGHT),
-	UDim2.new(buttonCfg.POSITION.X.Scale, buttonCfg.POSITION.X.Offset + 20, buttonCfg.POSITION.Y.Scale, labelY)
+	UDim2.new(0, buttonCfg.SIZE.X.Offset + 8, 0, buttonCfg.LABEL_HEIGHT),
+	UDim2.new(buttonCfg.POSITION.X.Scale, centerX, buttonCfg.POSITION.Y.Scale, labelY)
 )
 buttonLabel.Name = "Label"
-buttonLabel.AnchorPoint = Vector2.new(buttonCfg.ANCHOR.X, 0)
+buttonLabel.AnchorPoint = Vector2.new(0.5, 0)
 
 --------------------------------------------------------------------------------
 -- Panel
