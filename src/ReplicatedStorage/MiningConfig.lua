@@ -32,18 +32,26 @@ MiningConfig.ZONE_MULTIPLIERS = {
 -- Minerales: probabilidad en %, dinero base y color que se usa en el popup.
 -- Las probabilidades suman 100, pero no hace falta que sumen exactamente eso:
 -- el sorteo usa el total real, asi que puedes anadir minerales sin recalcular nada.
+-- NAME = nombre interno (logs), NAME_EN = el que se muestra en el cartel
 MiningConfig.MINERALS = {
-	{ NAME = "Piedra", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
-	{ NAME = "Carbon", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
-	{ NAME = "Cobre", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
-	{ NAME = "Hierro", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
-	{ NAME = "Oro", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
-	{ NAME = "Zafiro", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
-	{ NAME = "Amatista", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
-	{ NAME = "Diamante", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
-	{ NAME = "Esmeralda", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
+	{ NAME = "Piedra", NAME_EN = "Stone", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
+	{ NAME = "Carbon", NAME_EN = "Coal", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
+	{ NAME = "Cobre", NAME_EN = "Copper", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
+	{ NAME = "Hierro", NAME_EN = "Iron", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
+	{ NAME = "Oro", NAME_EN = "Gold", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
+	{ NAME = "Zafiro", NAME_EN = "Sapphire", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
+	{ NAME = "Amatista", NAME_EN = "Amethyst", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
+	{ NAME = "Diamante", NAME_EN = "Diamond", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
+	{ NAME = "Esmeralda", NAME_EN = "Emerald", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
 	-- RAINBOW = el color va cambiando (efecto arcoiris) y suelta mas chispas
-	{ NAME = "Legendario", CHANCE = 0.05, MONEY = 10000, COLOR = Color3.fromRGB(255, 255, 255), RAINBOW = true },
+	{
+		NAME = "Legendario",
+		NAME_EN = "Legendary",
+		CHANCE = 0.05,
+		MONEY = 10000,
+		COLOR = Color3.fromRGB(255, 255, 255),
+		RAINBOW = true,
+	},
 }
 
 -- Color de cada zona, solo se usa para pintar las plataformas de prueba de ZonesSetup
@@ -166,8 +174,10 @@ MiningConfig.POPUP = {
 
 	-- Texto de abajo. %s es la cantidad ya formateada (20.000 en vez de 20000).
 	TEXT_FORMAT = "+%s$",
-	-- true = ademas del dinero, escribe el nombre del mineral encima
-	SHOW_MINERAL_NAME = false,
+	-- Nombre del mineral (en ingles) debajo del dinero, con el color del mineral
+	SHOW_MINERAL_NAME = true,
+	-- Que parte del hueco de texto se lleva el nombre (el resto es el dinero)
+	NAME_RATIO = 0.42,
 
 	-- false = el popup NO se pinta del color del mineral (ese color va en el agujero).
 	-- Ponlo en true si algun dia quieres que tambien lo haga el cartel.

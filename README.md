@@ -12,18 +12,20 @@ dinero = dinero base del mineral x multiplicador de la zona
 
 **Minerales** (`MiningConfig.MINERALS`):
 
-| Mineral | Probabilidad | Base | Color del popup |
-| --- | --- | --- | --- |
-| Piedra | 55 % | 1 | gris |
-| Carbon | 20 % | 3 | negro |
-| Cobre | 10 % | 8 | marron |
-| Hierro | 7 % | 15 | gris claro |
-| Oro | 4 % | 40 | dorado |
-| Zafiro | 2 % | 80 | azul |
-| Amatista | 1 % | 150 | morado |
-| Diamante | 0,8 % | 400 | cian |
-| Esmeralda | 0,15 % | 1.000 | verde |
-| Legendario | 0,05 % | 10.000 | arcoiris (cambia de color) |
+| Mineral | En el cartel | Probabilidad | Base | Color |
+| --- | --- | --- | --- | --- |
+| Piedra | Stone | 55 % | 1 | gris |
+| Carbon | Coal | 20 % | 3 | negro |
+| Cobre | Copper | 10 % | 8 | marron |
+| Hierro | Iron | 7 % | 15 | gris claro |
+| Oro | Gold | 4 % | 40 | dorado |
+| Zafiro | Sapphire | 2 % | 80 | azul |
+| Amatista | Amethyst | 1 % | 150 | morado |
+| Diamante | Diamond | 0,8 % | 400 | cian |
+| Esmeralda | Emerald | 0,15 % | 1.000 | verde |
+| Legendario | Legendary | 0,05 % | 10.000 | arcoiris (cambia de color) |
+
+El color se usa en el agujero que queda en el suelo y en el nombre del mineral del cartel.
 
 **Zonas** (`MiningConfig.ZONE_MULTIPLIERS`):
 
@@ -189,7 +191,8 @@ con `SIZE` (diametro), `DEPTH`, `DARKEN` (cuanto se oscurece el color del minera
 | `IMAGE_COLOR` | Tinte de la imagen. Blanco = se ve con sus colores originales |
 | `CIRCLE_COLOR` | Color del circulo que sale cuando no hay imagen |
 | `TEXT_FORMAT` | Texto de abajo. `%s` es la cantidad formateada. Ej: `"+%s$"` |
-| `SHOW_MINERAL_NAME` | `true` escribe tambien el nombre del mineral |
+| `SHOW_MINERAL_NAME` | Nombre del mineral en ingles debajo del dinero, con su color |
+| `NAME_RATIO` | Cuanto del hueco de texto se lleva el nombre (el resto, el dinero) |
 | `USE_MINERAL_COLOR` | `false` por defecto: el color del mineral va en el agujero, no aqui |
 | `TEXT_COLOR`, `TEXT_STROKE_COLOR`, `FONT` | Estilo del texto |
 | `WIDTH`, `HEIGHT`, `IMAGE_RATIO` | Tamano del cartel en studs y cuanto ocupa la imagen |

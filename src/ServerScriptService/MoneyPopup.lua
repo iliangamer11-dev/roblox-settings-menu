@@ -118,11 +118,17 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 		corner.Parent = image
 	end
 
-	-- TextLabel debajo del ImageLabel
+	-- El hueco que queda debajo de la imagen se reparte entre el dinero y el nombre
+	local textArea = 1 - cfg.IMAGE_RATIO
+	local showName = cfg.SHOW_MINERAL_NAME and mineral ~= nil
+	local nameHeight = showName and textArea * cfg.NAME_RATIO or 0
+	local amountHeight = textArea - nameHeight
+
+	-- TextLabel del dinero, debajo del ImageLabel
 	local label = Instance.new("TextLabel")
 	label.Name = "Cantidad"
 	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(1, 1 - cfg.IMAGE_RATIO)
+	label.Size = UDim2.fromScale(1, amountHeight)
 	label.Position = UDim2.fromScale(0, cfg.IMAGE_RATIO)
 	label.Font = cfg.FONT
 	label.TextScaled = true
@@ -132,15 +138,15 @@ function MoneyPopup.show(character: Model, amount: number, mineral: any?)
 	label.TextStrokeTransparency = cfg.TEXT_STROKE_TRANSPARENCY
 	label.Parent = billboard
 
-	-- Nombre del mineral encima del dinero (opcional)
+	-- Nombre del mineral en ingles, justo DEBAJO del dinero y con su color
 	local nameLabel = nil
-	if cfg.SHOW_MINERAL_NAME and mineral and mineral.NAME then
+	if showName then
 		nameLabel = label:Clone()
 		nameLabel.Name = "Mineral"
-		nameLabel.Text = mineral.NAME
+		nameLabel.Text = mineral.NAME_EN or mineral.NAME or ""
 		nameLabel.TextColor3 = mineral.COLOR or cfg.TEXT_COLOR
-		nameLabel.Size = UDim2.fromScale(1, (1 - cfg.IMAGE_RATIO) * 0.7)
-		nameLabel.Position = UDim2.fromScale(0, -(1 - cfg.IMAGE_RATIO) * 0.7)
+		nameLabel.Size = UDim2.fromScale(1, nameHeight)
+		nameLabel.Position = UDim2.fromScale(0, cfg.IMAGE_RATIO + amountHeight)
 		nameLabel.Parent = billboard
 	end
 

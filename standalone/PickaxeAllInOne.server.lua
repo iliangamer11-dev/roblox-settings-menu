@@ -37,17 +37,25 @@ local ZONE_MULTIPLIERS = {
 
 -- Minerales: probabilidad en %, dinero base y color del popup.
 -- RAINBOW = el color cicla (arcoiris) y suelta muchas mas chispas.
+-- NAME = nombre interno (logs), NAME_EN = el que se muestra en el cartel
 local MINERALS = {
-	{ NAME = "Piedra", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
-	{ NAME = "Carbon", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
-	{ NAME = "Cobre", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
-	{ NAME = "Hierro", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
-	{ NAME = "Oro", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
-	{ NAME = "Zafiro", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
-	{ NAME = "Amatista", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
-	{ NAME = "Diamante", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
-	{ NAME = "Esmeralda", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
-	{ NAME = "Legendario", CHANCE = 0.05, MONEY = 10000, COLOR = Color3.fromRGB(255, 255, 255), RAINBOW = true },
+	{ NAME = "Piedra", NAME_EN = "Stone", CHANCE = 55, MONEY = 1, COLOR = Color3.fromRGB(145, 145, 145) },
+	{ NAME = "Carbon", NAME_EN = "Coal", CHANCE = 20, MONEY = 3, COLOR = Color3.fromRGB(28, 28, 30) },
+	{ NAME = "Cobre", NAME_EN = "Copper", CHANCE = 10, MONEY = 8, COLOR = Color3.fromRGB(178, 102, 52) },
+	{ NAME = "Hierro", NAME_EN = "Iron", CHANCE = 7, MONEY = 15, COLOR = Color3.fromRGB(214, 216, 222) },
+	{ NAME = "Oro", NAME_EN = "Gold", CHANCE = 4, MONEY = 40, COLOR = Color3.fromRGB(255, 199, 44) },
+	{ NAME = "Zafiro", NAME_EN = "Sapphire", CHANCE = 2, MONEY = 80, COLOR = Color3.fromRGB(40, 98, 255) },
+	{ NAME = "Amatista", NAME_EN = "Amethyst", CHANCE = 1, MONEY = 150, COLOR = Color3.fromRGB(158, 60, 220) },
+	{ NAME = "Diamante", NAME_EN = "Diamond", CHANCE = 0.8, MONEY = 400, COLOR = Color3.fromRGB(80, 238, 255) },
+	{ NAME = "Esmeralda", NAME_EN = "Emerald", CHANCE = 0.15, MONEY = 1000, COLOR = Color3.fromRGB(42, 220, 92) },
+	{
+		NAME = "Legendario",
+		NAME_EN = "Legendary",
+		CHANCE = 0.05,
+		MONEY = 10000,
+		COLOR = Color3.fromRGB(255, 255, 255),
+		RAINBOW = true,
+	},
 }
 
 local SWING_COOLDOWN = 0.75
@@ -108,7 +116,8 @@ local POPUP = {
 	IMAGE_TRANSPARENCY = 0,
 	ALWAYS_SHOW_CIRCLE = false, -- true = dibuja el circulo detras de tu imagen (para depurar)
 	TEXT_FORMAT = "+%s$", -- %s es la cantidad ya formateada (20.000)
-	SHOW_MINERAL_NAME = false, -- true = escribe tambien el nombre del mineral
+	SHOW_MINERAL_NAME = true, -- nombre en ingles debajo del dinero, con el color del mineral
+	NAME_RATIO = 0.42, -- parte del hueco de texto que se lleva el nombre
 	-- false = el cartel NO se pinta del color del mineral (ese color va en el agujero)
 	USE_MINERAL_COLOR = false,
 	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
@@ -365,10 +374,16 @@ local function showPopup(character, amount, mineral)
 		corner.Parent = image
 	end
 
+	-- El hueco debajo de la imagen se reparte entre el dinero y el nombre del mineral
+	local textArea = 1 - POPUP.IMAGE_RATIO
+	local showName = POPUP.SHOW_MINERAL_NAME and mineral ~= nil
+	local nameHeight = showName and textArea * POPUP.NAME_RATIO or 0
+	local amountHeight = textArea - nameHeight
+
 	local label = Instance.new("TextLabel")
 	label.Name = "Cantidad"
 	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(1, 1 - POPUP.IMAGE_RATIO)
+	label.Size = UDim2.fromScale(1, amountHeight)
 	label.Position = UDim2.fromScale(0, POPUP.IMAGE_RATIO)
 	label.Font = POPUP.FONT
 	label.TextScaled = true
@@ -378,15 +393,15 @@ local function showPopup(character, amount, mineral)
 	label.TextStrokeTransparency = POPUP.TEXT_STROKE_TRANSPARENCY
 	label.Parent = billboard
 
-	-- Nombre del mineral encima del dinero (opcional)
+	-- Nombre del mineral en ingles, justo DEBAJO del dinero y con su color
 	local nameLabel = nil
-	if POPUP.SHOW_MINERAL_NAME and mineral and mineral.NAME then
+	if showName then
 		nameLabel = label:Clone()
 		nameLabel.Name = "Mineral"
-		nameLabel.Text = mineral.NAME
+		nameLabel.Text = mineral.NAME_EN or mineral.NAME or ""
 		nameLabel.TextColor3 = mineral.COLOR or POPUP.TEXT_COLOR
-		nameLabel.Size = UDim2.fromScale(1, (1 - POPUP.IMAGE_RATIO) * 0.7)
-		nameLabel.Position = UDim2.fromScale(0, -(1 - POPUP.IMAGE_RATIO) * 0.7)
+		nameLabel.Size = UDim2.fromScale(1, nameHeight)
+		nameLabel.Position = UDim2.fromScale(0, POPUP.IMAGE_RATIO + amountHeight)
 		nameLabel.Parent = billboard
 	end
 
