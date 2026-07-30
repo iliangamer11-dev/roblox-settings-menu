@@ -165,8 +165,8 @@ Causas mas comunes:
 
 ## Barra de nivel
 
-Barra grande en la parte **de abajo, centrada**: ocupa el 46 % del ancho de la pantalla y
-80 px de alto (`LEVEL_BAR.SIZE`, con el ancho en escala para que se vea igual de grande en
+Barra en la parte **de abajo, centrada**: ocupa el 28 % del ancho de la pantalla y
+72 px de alto (`LEVEL_BAR.SIZE`, con el ancho en escala para que se vea igual de grande en
 cualquier resolucion). El progreso en **verde**, lo que falta en **blanco**, `Level X`
 dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha. Texto y cuadro con
 contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.

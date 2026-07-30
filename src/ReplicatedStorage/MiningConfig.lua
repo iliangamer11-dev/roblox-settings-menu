@@ -32,7 +32,7 @@ MiningConfig.LEVEL = {
 MiningConfig.LEVEL_BAR = {
 	-- Ancho relativo a la pantalla (0.62 = 62%) para que sea grande en cualquier
 	-- resolucion, y alto fijo en pixeles.
-	SIZE = UDim2.new(0.46, 0, 0, 80),
+	SIZE = UDim2.new(0.28, 0, 0, 72),
 	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
 	-- y el -28 la separa un poco.
 	POSITION = UDim2.new(0.5, 0, 1, -28),
