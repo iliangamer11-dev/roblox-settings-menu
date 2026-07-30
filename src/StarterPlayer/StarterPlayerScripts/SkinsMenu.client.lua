@@ -199,7 +199,7 @@ for index, skin in Config.SKINS do
 	)
 	equipButton.Name = "Equip"
 
-	equipButton.MouseButton1Click:Connect(function()
+	equipButton.Activated:Connect(function()
 		skinRemote:FireServer(skin.KEY)
 	end)
 
@@ -317,8 +317,8 @@ player:GetAttributeChangedSignal("skinsUnlocked"):Connect(function()
 	checkNewSkins()
 end)
 
-icon.MouseButton1Click:Connect(panelWindow.toggle)
-closeButton.MouseButton1Click:Connect(panelWindow.close)
+icon.Activated:Connect(panelWindow.toggle)
+closeButton.Activated:Connect(panelWindow.close)
 
 refresh()
 checkNewSkins()

@@ -189,13 +189,13 @@ local function changeVolume(delta: number)
 	end
 end
 
-downButton.MouseButton1Click:Connect(function()
+downButton.Activated:Connect(function()
 	changeVolume(-panelCfg.VOLUME_STEP)
 end)
-upButton.MouseButton1Click:Connect(function()
+upButton.Activated:Connect(function()
 	changeVolume(panelCfg.VOLUME_STEP)
 end)
-muteButton.MouseButton1Click:Connect(function()
+muteButton.Activated:Connect(function()
 	Settings.toggle("musicMuted")
 end)
 
@@ -211,7 +211,7 @@ for _, rowCfg in panelCfg.ROWS do
 
 	toggleButtons[rowCfg.KEY] = button
 
-	button.MouseButton1Click:Connect(function()
+	button.Activated:Connect(function()
 		Settings.toggle(rowCfg.KEY)
 	end)
 end
@@ -271,8 +271,8 @@ end)
 -- Abrir y cerrar
 --------------------------------------------------------------------------------
 
-icon.MouseButton1Click:Connect(panelWindow.toggle)
-closeButton.MouseButton1Click:Connect(panelWindow.close)
+icon.Activated:Connect(panelWindow.toggle)
+closeButton.Activated:Connect(panelWindow.close)
 
 -- Estado inicial
 refreshMusic()

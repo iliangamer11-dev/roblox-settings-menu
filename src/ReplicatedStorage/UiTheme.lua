@@ -11,6 +11,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 
@@ -27,6 +28,31 @@ function UiTheme.assetId(value: any): string
 
 	local digits = string.match(value, "^%s*(%d+)%s*$")
 	return digits and ("rbxassetid://" .. digits) or value
+end
+
+--[[
+	Pulsacion valida en TODOS los mandos de entrada.
+
+	GuiButton.Activated se dispara con raton, con toque en movil y con el boton A del
+	mando cuando el boton esta seleccionado. MouseButton1Click, en cambio, no responde al
+	mando, que era el problema en consola.
+]]
+function UiTheme.onActivated(button: GuiButton, callback: () -> ())
+	button.Selectable = true -- para que el mando pueda seleccionarlo
+
+	button.Activated:Connect(function()
+		callback()
+	end)
+end
+
+-- Primer boton de dentro de un panel, para darle el foco al abrirlo con mando
+local function findFirstButton(container: Instance): GuiButton?
+	for _, descendant in container:GetDescendants() do
+		if descendant:IsA("GuiButton") and descendant.Visible and descendant.Selectable then
+			return descendant
+		end
+	end
+	return nil
 end
 
 function UiTheme.corner(parent: Instance, radius: number): UICorner
@@ -186,6 +212,12 @@ function UiTheme.panel(gui: ScreenGui, frame: GuiObject, options: { exclusive: b
 			currentTween:Cancel()
 		end
 
+		-- Se suelta el foco del mando si estaba dentro de este panel
+		local selected = GuiService.SelectedObject
+		if selected and selected:IsDescendantOf(frame) then
+			GuiService.SelectedObject = nil
+		end
+
 		local info = TweenInfo.new(animation.CLOSE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		local tween = TweenService:Create(scale, info, { Scale = animation.START_SCALE })
 		currentTween = tween
@@ -220,6 +252,19 @@ function UiTheme.panel(gui: ScreenGui, frame: GuiObject, options: { exclusive: b
 		local tween = TweenService:Create(scale, info, { Scale = 1 })
 		currentTween = tween
 		tween:Play()
+
+		-- Con mando: se le da el foco al primer boton del panel, si no no hay forma de
+		-- moverse por el. Con raton o tactil esto no molesta.
+		if exclusive then
+			task.defer(function()
+				if gui.Enabled then
+					local button = findFirstButton(frame)
+					if button then
+						GuiService.SelectedObject = button
+					end
+				end
+			end)
+		end
 	end
 
 	function handle.toggle()
@@ -277,6 +322,7 @@ function UiTheme.hudButton(parent: Instance, slot: number, iconId: any, labelTex
 	icon.Size = UDim2.fromScale(0.82, 0.82)
 	icon.ScaleType = Enum.ScaleType.Fit
 	icon.Image = UiTheme.assetId(iconId)
+	icon.Selectable = true -- navegable con mando
 	icon.Parent = body
 
 	-- Texto centrado en su propio cuadro, para que no toque el del boton de al lado
@@ -308,6 +354,7 @@ function UiTheme.button(parent: Instance, text: string, size: UDim2, position: U
 	button.TextScaled = true
 	button.Text = text
 	button.TextColor3 = theme.TEXT_COLOR
+	button.Selectable = true -- navegable con mando
 	button.Parent = parent
 	UiTheme.corner(button, math.max(2, theme.CORNER_RADIUS - 3))
 	UiTheme.stroke(button, theme.OUTER_OUTLINE, 2)

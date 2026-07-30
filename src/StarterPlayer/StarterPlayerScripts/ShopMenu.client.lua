@@ -239,7 +239,7 @@ local function makeTile(pass, order: number)
 		return tile
 	end
 
-	buyButton.MouseButton1Click:Connect(function()
+	buyButton.Activated:Connect(function()
 		pcall(function()
 			MarketplaceService:PromptGamePassPurchase(player, pass.ID)
 		end)
@@ -299,7 +299,7 @@ end)
 -- Abrir y cerrar
 --------------------------------------------------------------------------------
 
-icon.MouseButton1Click:Connect(panelWindow.toggle)
-closeButton.MouseButton1Click:Connect(panelWindow.close)
+icon.Activated:Connect(panelWindow.toggle)
+closeButton.Activated:Connect(panelWindow.close)
 
 

@@ -212,6 +212,17 @@ Ejemplo: nivel 25 + tag Pro + skin Golden + X2 Money = **x5.19**.
 - El aspecto se ajusta en `MiningConfig.LEVEL_BAR` (tamano, posicion, colores, fuente,
   grosor de los contornos, formato de los textos).
 
+## Mando, tactil y raton
+
+Todos los botones usan **`GuiButton.Activated`**, no `MouseButton1Click`: `Activated` se
+dispara con raton, con toque en movil y con el **boton A del mando** cuando el boton esta
+seleccionado. Con `MouseButton1Click` los menus no se podian pulsar en consola.
+
+Ademas, todos los botones se crean con `Selectable = true` para que la cruceta pueda llegar
+a ellos, y al abrir un panel se le pasa el foco a su primer boton. Para conectar botones
+nuevos hay un helper: `UiTheme.onActivated(boton, callback)`, que ya deja el boton
+seleccionable.
+
 ## Interfaz en todos los dispositivos
 
 Cada ScreenGui tiene dentro un **contenedor escalado** (`UiTheme.root`) y todo cuelga de el.
@@ -274,6 +285,9 @@ Todos los paneles (ajustes, tienda, tags, skins) y los avisos se registran en
   ajustes, la tienda se cierra sola.
 - **Avisos aparte**: los mensajes de tag/skin nuevos se registran con `exclusive = false`,
   asi que no cierran los paneles ni desaparecen si abres uno.
+- **Foco del mando**: al abrir un panel se le da el foco a su primer boton
+  (`GuiService.SelectedObject`) y al cerrarlo se suelta, que es lo que permite moverse por el
+  menu con la cruceta.
 
 La animacion usa un `UIScale` en el panel, no en el contenedor de `UiTheme.root`: un objeto
 solo admite un `UIScale` y el del contenedor ya se usa para el escalado por dispositivo.

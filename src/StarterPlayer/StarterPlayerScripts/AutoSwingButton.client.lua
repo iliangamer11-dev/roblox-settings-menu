@@ -44,7 +44,7 @@ local function refresh()
 	button.BackgroundColor3 = enabled and theme.ON_COLOR or theme.OFF_COLOR
 end
 
-button.MouseButton1Click:Connect(function()
+button.Activated:Connect(function()
 	enabled = not enabled
 	refresh()
 	autoRemote:FireServer(enabled)

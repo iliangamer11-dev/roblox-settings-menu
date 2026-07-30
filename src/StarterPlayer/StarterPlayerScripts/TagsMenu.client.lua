@@ -183,7 +183,7 @@ for index, tag in Config.TAGS do
 		UiTheme.button(row, panelCfg.EQUIP_TEXT, UDim2.fromOffset(150, 42), UDim2.new(1, -14, 0.5, 0), Vector2.new(1, 0.5))
 	equipButton.Name = "Equip"
 
-	equipButton.MouseButton1Click:Connect(function()
+	equipButton.Activated:Connect(function()
 		tagRemote:FireServer(tag.KEY)
 	end)
 
@@ -307,8 +307,8 @@ player:GetAttributeChangedSignal("tagsUnlocked"):Connect(function()
 	checkNewTags()
 end)
 
-icon.MouseButton1Click:Connect(panelWindow.toggle)
-closeButton.MouseButton1Click:Connect(panelWindow.close)
+icon.Activated:Connect(panelWindow.toggle)
+closeButton.Activated:Connect(panelWindow.close)
 
 refresh()
 checkNewTags()
