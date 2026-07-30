@@ -222,9 +222,10 @@ y se actualiza en cada picazo y en cada compra. Se ajusta en `MiningConfig.MONEY
 
 Boton `SHOP` al lado del de ajustes. Abre un panel de 820x620 con el mismo estilo: cabecera
 fija con icono, titulo `Shop` y boton rojo de cerrar, y debajo un `ScrollingFrame` con el
-cartel grande, el separador `Gamepasses` y la cuadricula (3 por fila, tiles de 210x170).
-Como todo el contenido va dentro del scroll, se pueden anadir todos los gamepasses que
-quieras: los que no entren se ven bajando.
+separador `Gamepasses` y la cuadricula (3 por fila, tiles de 230x216). Como todo el
+contenido va dentro del scroll, se pueden anadir todos los gamepasses que quieras: los que
+no entren se ven bajando. El cartel grande de arriba viene desactivado
+(`BANNER.ENABLED = false`); activalo si quieres poner una imagen promocional.
 
 Cada gamepass lleva su icono, el nombre, **que hace en ingles** (`DESC`) y abajo un **boton
 verde con el precio**. El precio se pinta al momento con el de la config y se corrige con el
