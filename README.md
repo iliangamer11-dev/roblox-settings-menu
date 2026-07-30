@@ -145,9 +145,11 @@ quedar hermanos dentro de `ServerScriptService`.
   encima...), se cobra la zona que esta pisando.
 - **Agujero**: cada picazo deja una marca oscura pegada a la superficie que desaparece a los
   2 segundos (`HOLE.LIFETIME`).
-- **Sincronizado con el impacto**: el popup, las chispas y el agujero salen cuando la punta
-  toca el suelo, no al hacer click. El retardo se calcula con `SWING.RAISE_TIME +
-  SWING.STRIKE_TIME`, asi que sigue cuadrando si cambias las duraciones.
+- **Todo se resuelve en el impacto**, no al hacer click: la zona, el mineral, el dinero, el
+  popup, las chispas y el agujero. El retardo sale de `SWING.RAISE_TIME + SWING.STRIKE_TIME`,
+  asi que sigue cuadrando si cambias las duraciones. Esto importa porque andando a 6 studs/s
+  el jugador se mueve 1.3 studs durante el picazo: calculandolo al hacer click, el agujero
+  salia detras del jugador.
 - **Anti-exploit**: cooldown por jugador (0.55 s) y todo el dinero se calcula en el servidor.
 - **Efecto**: chispas del color de la zona en el punto golpeado.
 
