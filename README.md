@@ -200,10 +200,20 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
 
 ## Interfaz en todos los dispositivos
 
-Toda la GUI (barra de nivel, dinero, botones, iconos, paneles y avisos) se coloca con
-`AnchorPoint` respecto a su borde y se escala con `UiTheme.autoScale`, que mete un `UIScale`
-en cada elemento y lo recalcula cuando cambia la resolucion. El factor es
-`min(ancho/1600, alto/900)` limitado entre `MIN` y `MAX` (`UI_THEME.SCALE`).
+Cada ScreenGui tiene dentro un **contenedor escalado** (`UiTheme.root`) y todo cuelga de el.
+El contenedor lleva un `UIScale` con factor `min(ancho/1600, alto/900)` limitado entre `MIN`
+y `MAX` (`UI_THEME.SCALE`), y su tamano es `1/factor` de la pantalla para que, ya escalado,
+ocupe exactamente la pantalla.
+
+Esto es lo importante: un `UIScale` escala el tamano del objeto y **las posiciones de sus
+hijos**, pero no la posicion del objeto en si. Escalando cada elemento por separado los
+tamanos cambiaban pero las separaciones se quedaban fijas en pixeles: en PC los botones
+salian grandes y pegados y en movil pequenos y muy separados. Dentro del contenedor,
+tamanos, posiciones y huecos escalan juntos, asi que la proporcion es identica en todos los
+dispositivos.
+
+Por eso los tamanos y posiciones de la config van en pixeles, pensados para
+`REFERENCE = 1600x900`.
 
 | Dispositivo | Factor | Barra de nivel | Boton HUD | Panel tienda |
 | --- | --- | --- | --- | --- |
@@ -212,8 +222,8 @@ en cada elemento y lo recalcula cuando cambia la resolucion. El factor es
 | monitor 1920x1080 | 1.20 | 672x89 | 101 px | 984x744 |
 | 2K y 4K | 1.30 | 728x96 | 109 px | 1066x806 |
 
-Por eso los tamanos de la config estan en pixeles: el ajuste a cada pantalla lo hace el
-`UIScale`, y asi ancho y alto crecen juntos sin deformarse.
+La proporcion entre el tamano de los botones y el hueco que los separa es la misma en todas
+las resoluciones: la interfaz se ve igual, solo mas grande o mas pequena.
 
 ## Menu de ajustes
 
