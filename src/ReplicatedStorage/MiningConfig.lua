@@ -150,18 +150,19 @@ MiningConfig.SETTINGS_PANEL = {
 --------------------------------------------------------------------------------
 
 MiningConfig.SHOP_PANEL = {
-	-- 520 de alto para que se vean dos filas de gamepasses sin tener que hacer scroll
-	SIZE = UDim2.fromOffset(600, 520),
-	TITLE = "Exclusive Shop",
+	SIZE = UDim2.fromOffset(820, 620),
+	TITLE = "Shop",
 	TITLE_ICON_ID = "", -- iconito de la cabecera (opcional)
 
-	-- Cartel grande de arriba
+	-- Cartel grande de arriba. Sin textos: es un hueco para tu imagen.
+	-- Ponlo en ENABLED = false si no lo quieres.
 	BANNER = {
-		TITLE = "Best value!",
-		SUBTITLE = "Get more money per swing",
-		IMAGE_ID = "", -- imagen de fondo del cartel (opcional)
+		ENABLED = true,
+		TITLE = "", -- vacio = no se dibuja
+		SUBTITLE = "", -- vacio = no se dibuja
+		IMAGE_ID = "", -- imagen del cartel
 		COLOR = Color3.fromRGB(60, 150, 225),
-		HEIGHT = 118,
+		HEIGHT = 150,
 	},
 
 	SECTION_LABEL = "Gamepasses",
@@ -182,8 +183,9 @@ MiningConfig.SHOP_PANEL = {
 		{ ID = 0, NAME = "All Zones", ICON_ID = "" },
 	},
 
-	TILE_SIZE = UDim2.fromOffset(160, 120),
-	TILE_PADDING = 12,
+	-- Gamepasses grandes. Si no caben todos se baja con el scroll, no pasa nada.
+	TILE_SIZE = UDim2.fromOffset(210, 170),
+	TILE_PADDING = 14,
 }
 
 --------------------------------------------------------------------------------

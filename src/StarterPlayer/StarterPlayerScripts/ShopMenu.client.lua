@@ -148,28 +148,35 @@ contentLayout.Padding = UDim.new(0, 10)
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 contentLayout.Parent = scroll
 
--- Cartel grande
-local banner = Instance.new("ImageLabel")
-banner.Name = "Banner"
-banner.LayoutOrder = 1
-banner.Size = UDim2.new(1, 0, 0, panelCfg.BANNER.HEIGHT)
-banner.BackgroundColor3 = panelCfg.BANNER.COLOR
-banner.BackgroundTransparency = 0.05
-banner.BorderSizePixel = 0
-banner.ScaleType = Enum.ScaleType.Crop
-banner.Image = UiTheme.assetId(panelCfg.BANNER.IMAGE_ID)
-banner.Parent = scroll
-UiTheme.corner(banner, theme.CORNER_RADIUS)
-UiTheme.stroke(banner, theme.OUTER_OUTLINE, 2)
+-- Cartel grande (hueco para tu imagen). Los textos solo se crean si los rellenas.
+if panelCfg.BANNER.ENABLED then
+	local banner = Instance.new("ImageLabel")
+	banner.Name = "Banner"
+	banner.LayoutOrder = 1
+	banner.Size = UDim2.new(1, 0, 0, panelCfg.BANNER.HEIGHT)
+	banner.BackgroundColor3 = panelCfg.BANNER.COLOR
+	banner.BackgroundTransparency = 0.05
+	banner.BorderSizePixel = 0
+	banner.ScaleType = Enum.ScaleType.Crop
+	banner.Image = UiTheme.assetId(panelCfg.BANNER.IMAGE_ID)
+	banner.Parent = scroll
+	UiTheme.corner(banner, theme.CORNER_RADIUS)
+	UiTheme.stroke(banner, theme.OUTER_OUTLINE, 2)
 
-local bannerTitle = UiTheme.text(banner, panelCfg.BANNER.TITLE, UDim2.new(1, -20, 0.4, 0), UDim2.new(0, 10, 0, 12))
-bannerTitle.Name = "BannerTitle"
-bannerTitle.TextXAlignment = Enum.TextXAlignment.Left
+	if panelCfg.BANNER.TITLE ~= "" then
+		local bannerTitle =
+			UiTheme.text(banner, panelCfg.BANNER.TITLE, UDim2.new(1, -20, 0.34, 0), UDim2.new(0, 10, 0, 12))
+		bannerTitle.Name = "BannerTitle"
+		bannerTitle.TextXAlignment = Enum.TextXAlignment.Left
+	end
 
-local bannerSubtitle =
-	UiTheme.text(banner, panelCfg.BANNER.SUBTITLE, UDim2.new(1, -20, 0.26, 0), UDim2.new(0, 10, 0.56, 0))
-bannerSubtitle.Name = "BannerSubtitle"
-bannerSubtitle.TextXAlignment = Enum.TextXAlignment.Left
+	if panelCfg.BANNER.SUBTITLE ~= "" then
+		local bannerSubtitle =
+			UiTheme.text(banner, panelCfg.BANNER.SUBTITLE, UDim2.new(1, -20, 0.24, 0), UDim2.new(0, 10, 0.56, 0))
+		bannerSubtitle.Name = "BannerSubtitle"
+		bannerSubtitle.TextXAlignment = Enum.TextXAlignment.Left
+	end
+end
 
 -- Separador "Gamepasses"
 local sectionLabel = UiTheme.text(scroll, panelCfg.SECTION_LABEL, UDim2.new(1, 0, 0, 30), UDim2.new())
