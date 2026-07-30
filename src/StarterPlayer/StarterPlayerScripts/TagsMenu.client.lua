@@ -35,6 +35,11 @@ for _, wall in Config.WALLS do
 	wallTitles[wall.NAME] = wall.TITLE
 end
 
+local tagByKey = {}
+for _, tag in Config.TAGS do
+	tagByKey[tag.KEY] = tag
+end
+
 --------------------------------------------------------------------------------
 -- Boton
 --------------------------------------------------------------------------------
@@ -203,8 +208,79 @@ local function refresh()
 	end
 end
 
+--------------------------------------------------------------------------------
+-- Aviso de tag nuevo (no se equipa solo)
+--------------------------------------------------------------------------------
+
+local noticeGui = Instance.new("ScreenGui")
+noticeGui.Name = "TagUnlockGui"
+noticeGui.ResetOnSpawn = false
+noticeGui.IgnoreGuiInset = true
+noticeGui.Enabled = false
+noticeGui.Parent = playerGui
+
+local _, noticeBody =
+	UiTheme.framedBox(noticeGui, panelCfg.UNLOCK_SIZE, panelCfg.UNLOCK_POSITION, Vector2.new(0.5, 0))
+
+local noticeTitle = UiTheme.text(noticeBody, "", UDim2.new(1, -16, 0.5, 0), UDim2.new(0, 8, 0, 6))
+noticeTitle.Name = "Message"
+
+local noticeHint = UiTheme.text(noticeBody, panelCfg.UNLOCK_HINT, UDim2.new(1, -16, 0.3, 0), UDim2.new(0, 8, 0.6, 0))
+noticeHint.Name = "Hint"
+noticeHint.TextScaled = false
+noticeHint.TextSize = 16
+
+local noticeToken = 0
+
+local function showUnlockNotice(tag)
+	noticeTitle.Text = string.format(panelCfg.UNLOCK_MESSAGE, tag.LABEL)
+	UiTheme.gradient(noticeTitle, tag.TOP, tag.BOTTOM)
+	noticeGui.Enabled = true
+
+	noticeToken += 1
+	local token = noticeToken
+
+	task.delay(panelCfg.UNLOCK_DURATION, function()
+		-- Si mientras tanto ha salido otro aviso, este ya no lo apaga
+		if token == noticeToken then
+			noticeGui.Enabled = false
+		end
+	end)
+end
+
+--------------------------------------------------------------------------------
+-- Cambios
+--------------------------------------------------------------------------------
+
+-- Se compara la lista anterior con la nueva para saber que se acaba de desbloquear
+local knownKeys = {}
+local firstRead = true
+
+local function checkNewTags()
+	local unlockedList = player:GetAttribute("tagsUnlocked") or ""
+
+	for key in string.gmatch(unlockedList, "[^,]+") do
+		if not knownKeys[key] then
+			knownKeys[key] = true
+
+			-- Al entrar al juego no se avisa de los que ya tenia
+			if not firstRead then
+				local tag = tagByKey[key]
+				if tag then
+					showUnlockNotice(tag)
+				end
+			end
+		end
+	end
+
+	firstRead = false
+end
+
 player:GetAttributeChangedSignal("tag"):Connect(refresh)
-player:GetAttributeChangedSignal("tagsUnlocked"):Connect(refresh)
+player:GetAttributeChangedSignal("tagsUnlocked"):Connect(function()
+	refresh()
+	checkNewTags()
+end)
 
 icon.MouseButton1Click:Connect(function()
 	panelGui.Enabled = not panelGui.Enabled
@@ -214,4 +290,9 @@ closeButton.MouseButton1Click:Connect(function()
 	panelGui.Enabled = false
 end)
 
+UiTheme.autoScale(buttonGui)
+UiTheme.autoScale(panelGui)
+UiTheme.autoScale(noticeGui)
+
 refresh()
+checkNewTags()

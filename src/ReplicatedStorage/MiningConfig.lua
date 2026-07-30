@@ -30,9 +30,9 @@ MiningConfig.LEVEL = {
 -- Barra de nivel: verde lo conseguido, blanco lo que falta, "Level X" a la izquierda
 -- y los puntos a la derecha, todo con contorno negro.
 MiningConfig.LEVEL_BAR = {
-	-- Ancho relativo a la pantalla (0.62 = 62%) para que sea grande en cualquier
-	-- resolucion, y alto fijo en pixeles.
-	SIZE = UDim2.new(0.34, 0, 0, 74),
+	-- Tamano en pixeles: del ajuste a cada pantalla se encarga el UIScale de UiTheme
+	-- (ver UI_THEME.SCALE), asi el ancho y el alto crecen juntos y no se deforma.
+	SIZE = UDim2.fromOffset(560, 74),
 	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
 	-- y el -28 la separa un poco.
 	POSITION = UDim2.new(0.5, 0, 1, -28),
@@ -79,6 +79,15 @@ MiningConfig.UI_THEME = {
 	ON_COLOR = Color3.fromRGB(60, 200, 70), -- interruptor activado
 	OFF_COLOR = Color3.fromRGB(200, 70, 70), -- interruptor desactivado
 	BUTTON_COLOR = Color3.fromRGB(95, 95, 100), -- botones normales (+, -, X)
+
+	-- Escalado automatico de TODA la interfaz segun el tamano de la pantalla.
+	-- Los tamanos estan pensados para REFERENCE (un monitor normal); en pantallas mas
+	-- pequenas (movil) se encoge y en 4K se agranda, siempre entre MIN y MAX.
+	SCALE = {
+		REFERENCE = Vector2.new(1600, 900),
+		MIN = 0.55,
+		MAX = 1.3,
+	},
 }
 
 MiningConfig.SETTINGS_BUTTON = {
@@ -164,7 +173,7 @@ MiningConfig.TAGS = {
 	},
 	{
 		KEY = "PRINCIPIANTE",
-		LABEL = "Principiante",
+		LABEL = "Beginner",
 		WALL = "Pared2",
 		TOP = Color3.fromRGB(130, 205, 255), -- azul claro
 		BOTTOM = Color3.fromRGB(18, 62, 175), -- azul oscuro
@@ -203,6 +212,13 @@ MiningConfig.TAG_PANEL = {
 	EQUIP_TEXT = "EQUIP",
 	EQUIPPED_TEXT = "EQUIPPED",
 	LOCKED_TEXT = "LOCKED",
+
+	-- Aviso al desbloquear uno nuevo. No se equipa solo: hay que ir al menu.
+	UNLOCK_MESSAGE = "New tag unlocked: %s", -- %s = nombre del tag
+	UNLOCK_HINT = "Open TAGS to equip it",
+	UNLOCK_DURATION = 4, -- segundos que dura el aviso
+	UNLOCK_POSITION = UDim2.new(0.5, 0, 0, 96), -- debajo del boton de auto swing
+	UNLOCK_SIZE = UDim2.fromOffset(420, 74),
 	-- Como se lee el requisito de los que faltan
 	WALL_REQUIREMENT = "Buy %s", -- %s = titulo de la pared
 	PASS_REQUIREMENT = "Gamepass",

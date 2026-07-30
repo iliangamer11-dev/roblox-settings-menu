@@ -19,6 +19,7 @@ local ContentProvider = game:GetService("ContentProvider")
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local Format = require(ReplicatedStorage:WaitForChild("Format"))
 local Settings = require(ReplicatedStorage:WaitForChild("ClientSettings"))
+local UiTheme = require(ReplicatedStorage:WaitForChild("UiTheme"))
 
 local cfg = Config.LEVEL_BAR
 
@@ -211,6 +212,9 @@ local function update()
 	local alpha = needed > 0 and math.clamp(xp / needed, 0, 1) or 0
 	TweenService:Create(fill, tweenInfo, { Size = UDim2.fromScale(alpha, 1) }):Play()
 end
+
+-- Se ajusta al tamano de la pantalla (movil, monitor, 4K)
+UiTheme.autoScale(screenGui)
 
 -- La subida de nivel se detecta comparando el atributo, no hace falta RemoteEvent
 local lastLevel = player:GetAttribute("level") or 1

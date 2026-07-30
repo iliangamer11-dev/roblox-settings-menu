@@ -90,4 +90,6 @@ end
 
 player:GetAttributeChangedSignal(Config.MONEY_NAME):Connect(update)
 
+UiTheme.autoScale(screenGui)
+
 update()

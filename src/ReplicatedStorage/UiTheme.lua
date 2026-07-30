@@ -96,6 +96,51 @@ function UiTheme.text(parent: Instance, text: string, size: UDim2, position: UDi
 	return label
 end
 
+-- Escala toda la interfaz de un ScreenGui segun el tamano de la pantalla, para que se
+-- vea bien en movil, tablet, monitor y 4K. Se mete un UIScale en cada elemento de
+-- primer nivel y se recalcula cuando cambia la resolucion.
+-- Los AnchorPoint ya colocan cada cosa respecto a su borde, asi que el escalado no
+-- descoloca nada.
+function UiTheme.autoScale(gui: ScreenGui)
+	local settings = theme.SCALE
+	local scales = {}
+
+	local function ensure(child: Instance)
+		if child:IsA("GuiObject") and not child:FindFirstChildOfClass("UIScale") then
+			local scale = Instance.new("UIScale")
+			scale.Parent = child
+			table.insert(scales, scale)
+		end
+	end
+
+	local function update()
+		-- AbsoluteSize del ScreenGui es el tamano util de la pantalla
+		local viewport = gui.AbsoluteSize
+		if viewport.X <= 0 or viewport.Y <= 0 then
+			return
+		end
+
+		local factor = math.min(viewport.X / settings.REFERENCE.X, viewport.Y / settings.REFERENCE.Y)
+		factor = math.clamp(factor, settings.MIN, settings.MAX)
+
+		for _, scale in scales do
+			scale.Scale = factor
+		end
+	end
+
+	for _, child in gui:GetChildren() do
+		ensure(child)
+	end
+
+	gui.ChildAdded:Connect(function(child)
+		ensure(child)
+		update()
+	end)
+
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)
+	update()
+end
+
 -- Degradado vertical (de TOP arriba a BOTTOM abajo) sobre un texto
 function UiTheme.gradient(label: Instance, top: Color3, bottom: Color3): UIGradient
 	local gradient = Instance.new("UIGradient")

@@ -198,6 +198,23 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
 - El aspecto se ajusta en `MiningConfig.LEVEL_BAR` (tamano, posicion, colores, fuente,
   grosor de los contornos, formato de los textos).
 
+## Interfaz en todos los dispositivos
+
+Toda la GUI (barra de nivel, dinero, botones, iconos, paneles y avisos) se coloca con
+`AnchorPoint` respecto a su borde y se escala con `UiTheme.autoScale`, que mete un `UIScale`
+en cada elemento y lo recalcula cuando cambia la resolucion. El factor es
+`min(ancho/1600, alto/900)` limitado entre `MIN` y `MAX` (`UI_THEME.SCALE`).
+
+| Dispositivo | Factor | Barra de nivel | Boton HUD | Panel tienda |
+| --- | --- | --- | --- | --- |
+| movil 800x450 | 0.55 | 308x41 | 46 px | 451x341 |
+| portatil 1366x768 | 0.85 | 478x63 | 72 px | 700x529 |
+| monitor 1920x1080 | 1.20 | 672x89 | 101 px | 984x744 |
+| 2K y 4K | 1.30 | 728x96 | 109 px | 1066x806 |
+
+Por eso los tamanos de la config estan en pixeles: el ajuste a cada pantalla lo hace el
+`UIScale`, y asi ancho y alto crecen juntos sin deformarse.
+
 ## Menu de ajustes
 
 Boton **en el centro de la pantalla** con un icono y `Settings` debajo, y justo **encima el
@@ -313,13 +330,17 @@ Etiqueta sobre el personaje, con degradado propio, que se desbloquea con el prog
 | Tag | Como se consigue | Degradado |
 | --- | --- | --- |
 | Noob | lo tiene todo el mundo | marron claro -> marron oscuro |
-| Principiante | comprar `Pared2` | azul claro -> azul oscuro |
+| Beginner | comprar `Pared2` | azul claro -> azul oscuro |
 | Pro | comprar `Pared4` | naranja -> rojo |
 | VIP | gamepass VIP | naranja -> amarillo |
 
 Boton **TAGS** en la fila del HUD: abre un panel con todos, el equipado marcado como
 `EQUIPPED`, los que faltan como `LOCKED` con su requisito (`Buy Mine Zone`), y se equipa el
-que quieras. Al desbloquear uno nuevo se equipa solo.
+que quieras.
+
+Al desbloquear uno **no se equipa solo**: sale un aviso `New tag unlocked: Pro` con el
+degradado de ese tag durante 4 segundos y lo equipas tu desde el menu cuando quieras
+(`TAG_PANEL.UNLOCK_MESSAGE`, `UNLOCK_DURATION`).
 
 Como funciona por dentro:
 

@@ -53,5 +53,7 @@ end
 
 player:GetAttributeChangedSignal("autoSwing"):Connect(refreshVisibility)
 
+UiTheme.autoScale(screenGui)
+
 refresh()
 refreshVisibility()

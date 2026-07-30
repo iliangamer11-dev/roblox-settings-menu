@@ -105,18 +105,18 @@ local function publish(player: Player)
 	refreshLeaderstat(player)
 end
 
--- Al desbloquear uno nuevo se equipa solo, que es lo que uno espera
+-- Al desbloquear uno nuevo NO se equipa: solo se anade a la lista.
+-- El cliente ve que la lista ha crecido y muestra el aviso "New tag unlocked".
 local function onUnlock(player: Player, key: string)
 	local tag = tagByKey[key]
 	if not tag or not isUnlocked(player, tag) then
 		return
 	end
 
-	player:SetAttribute("tag", key)
 	publish(player)
 
 	if Config.DEBUG then
-		print(string.format("[Tags] %s desbloqueo %s", player.Name, tag.LABEL))
+		print(string.format("[Tags] %s desbloqueo %s (sin equipar)", player.Name, tag.LABEL))
 	end
 end
 
@@ -148,18 +148,8 @@ for _, player in Players:GetPlayers() do
 	task.spawn(onPlayerAdded, player)
 end
 
--- Gamepasses (VIP): al entrar y al comprarlo
+-- Gamepasses (VIP): al entrar y al comprarlo. Tampoco se equipa solo.
 Passes.Changed.Event:Connect(function(player: Player)
-	for _, tag in Config.TAGS do
-		if tag.PASS and Passes.has(player, tag.PASS) then
-			local unlocked = player:GetAttribute("tagsUnlocked") or ""
-			-- Solo se autoequipa la primera vez
-			if not string.find(unlocked, tag.KEY, 1, true) then
-				onUnlock(player, tag.KEY)
-			end
-		end
-	end
-
 	publish(player)
 end)
 

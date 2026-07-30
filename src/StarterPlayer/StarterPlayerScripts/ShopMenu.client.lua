@@ -299,3 +299,7 @@ end)
 closeButton.MouseButton1Click:Connect(function()
 	panelGui.Enabled = false
 end)
+
+-- Se ajustan al tamano de la pantalla
+UiTheme.autoScale(buttonGui)
+UiTheme.autoScale(panelGui)
