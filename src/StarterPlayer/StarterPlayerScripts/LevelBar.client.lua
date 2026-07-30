@@ -18,6 +18,7 @@ local ContentProvider = game:GetService("ContentProvider")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
 local Format = require(ReplicatedStorage:WaitForChild("Format"))
+local Settings = require(ReplicatedStorage:WaitForChild("ClientSettings"))
 
 local cfg = Config.LEVEL_BAR
 
@@ -225,5 +226,14 @@ end)
 
 player:GetAttributeChangedSignal("xp"):Connect(update)
 player:GetAttributeChangedSignal("xpNeeded"):Connect(update)
+
+-- El jugador puede ocultar la barra desde el menu de ajustes
+screenGui.Enabled = Settings.get("showLevelBar")
+
+Settings.Changed.Event:Connect(function(key: string, value: any)
+	if key == "showLevelBar" then
+		screenGui.Enabled = value
+	end
+end)
 
 update()

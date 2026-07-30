@@ -13,6 +13,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("MiningConfig"))
+local Settings = require(ReplicatedStorage:WaitForChild("ClientSettings"))
 local holeRemote = ReplicatedStorage:WaitForChild(Config.HOLE_REMOTE_NAME)
 
 local function spawnHole(position: Vector3, normal: Vector3, color: Color3, rainbow: boolean)
@@ -69,6 +70,11 @@ local function spawnHole(position: Vector3, normal: Vector3, color: Color3, rain
 end
 
 holeRemote.OnClientEvent:Connect(function(position, normal, color, rainbow)
+	-- El jugador puede desactivarlos desde el menu de ajustes
+	if not Settings.get("showHoles") then
+		return
+	end
+
 	if typeof(position) ~= "Vector3" or typeof(normal) ~= "Vector3" or typeof(color) ~= "Color3" then
 		return
 	end

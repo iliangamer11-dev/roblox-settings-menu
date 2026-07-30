@@ -32,7 +32,7 @@ MiningConfig.LEVEL = {
 MiningConfig.LEVEL_BAR = {
 	-- Ancho relativo a la pantalla (0.62 = 62%) para que sea grande en cualquier
 	-- resolucion, y alto fijo en pixeles.
-	SIZE = UDim2.new(0.28, 0, 0, 72),
+	SIZE = UDim2.new(0.34, 0, 0, 74),
 	-- Abajo y centrada. El 1 del Y con ANCHOR 1 la pega al borde inferior,
 	-- y el -28 la separa un poco.
 	POSITION = UDim2.new(0.5, 0, 1, -28),
@@ -53,6 +53,64 @@ MiningConfig.LEVEL_BAR = {
 	LEVEL_FORMAT = "Level %d",
 	PROGRESS_FORMAT = "%s / %s", -- puntos actuales / puntos del nivel
 	TWEEN_TIME = 0.35, -- lo que tarda la barra en moverse
+}
+
+--------------------------------------------------------------------------------
+-- INTERFAZ: TEMA COMUN, BOTON DE AJUSTES Y PANEL
+--------------------------------------------------------------------------------
+
+-- Gris con opacidad, contorno blanco muy fino por dentro y contorno negro normal
+-- por fuera, con esquinas redondeadas.
+MiningConfig.UI_THEME = {
+	BACKGROUND = Color3.fromRGB(70, 70, 74),
+	BACKGROUND_TRANSPARENCY = 0.25,
+
+	INNER_OUTLINE = Color3.fromRGB(255, 255, 255),
+	INNER_THICKNESS = 1, -- contorno blanco muy pequeno
+	OUTER_OUTLINE = Color3.fromRGB(0, 0, 0),
+	OUTER_THICKNESS = 3, -- contorno negro normal
+	CORNER_RADIUS = 10,
+
+	FONT = Enum.Font.FredokaOne,
+	TEXT_COLOR = Color3.fromRGB(255, 255, 255),
+	TEXT_OUTLINE = Color3.fromRGB(0, 0, 0),
+	TEXT_OUTLINE_THICKNESS = 2,
+
+	ON_COLOR = Color3.fromRGB(60, 200, 70), -- interruptor activado
+	OFF_COLOR = Color3.fromRGB(200, 70, 70), -- interruptor desactivado
+	BUTTON_COLOR = Color3.fromRGB(95, 95, 100), -- botones normales (+, -, X)
+}
+
+MiningConfig.SETTINGS_BUTTON = {
+	SIZE = UDim2.fromOffset(88, 88),
+	POSITION = UDim2.new(0, 20, 0, 20), -- arriba a la izquierda
+	ANCHOR = Vector2.new(0, 0),
+
+	-- Aqui pones tu imagen: "rbxassetid://1234567890" (o solo el numero).
+	-- Vacio = se ve el cuadro sin icono.
+	ICON_ID = "",
+	LABEL = "Settings", -- texto debajo del icono
+}
+
+MiningConfig.SETTINGS_PANEL = {
+	SIZE = UDim2.fromOffset(420, 400),
+	TITLE = "Settings",
+
+	MUSIC_ID = "rbxassetid://1848354536",
+	VOLUME_STEP = 0.1, -- cuanto sube o baja cada clic
+
+	-- Textos de las opciones, en ingles
+	MUSIC_LABEL = "Music",
+	MUTE_LABEL = "Mute",
+	UNMUTE_LABEL = "Unmute",
+	ROWS = {
+		{ KEY = "showLevelBar", LABEL = "Level bar" },
+		{ KEY = "showMoneyPopups", LABEL = "Money popups" },
+		{ KEY = "showHoles", LABEL = "Mining holes" },
+		{ KEY = "showNameplates", LABEL = "Player nameplates" },
+	},
+	ON_TEXT = "ON",
+	OFF_TEXT = "OFF",
 }
 
 --------------------------------------------------------------------------------

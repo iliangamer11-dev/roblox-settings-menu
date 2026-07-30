@@ -92,6 +92,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | --- | --- | --- |
 | `src/ReplicatedStorage/MiningConfig.lua` | ReplicatedStorage | ModuleScript `MiningConfig` |
 | `src/ReplicatedStorage/Format.lua` | ReplicatedStorage | ModuleScript `Format` |
+| `src/ReplicatedStorage/ClientSettings.lua` | ReplicatedStorage | ModuleScript `ClientSettings` |
 | `src/ServerScriptService/PickaxeTool.lua` | ServerScriptService | ModuleScript `PickaxeTool` |
 | `src/ServerScriptService/MoneyPopup.lua` | ServerScriptService | ModuleScript `MoneyPopup` |
 | `src/ServerScriptService/Minerals.lua` | ServerScriptService | ModuleScript `Minerals` |
@@ -104,6 +105,7 @@ rojo serve   # y conecta el plugin de Rojo desde Studio
 | `src/StarterPlayer/StarterPlayerScripts/HoleClient.client.lua` | StarterPlayerScripts | LocalScript `HoleClient` |
 | `src/StarterPlayer/StarterPlayerScripts/WallShopClient.client.lua` | StarterPlayerScripts | LocalScript `WallShopClient` |
 | `src/StarterPlayer/StarterPlayerScripts/LevelBar.client.lua` | StarterPlayerScripts | LocalScript `LevelBar` |
+| `src/StarterPlayer/StarterPlayerScripts/SettingsMenu.client.lua` | StarterPlayerScripts | LocalScript `SettingsMenu` |
 
 `MiningService`, `PickaxeTool`, `MoneyPopup`, `Minerals`, `LevelService` y `WallShop` deben
 quedar hermanos dentro de `ServerScriptService`.
@@ -165,8 +167,8 @@ Causas mas comunes:
 
 ## Barra de nivel
 
-Barra en la parte **de abajo, centrada**: ocupa el 28 % del ancho de la pantalla y
-72 px de alto (`LEVEL_BAR.SIZE`, con el ancho en escala para que se vea igual de grande en
+Barra en la parte **de abajo, centrada**: ocupa el 34 % del ancho de la pantalla y
+74 px de alto (`LEVEL_BAR.SIZE`, con el ancho en escala para que se vea igual de grande en
 cualquier resolucion). El progreso en **verde**, lo que falta en **blanco**, `Level X`
 dentro a la izquierda y los puntos (`83 / 116`) dentro a la derecha. Texto y cuadro con
 contorno negro. Se dibuja por codigo, no hay que montar ninguna GUI.
@@ -188,6 +190,34 @@ el aviso, que solo oye ese jugador. Se ajusta en `MiningConfig.LEVEL_UP`: `TEXT_
   `player:GetAttribute("level")`.
 - El aspecto se ajusta en `MiningConfig.LEVEL_BAR` (tamano, posicion, colores, fuente,
   grosor de los contornos, formato de los textos).
+
+## Menu de ajustes
+
+Boton arriba a la izquierda con un `ImageLabel` (tu icono) y `Settings` debajo. Al pulsarlo
+abre el panel. Mismo estilo en todo (`MiningConfig.UI_THEME`): gris con opacidad, contorno
+blanco muy fino por dentro, contorno negro por fuera y esquinas redondeadas.
+
+| Opcion | Que hace |
+| --- | --- |
+| `Music` | Bajar, subir y silenciar la musica (`rbxassetid://1848354536`) |
+| `Level bar` | Muestra u oculta la barra de nivel |
+| `Money popups` | Muestra u oculta los carteles de "+20 Diamond" |
+| `Mining holes` | Muestra u oculta las marcas del pico en el suelo |
+| `Player nameplates` | Muestra u oculta los nombres y niveles sobre los personajes |
+
+**Tu icono**: `SETTINGS_BUTTON.ICON_ID = "rbxassetid://..."` (vale poner solo el numero). El
+texto de debajo se cambia en `SETTINGS_BUTTON.LABEL` y el resto de textos, todos en ingles,
+en `SETTINGS_PANEL`.
+
+Son **ajustes locales**: cada jugador los cambia solo para el, no se mandan al servidor.
+El estado vive en `ClientSettings`, un ModuleScript que comparten todos los LocalScripts del
+mismo cliente, asi que no hace falta ningun RemoteEvent. Para anadir opciones basta con
+meter una clave en `ClientSettings.Defaults` y una fila en `SETTINGS_PANEL.ROWS`.
+
+Los carteles de dinero y las placas de nombre los crea el servidor, asi que ocultarlos se
+hace poniendo `Enabled = false` en este cliente: los demas siguen viendolos.
+
+Los ajustes **no se guardan al salir** (harian falta DataStore o atributos guardados).
 
 ## Placa sobre el personaje
 
