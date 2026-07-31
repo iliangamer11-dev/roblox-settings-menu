@@ -186,8 +186,38 @@ workspace.DescendantAdded:Connect(setupWall)
 -- Jugadores
 --------------------------------------------------------------------------------
 
+-- SaveService restaura las paredes compradas poniendo el atributo ownsParedN.
+-- Aqui se escucha ese atributo para dar la pared por comprada (y no volver a cobrarla)
+-- y para avisar al cliente de que la esconda.
+local function restoreFromAttribute(player: Player, wallName: string)
+	if player:GetAttribute("owns" .. wallName) ~= true then
+		return
+	end
+
+	local playerWalls = owned[player]
+	if not playerWalls or playerWalls[wallName] then
+		return
+	end
+
+	playerWalls[wallName] = true
+	wallRemote:FireClient(player, "unlocked", wallName)
+
+	if Config.DEBUG then
+		print(string.format("[WallShop] %s recupera %s de su partida guardada", player.Name, wallName))
+	end
+end
+
 local function onPlayerAdded(player: Player)
 	owned[player] = {}
+
+	-- Paredes guardadas: las que ya estuvieran puestas y las que ponga SaveService al cargar
+	for wallName in wallByName do
+		restoreFromAttribute(player, wallName)
+
+		player:GetAttributeChangedSignal("owns" .. wallName):Connect(function()
+			restoreFromAttribute(player, wallName)
+		end)
+	end
 
 	-- Al respawnear se le recuerdan las paredes que ya compro, porque la pared
 	-- solo esta oculta en su cliente y conviene volver a aplicarlo

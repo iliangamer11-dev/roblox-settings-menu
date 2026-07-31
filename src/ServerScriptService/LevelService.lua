@@ -26,6 +26,9 @@ local LevelService = {}
 -- data[player] = { level = 1, xp = 0 }
 local data = {}
 
+-- restored[player] = true cuando SaveService ya le ha puesto su nivel guardado
+local restored = {}
+
 local function xpNeededFor(level: number): number
 	local cfg = Config.LEVEL
 	return math.max(1, math.floor(cfg.BASE_XP * cfg.GROWTH ^ (level - 1)))
@@ -58,7 +61,29 @@ local function publish(player: Player)
 end
 
 function LevelService.setup(player: Player)
+	-- Si SaveService ya restauro su nivel no se le pisa: el orden en que corren los
+	-- scripts al entrar un jugador no esta garantizado
+	if restored[player] then
+		publish(player)
+		return
+	end
+
 	data[player] = { level = 1, xp = 0 }
+	publish(player)
+end
+
+-- Restaura el nivel guardado (lo llama SaveService al entrar el jugador)
+function LevelService.load(player: Player, level: number?, xp: number?)
+	local entry = data[player]
+	if not entry then
+		entry = { level = 1, xp = 0 }
+		data[player] = entry
+	end
+
+	entry.level = math.max(1, math.floor(tonumber(level) or 1))
+	entry.xp = math.max(0, tonumber(xp) or 0)
+	restored[player] = true
+
 	publish(player)
 end
 
@@ -97,6 +122,7 @@ end
 
 function LevelService.clear(player: Player)
 	data[player] = nil
+	restored[player] = nil
 end
 
 return LevelService

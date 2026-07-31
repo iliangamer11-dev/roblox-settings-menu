@@ -69,6 +69,24 @@ MiningConfig.LEVEL_BAR = {
 }
 
 --------------------------------------------------------------------------------
+-- GUARDADO (DataStore)
+--------------------------------------------------------------------------------
+
+-- Se guarda: dinero, nivel/puntos, paredes compradas, tag y skin equipados.
+-- Los gamepasses NO se guardan: Roblox ya sabe quien los tiene y se consultan al entrar.
+MiningConfig.SAVE = {
+	ENABLED = true,
+
+	-- Si cambias el nombre, todos empiezan de cero (util para hacer un reset)
+	STORE_NAME = "MineMillionsSave_v1",
+	KEY_PREFIX = "player_",
+
+	AUTOSAVE_INTERVAL = 120, -- cada cuanto se guarda solo, en segundos
+	RETRIES = 3, -- intentos si Roblox falla
+	RETRY_DELAY = 2,
+}
+
+--------------------------------------------------------------------------------
 -- PANTALLA DE CARGA
 --------------------------------------------------------------------------------
 
