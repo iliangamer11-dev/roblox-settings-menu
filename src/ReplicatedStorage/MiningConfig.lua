@@ -81,7 +81,14 @@ MiningConfig.SAVE = {
 	STORE_NAME = "MineMillionsSave_v1",
 	KEY_PREFIX = "player_",
 
-	AUTOSAVE_INTERVAL = 120, -- cada cuanto se guarda solo, en segundos
+	-- Cada cuanto MIRA si hay algo nuevo que guardar, en segundos
+	AUTOSAVE_INTERVAL = 3,
+
+	-- Tiempo minimo entre dos guardados del mismo jugador, en segundos.
+	-- Roblox solo acepta UNA escritura cada 6 segundos por clave, asi que bajar esto
+	-- de 7 no guarda mas rapido: solo hace que Roblox empiece a rechazar guardados.
+	MIN_SAVE_INTERVAL = 7,
+
 	RETRIES = 3, -- intentos si Roblox falla
 	RETRY_DELAY = 2,
 }
